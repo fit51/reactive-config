@@ -1,6 +1,6 @@
-# ReactiveConfig
+# reactive-config
 
-ReactiveConfig is a configuration library for Scala. 
+reactive-config is a configuration library for Scala. 
 
 It provides functionality to get pieces of config, that reload reactive. 
 These pieces of configuration are called `Reloadables`. 
@@ -9,7 +9,7 @@ You can `combine` and `map` `Reloadables` to construct change-propagation chains
 Library is implemented on top of [Monix](https://github.com/monix/monix) Observable and supports number of configuration back ends:
 * [Typesafe-config](https://github.com/lightbend/config) - HOCON file.  
 See [reactive-config-typesafe](https://github.com/fit51/reactive-config/tree/master/typesafe/src)
-* [Etcd](https://github.com/etcd-io/etcd) - Distributed reliable key-value store, supports KV change notification streaming.  
+* [Etcd](https://coreos.com/etcd/) - Distributed reliable key-value store, that supports monitoring changes to keys.  
 See [reactive-config-etcd]()
 
 ## Quickstart with sbt
