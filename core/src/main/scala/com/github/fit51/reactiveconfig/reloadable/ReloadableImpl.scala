@@ -11,7 +11,7 @@ object ReloadableImpl {
   def apply[F[_], A, B](initial: B,
                         ob: Observable[A],
                         start: A => F[B],
-                        reloadBehaviour: ReloadBehaviour[F, A, B] = Simple[F, A, B])(
+                        reloadBehaviour: ReloadBehaviour[F, A, B] = Simple[F, A, B]())(
       implicit scheduler: Scheduler,
       F: MonadError[F, Throwable],
       T: TaskLike[F]): ReloadableImpl[F, A, B] =
