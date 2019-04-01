@@ -28,7 +28,7 @@ class ReactiveConfigImplTest extends WordSpecLike with Matchers with MockitoSuga
     val watch: Observable[ParsedKeyValue[String]] =
       Observable.evalDelayed(2 seconds, ParsedKeyValue("key1", Value("value2", 1l)))
 
-    val config = new ConfigImpl[IO, String](storage, watch)
+    val config = new ReactiveConfigImpl[IO, String](storage, watch)
   }
 
   "Config" should {
@@ -63,21 +63,21 @@ class ReactiveConfigImplTest extends WordSpecLike with Matchers with MockitoSuga
       when(configStorageIO.watch()).thenReturn(watch)
       when(configStorageIO.load()).thenReturn(IO(storage))
 
-      Await.result(ConfigImpl[IO, String](configStorageIO).unsafeToFuture, 1 second)
+      Await.result(ReactiveConfigImpl[IO, String](configStorageIO).unsafeToFuture, 1 second)
 
       val configStorageTask = mock[ConfigStorage[Task, String]]
 
       when(configStorageTask.watch()).thenReturn(watch)
       when(configStorageTask.load()).thenReturn(Task(storage))
 
-      Await.result(ConfigImpl[Task, String](configStorageTask).runToFuture, 1 second)
+      Await.result(ReactiveConfigImpl[Task, String](configStorageTask).runToFuture, 1 second)
 
       val configStorageFuture = mock[ConfigStorage[Future, String]]
 
       when(configStorageFuture.watch()).thenReturn(watch)
       when(configStorageFuture.load()).thenReturn(Future(storage))
 
-      ConfigImpl[Future, String](configStorageFuture)
+      ReactiveConfigImpl[Future, String](configStorageFuture)
     }
   }
 }

@@ -4,7 +4,7 @@ import java.nio.file.Paths
 import better.files.File
 import io.circe.generic.auto._
 import cats.effect.IO
-import com.github.fit51.reactiveconfig.config.ConfigImpl
+import com.github.fit51.reactiveconfig.config.ReactiveConfigImpl
 import io.circe.Json
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatest.mockito.MockitoSugar
@@ -20,7 +20,7 @@ class TypesafeConfigStorageTest extends WordSpecLike with Matchers with MockitoS
   trait mocks {
     val path    = Paths.get("typesafe/src/test/resources/application.conf")
     val storage = TypesafeConfigStorage[IO, Json](path)
-    val config  = Await.result(ConfigImpl[IO, Json](storage).unsafeToFuture, 1 second)
+    val config  = Await.result(ReactiveConfigImpl[IO, Json](storage).unsafeToFuture, 1 second)
   }
 
   "TypesafeConfig" should {

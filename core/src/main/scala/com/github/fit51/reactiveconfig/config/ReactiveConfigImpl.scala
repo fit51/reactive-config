@@ -13,21 +13,21 @@ import com.github.fit51.reactiveconfig.storage.ConfigStorage
 import scala.collection.concurrent.TrieMap
 import scala.util.{Failure, Success, Try}
 
-object ConfigImpl {
+object ReactiveConfigImpl {
 
   /**
     * Creates new instance of Config using arbitrary F for reloading.
     **/
   def apply[F[_]: TaskLike, ParsedData](configStorage: ConfigStorage[F, ParsedData])(
       implicit s: Scheduler,
-      F: MonadError[F, Throwable]): F[ConfigImpl[F, ParsedData]] =
-    configStorage.load().map(storage => new ConfigImpl[F, ParsedData](storage, configStorage.watch()))
+      F: MonadError[F, Throwable]): F[ReactiveConfigImpl[F, ParsedData]] =
+    configStorage.load().map(storage => new ReactiveConfigImpl[F, ParsedData](storage, configStorage.watch()))
 }
 
-class ConfigImpl[F[_], ParsedData](
+class ReactiveConfigImpl[F[_], ParsedData](
     storage: TrieMap[String, Value[ParsedData]],
     watch: Observable[ParsedKeyValue[ParsedData]])(implicit s: Scheduler, F: MonadError[F, Throwable], T: TaskLike[F])
-    extends Config[F, ParsedData] {
+    extends ReactiveConfig[F, ParsedData] {
 
   def get[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): Option[T] = getTry(key).toOption
 
