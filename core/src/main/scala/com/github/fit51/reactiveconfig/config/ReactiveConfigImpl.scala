@@ -18,15 +18,16 @@ object ReactiveConfigImpl {
   /**
     * Creates new instance of Config using arbitrary F for reloading.
     **/
-  def apply[F[_]: TaskLike, ParsedData](configStorage: ConfigStorage[F, ParsedData])(
-      implicit s: Scheduler,
-      F: MonadError[F, Throwable]): F[ReactiveConfigImpl[F, ParsedData]] =
+  def apply[F[_]: TaskLike, ParsedData](
+      configStorage: ConfigStorage[F, ParsedData]
+  )(implicit s: Scheduler, F: MonadError[F, Throwable]): F[ReactiveConfigImpl[F, ParsedData]] =
     configStorage.load().map(storage => new ReactiveConfigImpl[F, ParsedData](storage, configStorage.watch()))
 }
 
 class ReactiveConfigImpl[F[_], ParsedData](
     storage: TrieMap[String, Value[ParsedData]],
-    watch: Observable[ParsedKeyValue[ParsedData]])(implicit s: Scheduler, F: MonadError[F, Throwable], T: TaskLike[F])
+    watch: Observable[ParsedKeyValue[ParsedData]]
+)(implicit s: Scheduler, F: MonadError[F, Throwable], T: TaskLike[F])
     extends ReactiveConfig[F, ParsedData] {
 
   def get[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): Option[T] = getTry(key).toOption

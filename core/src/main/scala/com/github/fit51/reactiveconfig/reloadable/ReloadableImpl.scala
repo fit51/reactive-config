@@ -8,13 +8,12 @@ import monix.execution.Scheduler
 import monix.reactive.Observable
 
 object ReloadableImpl {
-  def apply[F[_], A, B](initial: B,
-                        ob: Observable[A],
-                        start: A => F[B],
-                        reloadBehaviour: ReloadBehaviour[F, A, B] = Simple[F, A, B]())(
-      implicit scheduler: Scheduler,
-      F: MonadError[F, Throwable],
-      T: TaskLike[F]): ReloadableImpl[F, A, B] =
+  def apply[F[_], A, B](
+      initial: B,
+      ob: Observable[A],
+      start: A => F[B],
+      reloadBehaviour: ReloadBehaviour[F, A, B] = Simple[F, A, B]()
+  )(implicit scheduler: Scheduler, F: MonadError[F, Throwable], T: TaskLike[F]): ReloadableImpl[F, A, B] =
     new ReloadableImpl[F, A, B](initial, ob, start, reloadBehaviour)
 }
 
@@ -34,8 +33,8 @@ object ReloadableImpl {
 class ReloadableImpl[F[_], A, B](initial: B, ob: Observable[A], start: A => F[B], behaviour: ReloadBehaviour[F, A, B])(
     implicit scheduler: Scheduler,
     F: MonadError[F, Throwable],
-    T: TaskLike[F])
-    extends Reloadable[F, A, B] with LazyLogging {
+    T: TaskLike[F]
+) extends Reloadable[F, A, B] with LazyLogging {
 
   @volatile
   private var value      = initial
@@ -71,8 +70,10 @@ class ReloadableImpl[F[_], A, B](initial: B, ob: Observable[A], start: A => F[B]
     }
   }
 
-  def combine[C, D](other: Reloadable[F, _, C])(f: (B, C) => D,
-                                                behaviour: ReloadBehaviour[F, (B, C), D]): Reloadable[F, (B, C), D] = {
+  def combine[C, D](other: Reloadable[F, _, C])(
+      f: (B, C) => D,
+      behaviour: ReloadBehaviour[F, (B, C), D]
+  ): Reloadable[F, (B, C), D] = {
     val b1       = Observable(Observable.eval(this.get), this.observable).concat
     val b2       = Observable(Observable.eval(other.get), other.observable).concat
     val combined = b1.combineLatest(b2).drop(1)
@@ -82,7 +83,8 @@ class ReloadableImpl[F[_], A, B](initial: B, ob: Observable[A], start: A => F[B]
 
   def combineF[C, D](other: Reloadable[F, _, C])(
       f: (B, C) => F[D],
-      behaviour: ReloadBehaviour[F, (B, C), D]): F[Reloadable[F, (B, C), D]] = {
+      behaviour: ReloadBehaviour[F, (B, C), D]
+  ): F[Reloadable[F, (B, C), D]] = {
     f(this.get, other.get).map { c =>
       val init     = c
       val b1       = Observable(Observable.eval(this.get), this.observable).concat
