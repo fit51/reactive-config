@@ -24,11 +24,11 @@ trait Reloadable[F[_], A, B] {
 
   def mapF[C](f: B => F[C], behaviour: ReloadBehaviour[F, B, C] = new Simple[F, B, C]): F[Reloadable[F, B, C]]
 
-  def combine[C, D](other: Reloadable[F, _, C])(
-      f: (B, C) => D,
-      behaviour: ReloadBehaviour[F, (B, C), D] = new Simple[F, (B, C), D]): Reloadable[F, (B, C), D]
+  def combine[C, D](
+      other: Reloadable[F, _, C]
+  )(f: (B, C) => D, behaviour: ReloadBehaviour[F, (B, C), D] = new Simple[F, (B, C), D]): Reloadable[F, (B, C), D]
 
-  def combineF[C, D](other: Reloadable[F, _, C])(
-      f: (B, C) => F[D],
-      behaviour: ReloadBehaviour[F, (B, C), D] = new Simple[F, (B, C), D]): F[Reloadable[F, (B, C), D]]
+  def combineF[C, D](
+      other: Reloadable[F, _, C]
+  )(f: (B, C) => F[D], behaviour: ReloadBehaviour[F, (B, C), D] = new Simple[F, (B, C), D]): F[Reloadable[F, (B, C), D]]
 }
