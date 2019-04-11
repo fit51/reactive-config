@@ -1,4 +1,4 @@
-val publishVersion = "0.0.1"
+val publishVersion = "0.0.2"
 
 version in ThisBuild := {
   val branch = git.gitCurrentBranch.value

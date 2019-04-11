@@ -30,11 +30,16 @@ case class Simple[F[_], A, B]() extends ReloadBehaviour[F, A, B] {
 /**
   * Stop reload policy
   *
-  * When new [[A]] arrives - stops current [[B]] instance, then, creates a new [[B]]
+  * When new [[A]] arrives - creates a new [[B]] and then stops current [[B]]
   * @param stop Stop function
   */
 case class Stop[F[_]: FlatMap, A, B](stop: B => F[_]) extends ReloadBehaviour[F, A, B] {
-  def reload(start: A => F[B]): (A, B) => F[B] = (a, b) => stop(b).flatMap(_ => start(a))
+  def reload(start: A => F[B]): (A, B) => F[B] =
+    (a, b) =>
+      for {
+        newB <- start(a)
+        _    <- stop(b)
+      } yield newB
 }
 
 /**
