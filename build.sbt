@@ -31,6 +31,23 @@ lazy val circe = project
     )
   )
 
+lazy val etcd = project
+  .in(file("etcd"))
+  .dependsOn(core)
+  .settings(commonSettings)
+  .settings(
+    name := "reactive-config-etcd",
+    libraryDependencies ++= Seq(
+      "io.grpc"              % "grpc-netty"                      % "1.9.0",
+      "io.netty"             % "netty-tcnative-boringssl-static" % "2.0.7.Final",
+      "com.coreos"           % "jetcd-core"                      % "0.0.1",
+      "com.thesamet.scalapb" %% "scalapb-runtime"                % "0.9.1" % "protobuf"
+    ),
+    PB.targets in Compile := Seq(
+      scalapb.gen(grpc=false) -> (sourceDirectory in Compile).value / "scala" / "com" / "github" / "fit51" / "reactiveconfig" / "etcd" / "gen"
+    )
+  )
+
 lazy val typesafe = project
   .in(file("typesafe"))
   .dependsOn(core)
