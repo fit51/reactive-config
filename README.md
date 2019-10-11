@@ -2,9 +2,9 @@
 
 reactive-config is a configuration library for Scala. 
 
-It provides functionality to get pieces of config, that reload reactive. 
-These pieces of configuration are called `Reloadables`. 
-You can `combine` and `map` `Reloadables` to construct change-propagation chains.
+It provides functionality to get pieces of config, that reload. 
+The piece of configuration is called `Reloadable`. 
+You can `combine` and `map` `Reloadables` to construct change-propagation graphs.
 
 Library is implemented on top of [Monix](https://github.com/monix/monix) Observable and supports number of configuration back ends:
 * [Typesafe-config](https://github.com/lightbend/config) - HOCON file.  
@@ -23,4 +23,4 @@ See examples [here](https://github.com/fit51/reactive-config/tree/master/example
 
 ## Note
 Library is in development.  
-It was originally created in private Bitbucket repository. Now, library is moved to GitHub with most of commits squashed, due to _some_ reasons. 
+It was originally created in private Bitbucket repository. Now, library is moved to GitHub with most of commits squashed due to _some_ reasons. 
