@@ -5,7 +5,7 @@ import monix.reactive.Observable
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.{Matchers, WordSpecLike}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import scala.concurrent.duration._
 import monix.execution.Scheduler.Implicits.global
 import org.mockito.invocation.InvocationOnMock
@@ -78,8 +78,8 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
       //FOR RESTART BEHAVIOUR
 
       val restart = mock[RestartingService[String, String]]
-      when(restart.restart(any(), any())).thenAnswer((invocation: InvocationOnMock) =>
-        IO(function(invocation.getArgument[String](0))))
+      when(restart.restart(any(), any()))
+        .thenAnswer((invocation: InvocationOnMock) => IO(function(invocation.getArgument[String](0))))
 
       val mappedReloadable2 =
         initialReloadable.map(function, Restart[IO, String, String]((a: String, b: String) => restart.restart(a, b)))

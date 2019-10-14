@@ -16,7 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
 import monix.execution.Scheduler
 import monix.reactive.Observable
 import monix.reactive.subjects.PublishSubject
-import scala.collection.JavaConverters.asScalaSetConverter
+import scala.collection.JavaConverters._
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
 import scala.util.{Failure, Success}
