@@ -22,7 +22,7 @@ libraryDependencies += "com.github.fit51" %% "reactive-config-core" % "0.0.1"
 See examples [here](https://github.com/fit51/reactive-config/tree/master/examples).
 
 ## Etcd
-Run "sbt etcd/protocGenerate" to generate etcd GRPC services.
+Run "sbt etcd/generateSources" to generate etcd GRPC services and move them to source directory.
 
 ## Note
 Library is in development.  

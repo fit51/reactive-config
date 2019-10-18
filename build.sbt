@@ -45,11 +45,21 @@ lazy val etcd = project
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % "0.9.3",
       "com.coreos"           % "jetcd-core"                      % "0.0.2",
       "com.coreos"           % "jetcd-common"                    % "0.0.2"
-    ),
-    PB.targets in Compile := Seq(
-      scalapb.gen() -> (sourceManaged in Compile).value
     )
   )
+  .settings {
+    val generateSources           = TaskKey.apply[Unit]("generateSources")
+    def genPackage(f: File): File = f / "com" / "github" / "fit51" / "reactiveconfig" / "etcd" / "gen"
+    generateSources := {
+      (PB.generate in Compile).value
+      val genDir    = genPackage((sourceManaged in Compile).value)
+      val targetDir = genPackage((sourceDirectory in Compile).value / "scala")
+      println(s"Generated in: $genDir")
+      println(s"Moved to: $targetDir")
+      IO.copyDirectory(genDir, targetDir, true, true)
+      IO.delete(genDir)
+    }
+  }
 
 lazy val typesafe = project
   .in(file("typesafe"))

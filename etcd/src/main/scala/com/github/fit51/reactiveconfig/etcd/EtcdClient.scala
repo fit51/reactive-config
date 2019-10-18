@@ -8,6 +8,7 @@ import io.grpc.LoadBalancer
 import javax.net.ssl.TrustManagerFactory
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
+import monix.execution.Scheduler
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
@@ -19,13 +20,13 @@ object EtcdClient {
       authority: String,
       loadBalancerFactory: LoadBalancer.Factory,
       trustManagerFactory: TrustManagerFactory
-  )(implicit exec: ExecutionContext) =
+  )(implicit scheduler: Scheduler) =
     new EtcdClient(
       ChannelManager(endpoints, credential, Some(authority), Some(loadBalancerFactory), Some(trustManagerFactory))
     )
 }
 
-class EtcdClient[F[_]: Async: ContextShift](val manager: ChannelManager)(implicit val ec: ExecutionContext)
+class EtcdClient[F[_]: Async: ContextShift](val manager: ChannelManager)(implicit val scheduler: Scheduler)
     extends LazyLogging {
   import EtcdUtils._
 

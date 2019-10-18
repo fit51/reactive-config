@@ -45,8 +45,9 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, Json](etcd: EtcdClient[F] wit
       }
 
   def watch(): Observable[ParsedKeyValue[Json]] =
-    etcd
-      .watch(EtcdUtils.getRange(prefix))
+    Observable
+      .fromTask(etcd.watch(EtcdUtils.getRange(prefix)))
+      .flatten
       .map(saveKeyValue(_))
       .collect { case Some(value) => value }
 
