@@ -1,7 +1,7 @@
 package com.github.fit51.reactiveconfig.config
 
 import com.github.fit51.reactiveconfig.parser.ConfigDecoder
-import com.github.fit51.reactiveconfig.reloadable.Reloadable
+import com.github.fit51.reactiveconfig.reloadable.ReloadableInternal
 import scala.util.Try
 
 trait ReactiveConfig[F[_], ParsedData] {
@@ -11,5 +11,5 @@ trait ReactiveConfig[F[_], ParsedData] {
 
   def getOrThrow[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): T
 
-  def reloadable[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): Reloadable[F, T, T]
+  def reloadable[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): ReloadableInternal[F, T, T]
 }

@@ -30,5 +30,3 @@ useGpg in ThisBuild := true
 pomIncludeRepository in ThisBuild := { _ => false }
 
 updateOptions in ThisBuild := updateOptions.value.withGigahorse(false)
-
-credentials in ThisBuild += Credentials(Path.userHome / ".sbt" / "sonatype_credentials")

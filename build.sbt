@@ -40,11 +40,11 @@ lazy val etcd = project
   .settings(
     name := "reactive-config-etcd",
     libraryDependencies ++= Seq(
-      "io.grpc"              % "grpc-netty"                      % "1.9.0",
+      "io.grpc"              % "grpc-netty"                      % "1.24.0",
       "io.netty"             % "netty-tcnative-boringssl-static" % "2.0.7.Final",
-      "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % "0.9.3",
-      "com.coreos"           % "jetcd-core"                      % "0.0.2",
-      "com.coreos"           % "jetcd-common"                    % "0.0.2"
+      "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % scalapb.compiler.Version.scalapbVersion,
+      "com.coreos"           % "jetcd-core"                      % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc")),
+      "com.coreos"           % "jetcd-common"                    % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc"))
     )
   )
   .settings {
@@ -78,8 +78,13 @@ lazy val typesafe = project
 
 lazy val examples = project
   .in(file("examples"))
-  .dependsOn(core, circe, typesafe)
+  .dependsOn(etcd, typesafe, circe)
   .settings(commonSettings)
+  .settings(
+    resolvers += Resolver.sonatypeRepo("releases"),
+    addCompilerPlugin("org.typelevel" % "kind-projector"      % "0.11.0" cross CrossVersion.full),
+    addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
+  )
   .settings(
     name := "reactive-config-examples",
     libraryDependencies ++= Seq(

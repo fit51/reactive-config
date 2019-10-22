@@ -8,6 +8,7 @@ object GrpcMonix {
     new StreamObserver[T] {
       override def onError(t: Throwable): Unit = subscriber.onError(t)
       override def onCompleted(): Unit         = subscriber.onComplete()
+      // No backpressure here, breaking the observer contract
       override def onNext(value: T): Unit      = subscriber.onNext(value)
     }
 }

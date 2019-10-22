@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 
 case class SimpleLib(foo: String, whatever: String)
 
-object SampleApplication extends App with LazyLogging {
+object TypesafeConfigApplication extends App with LazyLogging {
   implicit val scheduler = monix.execution.Scheduler.global
 
   import CirceConfigParser._

@@ -6,7 +6,7 @@ import cats.implicits._
 /**
   * Reload policy
   *
-  * @see [[Reloadable]]
+  * @see [[ReloadableInternal]]
   */
 trait ReloadBehaviour[F[_], A, B] {
 

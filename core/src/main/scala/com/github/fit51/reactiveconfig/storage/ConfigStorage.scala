@@ -4,7 +4,7 @@ import monix.reactive.Observable
 import com.github.fit51.reactiveconfig.{ParsedKeyValue, Value}
 import scala.collection.concurrent.TrieMap
 
-trait ConfigStorage[F[_], Json] {
+trait ConfigStorage[F[_], ParsedData] {
 
   /**
     * Load configuration
@@ -12,7 +12,7 @@ trait ConfigStorage[F[_], Json] {
     * @return key -> values, that contain ParsedData and key-value version
     * @see [[Value]]
     */
-  def load(): F[TrieMap[String, Value[Json]]]
+  def load(): F[TrieMap[String, Value[ParsedData]]]
 
   /**
     * Start observing config changes
@@ -20,5 +20,5 @@ trait ConfigStorage[F[_], Json] {
     * @return stream of changed key-value pairs.
     * @see[[ParsedKeyValue]]
     */
-  def watch(): Observable[ParsedKeyValue[Json]]
+  def watch(): Observable[ParsedKeyValue[ParsedData]]
 }

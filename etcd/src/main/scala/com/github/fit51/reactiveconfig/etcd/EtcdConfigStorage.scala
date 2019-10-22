@@ -25,15 +25,15 @@ object EtcdConfigStorage {
     new EtcdConfigStorage[F, Json](etcd, prefix)
 }
 
-class EtcdConfigStorage[F[_]: Async: ContextShift, Json](etcd: EtcdClient[F] with Watch[F], prefix: String)(
+class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](etcd: EtcdClient[F] with Watch[F], prefix: String)(
     implicit s: Scheduler,
-    encoder: ConfigParser[Json]
-) extends ConfigStorage[F, Json] with LazyLogging {
+    encoder: ConfigParser[ParsedData]
+) extends ConfigStorage[F, ParsedData] with LazyLogging {
   @volatile
-  private var revision                              = 0L
-  private val storage: TrieMap[String, Value[Json]] = TrieMap.empty
+  private var revision                                    = 0L
+  private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
-  def load(): F[TrieMap[String, Value[Json]]] =
+  def load(): F[TrieMap[String, Value[ParsedData]]] =
     etcd
       .getRecursiveSinceRevision(prefix, revision)
       .map {
@@ -44,14 +44,14 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, Json](etcd: EtcdClient[F] wit
           storage
       }
 
-  def watch(): Observable[ParsedKeyValue[Json]] =
+  def watch(): Observable[ParsedKeyValue[ParsedData]] =
     Observable
       .fromTask(etcd.watch(EtcdUtils.getRange(prefix)))
       .flatten
       .map(saveKeyValue(_))
       .collect { case Some(value) => value }
 
-  private def saveKeyValue(kv: KeyValue, checkVersions: Boolean = false): Option[ParsedKeyValue[Json]] =
+  private def saveKeyValue(kv: KeyValue, checkVersions: Boolean = false): Option[ParsedKeyValue[ParsedData]] =
     encoder.parse(kv.value.utf8) match {
       case Failure(failure) =>
         logger.error(s"Key ${kv.key.utf8}. ${failure.getMessage()}")
@@ -60,12 +60,15 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, Json](etcd: EtcdClient[F] wit
         val key   = kv.key.utf8
         val value = Value(parsed, kv.version)
         if (checkVersions) {
-          storage.get(key).map { storedValue =>
-            if (storedValue.version < value.version)
-              storage.put(key, value)
-          }
+          storage
+            .get(key)
+            .map { storedValue =>
+              if (storedValue.version < value.version)
+                storage.put(key, value)
+            }
+            .getOrElse(storage.put(key, value))
         } else
           storage.update(key, value)
-        Some(ParsedKeyValue[Json](key, value))
+        Some(ParsedKeyValue[ParsedData](key, value))
     }
 }

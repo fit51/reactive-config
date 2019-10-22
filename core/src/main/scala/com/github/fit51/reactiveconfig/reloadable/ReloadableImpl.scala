@@ -21,7 +21,7 @@ object ReloadableImpl {
   * Reloadable is a wrapped [[B]] value, that can be accessed at any time.
   * Inside it encapsulates logic for updating [[B]] on [[A]] changes.
   *
-  * @see [[Reloadable]]
+  * @see [[ReloadableInternal]]
   * @param initial   value of type [[B]]
   * @param ob        observable of [[A]] changes
   * @param start     function to get [[B]] from [[A]]. Is used in [[behaviour]]
@@ -34,7 +34,7 @@ class ReloadableImpl[F[_], A, B](initial: B, ob: Observable[A], start: A => F[B]
     implicit scheduler: Scheduler,
     F: MonadError[F, Throwable],
     T: TaskLike[F]
-) extends Reloadable[F, A, B] with LazyLogging {
+) extends ReloadableInternal[F, A, B] with LazyLogging {
 
   @volatile
   private var value      = initial
@@ -58,22 +58,22 @@ class ReloadableImpl[F[_], A, B](initial: B, ob: Observable[A], start: A => F[B]
 
   def observable: Observable[B] = underlying
 
-  def map[C](f: B => C, behaviour: ReloadBehaviour[F, B, C]): Reloadable[F, B, C] = {
+  def map[C](f: B => C, behaviour: ReloadBehaviour[F, B, C]): ReloadableInternal[F, B, C] = {
     val init = f(get)
     ReloadableImpl[F, B, C](init, this.observable, in => Applicative[F].pure(f(in)), behaviour)
   }
 
-  def mapF[C](f: B => F[C], behaviour: ReloadBehaviour[F, B, C]): F[Reloadable[F, B, C]] = {
+  def mapF[C](f: B => F[C], behaviour: ReloadBehaviour[F, B, C]): F[ReloadableInternal[F, B, C]] = {
     f(get).map { c =>
       val init = c
       ReloadableImpl[F, B, C](init, this.observable, f, behaviour)
     }
   }
 
-  def combine[C, D](other: Reloadable[F, _, C])(
+  def combine[C, D](other: ReloadableInternal[F, _, C])(
       f: (B, C) => D,
       behaviour: ReloadBehaviour[F, (B, C), D]
-  ): Reloadable[F, (B, C), D] = {
+  ): ReloadableInternal[F, (B, C), D] = {
     val b1       = Observable(Observable.eval(this.get), this.observable).concat
     val b2       = Observable(Observable.eval(other.get), other.observable).concat
     val combined = b1.combineLatest(b2).drop(1)
@@ -81,10 +81,10 @@ class ReloadableImpl[F[_], A, B](initial: B, ob: Observable[A], start: A => F[B]
     ReloadableImpl[F, (B, C), D](init, combined, in => Applicative[F].pure(f(in._1, in._2)), behaviour)
   }
 
-  def combineF[C, D](other: Reloadable[F, _, C])(
+  def combineF[C, D](other: ReloadableInternal[F, _, C])(
       f: (B, C) => F[D],
       behaviour: ReloadBehaviour[F, (B, C), D]
-  ): F[Reloadable[F, (B, C), D]] = {
+  ): F[ReloadableInternal[F, (B, C), D]] = {
     f(this.get, other.get).map { c =>
       val init     = c
       val b1       = Observable(Observable.eval(this.get), this.observable).concat

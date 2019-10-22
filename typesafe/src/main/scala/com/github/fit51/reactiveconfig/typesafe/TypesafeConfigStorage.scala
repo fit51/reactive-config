@@ -37,14 +37,16 @@ object TypesafeConfigStorage {
     new TypesafeConfigStorage[F, Json](path)
 }
 
-class TypesafeConfigStorage[F[_]: Sync, Json](path: Path)(implicit s: Scheduler, encoder: ConfigParser[Json])
-    extends ConfigStorage[F, Json] with LazyLogging {
+class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path)(
+    implicit s: Scheduler,
+    encoder: ConfigParser[ParsedData]
+) extends ConfigStorage[F, ParsedData] with LazyLogging {
 
-  private val storage: TrieMap[String, Value[Json]] = TrieMap.empty
+  private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
   private val fileWatch: Observable[WatchEvent.Kind[Path]] =
     FileWatch.watch(File(path.getParent), PublishSubject[WatchEvent.Kind[Path]])
 
-  def load(): F[TrieMap[String, Value[Json]]] =
+  def load(): F[TrieMap[String, Value[ParsedData]]] =
     if (!Files.exists(path))
       MonadError[F, Throwable].raiseError(new FileNotFoundException(path.toString))
     else
@@ -61,7 +63,7 @@ class TypesafeConfigStorage[F[_]: Sync, Json](path: Path)(implicit s: Scheduler,
           )
       }
 
-  def watch(): Observable[ParsedKeyValue[Json]] =
+  def watch(): Observable[ParsedKeyValue[ParsedData]] =
     fileWatch.flatMap { _ =>
       Observable.fromIterable {
         ConfigFactory.invalidateCaches()
@@ -81,7 +83,7 @@ class TypesafeConfigStorage[F[_]: Sync, Json](path: Path)(implicit s: Scheduler,
                 entry = entry,
                 maybeJson = maybeJson,
                 revision = storage.get(entry.getKey).map(_.version).getOrElse(0L) + 1,
-                storage = mutable.Map.empty[String, Value[Json]]
+                storage = mutable.Map.empty[String, Value[ParsedData]]
               ).map(kv => ParsedKeyValue(kv._1, kv._2)).some
           }
           .collect { case Some(kvs) => kvs }
@@ -89,10 +91,10 @@ class TypesafeConfigStorage[F[_]: Sync, Json](path: Path)(implicit s: Scheduler,
       }
     }
 
-  private def flattenHoconToJsonMap[T <: mutable.Map[String, Value[Json]]](
+  private def flattenHoconToJsonMap[T <: mutable.Map[String, Value[ParsedData]]](
       key: String,
       entry: util.Map.Entry[String, ConfigValue],
-      maybeJson: Option[Json],
+      maybeJson: Option[ParsedData],
       revision: Long,
       storage: T
   ): T = {
@@ -112,8 +114,8 @@ class TypesafeConfigStorage[F[_]: Sync, Json](path: Path)(implicit s: Scheduler,
     }
   }
 
-  private def parseHoconEntryToJson(entry: util.Map.Entry[String, ConfigValue]): Option[Json] =
-    ConfigParser[Json].parse(entry.getValue.render(ConfigRenderOptions.concise())) match {
+  private def parseHoconEntryToJson(entry: util.Map.Entry[String, ConfigValue]): Option[ParsedData] =
+    ConfigParser[ParsedData].parse(entry.getValue.render(ConfigRenderOptions.concise())) match {
       case Success(value) => Some(value)
       case Failure(th) =>
         logger.error(s"Error occurred while trying to parse config entry with key ${entry.getKey}: ${th.getMessage}")

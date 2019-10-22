@@ -7,6 +7,7 @@ import com.coreos.jetcd.common.exception.EtcdExceptionFactory;
 import com.coreos.jetcd.resolver.URIResolver;
 import com.coreos.jetcd.resolver.URIResolverLoader;
 import io.grpc.Attributes;
+import io.grpc.NameResolver.Listener;
 import io.grpc.EquivalentAddressGroup;
 import io.grpc.NameResolver;
 import io.grpc.Status;
@@ -35,7 +36,7 @@ public class SmartNameResolver extends NameResolver {
     private volatile boolean resolving;
 
     @GuardedBy("lock")
-    private ExecutorService executor;
+    private Executor executor;
     @GuardedBy("lock")
     private Listener listener;
 

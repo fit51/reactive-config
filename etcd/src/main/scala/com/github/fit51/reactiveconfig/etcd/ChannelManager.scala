@@ -68,12 +68,12 @@ class ChannelManager(
       .nameResolverFactory(
         new SmartNameResolverFactory(uris, authority.getOrElse("etcd"), URIResolverLoader.defaultLoader)
       )
-      .loadBalancerFactory(lbf.getOrElse(PickFirstBalancerFactory.getInstance()))
+      .defaultLoadBalancingPolicy("pick_first")
 
     if (authority.isDefined)
       builder.sslContext(getSslContext)
     else
-      builder.usePlaintext(true)
+      builder.usePlaintext()
   }
 
   protected def getSslContext() = {

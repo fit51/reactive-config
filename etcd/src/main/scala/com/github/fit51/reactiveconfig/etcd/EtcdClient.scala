@@ -11,7 +11,6 @@ import com.github.fit51.reactiveconfig.etcd.gen.rpc._
 import monix.execution.Scheduler
 
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
 
 object EtcdClient {
   def apply[F[_]: Async: ContextShift](
