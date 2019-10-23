@@ -18,6 +18,6 @@ object ConfigParser {
 }
 
 object ParserOps {
-  def parse[Json](rawData: String)(implicit p: ConfigParser[Json]): Try[Json] =
+  def parse[ParsedData](rawData: String)(implicit p: ConfigParser[ParsedData]): Try[ParsedData] =
     p.parse(rawData)
 }

@@ -11,7 +11,7 @@ import org.scalatest.{Matchers, WordSpecLike}
 import monix.eval.Task
 import scala.collection.concurrent.TrieMap
 import monix.execution.Scheduler.Implicits.global
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import scala.concurrent.{Await, Future}
 import scala.util.Success
 import scala.concurrent.duration._
@@ -21,12 +21,12 @@ class ReactiveConfigImplTest extends WordSpecLike with Matchers with MockitoSuga
 
   trait mocks {
     val storage = TrieMap[String, Value[String]](
-      "key1" -> Value("value1", 0l),
-      "key2" -> Value("value2", 0l),
-      "key3" -> Value("value3", 0l)
+      "key1" -> Value("value1", 0L),
+      "key2" -> Value("value2", 0L),
+      "key3" -> Value("value3", 0L)
     )
     val watch: Observable[ParsedKeyValue[String]] =
-      Observable.evalDelayed(2 seconds, ParsedKeyValue("key1", Value("value2", 1l)))
+      Observable.evalDelayed(2 seconds, ParsedKeyValue("key1", Value("value2", 1L)))
 
     val config = new ReactiveConfigImpl[IO, String](storage, watch)
   }

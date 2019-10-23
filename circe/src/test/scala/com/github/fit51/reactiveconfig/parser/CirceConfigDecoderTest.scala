@@ -1,7 +1,7 @@
 package com.github.fit51.reactiveconfig.parser
 
 import org.scalatest.{Matchers, WordSpecLike}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import io.circe.generic.auto._
 
 class CirceConfigDecoderTest extends WordSpecLike with Matchers with MockitoSugar {
@@ -10,7 +10,8 @@ class CirceConfigDecoderTest extends WordSpecLike with Matchers with MockitoSuga
   trait mocks {
     val param = SimpleConfigParameter[String]("value")
     val params = ComplexConfigParameter[String](
-      List(SimpleConfigParameter[String]("value1"), SimpleConfigParameter[String]("value2")))
+      List(SimpleConfigParameter[String]("value1"), SimpleConfigParameter[String]("value2"))
+    )
 
     val json =
       s"""

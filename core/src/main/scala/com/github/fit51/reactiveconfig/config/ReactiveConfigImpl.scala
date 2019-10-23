@@ -40,7 +40,7 @@ class ReactiveConfigImpl[F[_], ParsedData](
       case None    => Failure(ReactiveConfigException(key, "Failed to find ValueByKey"))
     }
 
-  def reloadable[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): Reloadable[F, T, T] =
+  def reloadable[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): ReloadableInternal[F, T, T] =
     ReloadableImpl[F, T, T](
       initial = getOrThrow[T](key),
       start = F.pure,
