@@ -15,7 +15,10 @@ See [reactive-config-etcd]()
 ## Quickstart with sbt
 
 ```scala
-libraryDependencies += "com.github.fit51" %% "reactive-config-core" % "0.0.1"
+libraryDependencies ++= Seq(
+    "com.github.fit51" %% "reactive-config-circe" % "0.0.3",
+    "com.github.fit51" %% "reactive-config-etcd"  % "0.0.3"
+)
 ```
 
 ## Examples

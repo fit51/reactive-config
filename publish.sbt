@@ -26,7 +26,9 @@ publishTo in ThisBuild := Some(
     Opts.resolver.sonatypeStaging
 )
 
-useGpg in ThisBuild := true
 pomIncludeRepository in ThisBuild := { _ => false }
+
+publishConfiguration := publishConfiguration.value.withOverwrite(true)
+publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
 
 updateOptions in ThisBuild := updateOptions.value.withGigahorse(false)

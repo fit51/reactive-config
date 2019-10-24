@@ -60,31 +60,31 @@ trait Watch[F[_]] {
     val s = new Subscriber[WatchResponse] {
       override implicit def scheduler: Scheduler = self.scheduler
 
-        override def onNext(elem: WatchResponse): Future[Ack] = elem match {
-          case v: WatchResponse if !v.created && !v.canceled =>
-            val keyValues = v.events.flatMap { ev =>
-              if (ev.`type` == EventType.PUT) ev.kv else None
-            }
-            subscriber.feed(keyValues)
-          case v if v.created =>
-            logger.info("Subscribed on Watch!")
-            fillWatchId(v.watchId) >>
-              p.complete(()).attempt.as(Continue) runToFuture
-          case v if v.canceled =>
-            logger.warn("Etcd Watch cancelled")
-            emptyWatchId.map { _ =>
-              // Run in background
-              protectedSubscribe(subscriber, keyRange, p).runToFuture
-            }.as(Stop).runToFuture
-        }
-
-        override def onError(ex: Throwable): Unit = {
-          logger.error("ETCD: Watch requestObserver crashed ", ex)
+      override def onNext(elem: WatchResponse): Future[Ack] = elem match {
+        case v: WatchResponse if !v.created && !v.canceled =>
+          val keyValues = v.events.flatMap { ev =>
+            if (ev.`type` == EventType.PUT) ev.kv else None
+          }
+          subscriber.feed(keyValues)
+        case v if v.created =>
+          logger.info("Subscribed on Watch!")
+          fillWatchId(v.watchId) >>
+            p.complete(()).attempt.as(Continue) runToFuture
+        case v if v.canceled =>
+          logger.warn("Etcd Watch cancelled")
           emptyWatchId.map { _ =>
             // Run in background
             protectedSubscribe(subscriber, keyRange, p).runToFuture
-          }.runToFuture
-        }
+          }.as(Stop).runToFuture
+      }
+
+      override def onError(ex: Throwable): Unit = {
+        logger.error("ETCD: Watch requestObserver crashed ", ex)
+        emptyWatchId.map { _ =>
+          // Run in background
+          protectedSubscribe(subscriber, keyRange, p).runToFuture
+        }.runToFuture
+      }
 
       override def onComplete(): Unit = {
         logger.warn(s"ETCD: Watch finished")
