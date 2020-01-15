@@ -1,16 +1,20 @@
 package com.github.fit51.reactiveconfig.typesafe
 
-import java.nio.file.Paths
 import better.files.File
-import io.circe.generic.auto._
+import cats.effect.Clock
 import cats.effect.IO
 import com.github.fit51.reactiveconfig.config.ReactiveConfigImpl
+import io.circe.generic.auto._
 import io.circe.Json
-import org.scalatest.{Matchers, WordSpecLike}
-import org.scalatest.mockito.MockitoSugar
+import java.nio.file.Paths
+import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
+import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatestplus.mockito.MockitoSugar
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Success
 
 class TypesafeConfigStorageTest extends WordSpecLike with Matchers with MockitoSugar {
   import TypesafeConfigStorageTest._
@@ -21,47 +25,62 @@ class TypesafeConfigStorageTest extends WordSpecLike with Matchers with MockitoS
     val path    = Paths.get("typesafe/src/test/resources/application.conf")
     val storage = TypesafeConfigStorage[IO, Json](path)
     val config  = Await.result(ReactiveConfigImpl[IO, Json](storage).unsafeToFuture, 1 second)
+
+    implicit val timer = new cats.effect.Timer[IO] {
+      override def clock: Clock[IO] =
+        Clock.create
+      override def sleep(duration: FiniteDuration): IO[Unit] =
+        Task.sleep(duration).to[IO]
+    }
   }
 
   "TypesafeConfig" should {
 
     "properly fetch values with different paths" in new mocks {
-      config.get[Int]("app.net.port.public").shouldEqual(Some(8080))
-      config.get[String]("app.net.host").shouldEqual(Some("0.0.0.0"))
-      config.get[Port]("app.net.port").shouldEqual(Some(Port(8080, 9090)))
-      config.get[Net]("app.net").shouldEqual(Some(Net("0.0.0.0", Port(8080, 9090))))
-      config.get[App]("app").shouldEqual(Some(App(Net("0.0.0.0", Port(8080, 9090)))))
+      config.unsafeGet[Int]("app.net.port.public").shouldEqual(Success(8080))
+      config.unsafeGet[String]("app.net.host").shouldEqual(Success("0.0.0.0"))
+      config.unsafeGet[Port]("app.net.port").shouldEqual(Success(Port(8080, 9090)))
+      config.unsafeGet[Net]("app.net").shouldEqual(Success(Net("0.0.0.0", Port(8080, 9090))))
+      config.unsafeGet[App]("app").shouldEqual(Success(App(Net("0.0.0.0", Port(8080, 9090)))))
     }
 
     "fetch values from included config" in new mocks {
-      config.get[Int]("akka.kafka.producer.parallelism").shouldEqual(Some(10))
-      config.get[String]("akka.remote.netty.tcp.hostname") shouldEqual (Some("0.0.0.0"))
+      config.unsafeGet[Int]("akka.kafka.producer.parallelism").shouldEqual(Success(10))
+      config.unsafeGet[String]("akka.remote.netty.tcp.hostname") shouldEqual (Success("0.0.0.0"))
     }
 
     "config should be able to reload primitive value on change" in new mocks {
-      try {
-        val reloadable = config.reloadable[Int]("changeable.parameter.value")
-
-        reloadable.get.shouldEqual(1)
-        File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
-        Thread.sleep(300)
-        reloadable.get.shouldEqual(2)
-      } finally {
+      (for {
+        reloadable <- config.reloadable[Int]("changeable.parameter.value")
+        first <- reloadable.get
+        _ <- IO.delay(
+          File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
+        )
+        _ <- IO.sleep(300 millis)
+        second <- reloadable.get
+      } yield {
+        first shouldBe 1
+        second shouldBe 2
+      }).guarantee(IO.delay(
         File(path.getParent.resolve("changeable.conf")).overwrite(changeable(1))
-      }
+      )).unsafeRunSync()
     }
 
     "config should be able to reload case class on change" in new mocks {
-      try {
-        val reloadable = config.reloadable[Parameter]("changeable.parameter")
-
-        reloadable.get.value.shouldEqual(1)
-        File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
-        Thread.sleep(300)
-        reloadable.get.value.shouldEqual(2)
-      } finally {
+      (for {
+        reloadable <- config.reloadable[Parameter]("changeable.parameter")
+        first <- reloadable.get
+        _ <- IO.delay(
+          File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
+        )
+        _ <- IO.sleep(300 millis)
+        second <- reloadable.get
+      } yield {
+        first shouldBe Parameter(1)
+        second shouldBe Parameter(2)
+      }).guarantee(IO.delay(
         File(path.getParent.resolve("changeable.conf")).overwrite(changeable(1))
-      }
+      )).unsafeRunSync()
     }
   }
 }

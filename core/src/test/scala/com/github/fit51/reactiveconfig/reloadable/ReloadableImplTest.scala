@@ -1,15 +1,18 @@
 package com.github.fit51.reactiveconfig.reloadable
 
+import cats.effect.Clock
 import cats.effect.IO
+import monix.eval.Task
+import monix.execution.Scheduler.Implicits.global
 import monix.reactive.Observable
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{verify, when}
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
-import scala.concurrent.duration._
-import monix.execution.Scheduler.Implicits.global
-import org.mockito.invocation.InvocationOnMock
+
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
 
@@ -23,158 +26,263 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     case class Data(s: String, i: Int)
+
+    implicit val timer = new cats.effect.Timer[IO] {
+      override def clock: Clock[IO] = Clock.create
+      override def sleep(duration: FiniteDuration): IO[Unit] =
+        Task.sleep(duration).to[IO]
+    }
   }
 
   "Reloadable" should {
 
     "be able to return new data using get" in new mocks {
-      val reloadable = ReloadableImpl[IO, String, String](
-        initial = "initial",
-        start = IO.pure,
-        ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
-      )
-
-      reloadable.get.shouldEqual("initial")
-      Thread.sleep(3000)
-      reloadable.get.shouldEqual("0")
-      Thread.sleep(3000)
-      reloadable.get.shouldEqual("1")
+      (for {
+        reloadable <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
+        )
+        initial <- reloadable.get
+        _ <- IO.sleep(3 seconds)
+        first <- reloadable.get
+        _ <- IO.sleep(3 seconds)
+        second <- reloadable.get
+      } yield {
+        initial shouldBe "initial"
+        first shouldBe "0"
+        second shouldBe "1"
+      }).unsafeRunSync()
     }
 
     "be able to change its reload behaviour using map" in new mocks {
-      val initialReloadable = ReloadableImpl[IO, String, String](
-        initial = "initial",
-        start = IO.pure,
-        ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
-      )
-
       val function = (s: String) => s"${s}_changed"
-
-      val mappedReloadable = initialReloadable.map(function, Simple[IO, String, String])
-
-      mappedReloadable.get.shouldEqual("initial_changed")
-      Thread.sleep(3000)
-      mappedReloadable.get.shouldEqual("0_changed")
-      Thread.sleep(3000)
-      mappedReloadable.get.shouldEqual("1_changed")
+      (for {
+        initialReloadable <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
+        )
+        mappedReloadable <- initialReloadable.map(function)
+        initial <- mappedReloadable.get
+        _ <- IO.sleep(3 seconds)
+        first <- mappedReloadable.get
+        _ <- IO.sleep(3 seconds)
+        second <- mappedReloadable.get
+      } yield {
+        initial shouldBe "initial_changed"
+        first shouldBe "0_changed"
+        second shouldBe "1_changed"
+      }).unsafeRunSync()
     }
 
     "be able to accept behavior using different ReloadBehaviour" in new mocks {
-      val initialReloadable = ReloadableImpl[IO, String, String](
-        initial = "initial",
-        start = IO.pure,
-        ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
-      )
-
-      val function = (s: String) => s"${s}_changed"
-
-      //FOR STOP BEHAVIOUR
+      val function = (s: String) => IO.pure(s"${s}_changed")
 
       val stop = mock[StoppingService[String, String]]
       when(stop.stop(any())).thenAnswer((invocation: InvocationOnMock) => IO(invocation.getArgument[String](0)))
 
-      val mappedReloadable1 = initialReloadable.map(function, Stop[IO, String, String]((s: String) => stop.stop(s)))
-
-      //FOR RESTART BEHAVIOUR
-
       val restart = mock[RestartingService[String, String]]
       when(restart.restart(any(), any()))
-        .thenAnswer((invocation: InvocationOnMock) => IO(function(invocation.getArgument[String](0))))
+        .thenAnswer((invocation: InvocationOnMock) => function(invocation.getArgument[String](0)))
 
-      val mappedReloadable2 =
-        initialReloadable.map(function, Restart[IO, String, String]((a: String, b: String) => restart.restart(a, b)))
+      (for {
+        initialReloadable <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
+        )
+        mappedReloadable1 <- initialReloadable.mapF(function, Stop((s: String) => stop.stop(s)))
+        mappedReloadable2 <- initialReloadable.mapF(function, Restart((a: String, b: String) => restart.restart(a, b)))
 
-      //Assertions
-
-      mappedReloadable1.get.shouldEqual("initial_changed")
-      mappedReloadable2.get.shouldEqual("initial_changed")
-      Thread.sleep(3000)
-      verify(stop).stop("initial_changed")
-      verify(restart).restart("0", "initial_changed")
-      mappedReloadable1.get.shouldEqual("0_changed")
-      mappedReloadable2.get.shouldEqual("0_changed")
-      Thread.sleep(3000)
-      mappedReloadable1.get.shouldEqual("1_changed")
-      mappedReloadable2.get.shouldEqual("1_changed")
-      verify(stop).stop("0_changed")
-      verify(restart).restart("1", "0_changed")
+        initial1 <- mappedReloadable1.get
+        initial2 <- mappedReloadable2.get
+        _ <- IO.sleep(3 seconds)
+        _ = verify(stop).stop("initial_changed")
+        _ = verify(restart).restart("0", "initial_changed")
+        first1 <- mappedReloadable1.get
+        first2 <- mappedReloadable2.get
+        _ <- IO.sleep(3 seconds)
+        second1 <- mappedReloadable1.get
+        second2 <- mappedReloadable2.get
+        _ = verify(stop).stop("0_changed")
+        _ = verify(restart).restart("1", "0_changed")
+      } yield {
+        initial1 shouldBe "initial_changed"
+        initial2 shouldBe "initial_changed"
+        first1 shouldBe "0_changed"
+        first2 shouldBe "0_changed"
+        second1 shouldBe "1_changed"
+        second2 shouldBe "1_changed"
+      }).unsafeRunSync()
     }
 
     "be able to change its reload behaviour to dirty computation in pure way using mapF" in new mocks {
-      val initialReloadable = ReloadableImpl[IO, String, String](
-        initial = "initial",
-        start = IO.pure,
-        ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
-      )
-
       val function = (s: String) => IO(s"${s}_changed")
 
-      val mappedReloadable = initialReloadable.mapF(function, Simple[IO, String, String])
+      val future = (for {
+        initialReloadable <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
+        )
+        mappedReloadable <- initialReloadable.mapF(function)
 
-      Await.result(
-        mappedReloadable.map { reloadable =>
-          reloadable.get.shouldEqual("initial_changed")
-          Thread.sleep(3000)
-          reloadable.get.shouldEqual("0_changed")
-          Thread.sleep(3000)
-          reloadable.get.shouldEqual("1_changed")
-        }.unsafeToFuture(),
-        7 seconds
-      )
+        initial <- mappedReloadable.get
+        _ <- IO.sleep(3 seconds)
+        first <- mappedReloadable.get
+        _ <- IO.sleep(3 seconds)
+        second <- mappedReloadable.get
+      } yield {
+        initial shouldBe "initial_changed"
+        first shouldBe "0_changed"
+        second shouldBe "1_changed"
+      }).unsafeToFuture
+
+      Await.result(future, 7 seconds)
     }
 
     "be able to produce new reloadable by combining sources of this and that reloadables " in new mocks {
-      val initialReloadable1 = ReloadableImpl[IO, String, String](
-        initial = "initial",
-        start = IO.pure,
-        ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
-      )
-
-      val initialReloadable2 = ReloadableImpl[IO, Int, Int](
-        initial = -1,
-        start = IO.pure,
-        ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toInt)
-      )
-
       val function = (s: String, i: Int) => Data(s, i)
 
-      val combinedReloadable = initialReloadable1.combine(initialReloadable2)(function, Simple[IO, (String, Int), Data])
+      (for {
+        initialReloadable1 <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
+        )
+        initialReloadable2 <- Reloadable[IO, Int](
+          initial = -1,
+          ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toInt)
+        )
 
-      combinedReloadable.get.shouldEqual(Data("initial", -1))
-      Thread.sleep(3000)
-      combinedReloadable.get.shouldEqual(Data("0", 0))
-      Thread.sleep(3000)
-      combinedReloadable.get.shouldEqual(Data("1", 1))
+        combinedReloadable <- initialReloadable1.combine(initialReloadable2)(function)
+        initial <- combinedReloadable.get
+        _ <- IO.sleep(3 seconds)
+        first <- combinedReloadable.get
+        _ <- IO.sleep(3 seconds)
+        second <- combinedReloadable.get
+      } yield {
+        initial shouldBe Data("initial", -1)
+        first shouldBe Data("0", 0)
+        second shouldBe Data("1", 1)
+      }).unsafeRunSync()
     }
 
     "be able to produce new reloadable by combining sources of this and that reloadables with dirty function " in new mocks {
-      val initialReloadable1 = ReloadableImpl[IO, String, String](
-        initial = "initial",
-        start = IO.pure,
-        ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
+      val function = (s: String, i: Int) => IO.pure(Data(s, i))
+
+      val future = (for {
+        initialReloadable1 <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
+        )
+        initialReloadable2 <- Reloadable[IO, Int](
+          initial = -1,
+          ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toInt)
+        )
+
+        combinedReloadable <- initialReloadable1.combineF(initialReloadable2)(function)
+        initial <- combinedReloadable.get
+        _ <- IO.sleep(3 seconds)
+        first <- combinedReloadable.get
+        _ <- IO.sleep(3 seconds)
+        second <- combinedReloadable.get
+      } yield {
+        initial shouldBe Data("initial", -1)
+        first shouldBe Data("0", 0)
+        second shouldBe Data("1", 1)
+      }).unsafeToFuture()
+
+      Await.result(future, 7 seconds)
+    }
+
+    "survive after errors in stop handler" in new mocks {
+      val stop = mock[StoppingService[String, String]]
+      when(stop.stop(any())).thenReturn(
+        IO.raiseError(new Exception("oops")),
+        IO.raiseError(new Exception("oops")),
+        IO.pure("stopped")
       )
 
-      val initialReloadable2 = ReloadableImpl[IO, Int, Int](
-        initial = -1,
-        start = IO.pure,
-        ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toInt)
-      )
+      (for {
+        initialReloadable <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(1 second, 1 second).map(_.toString)
+        )
+        mappedReloadable <- initialReloadable.mapF(s => IO.delay(s * 2), Stop((s: String) => stop.stop(s)))
 
-      val function = (s: String, i: Int) => IO(Data(s, i))
+        _ <- IO.sleep(3500 millis)
+        cur <- mappedReloadable.get
+        _ = verify(stop, times(3)).stop(any())
 
-      val combinedReloadable =
-        initialReloadable1.combineF(initialReloadable2)(function, Simple[IO, (String, Int), Data])
+        _ <- mappedReloadable.stop
+        _ <- IO.sleep(1500 millis)
+        _ = verify(stop, times(3)).stop(any())
+      } yield {
+        cur shouldBe "22"
+      }).unsafeRunSync()
+    }
 
-      Await.result(
-        combinedReloadable.map { reloadable =>
-          reloadable.get.shouldEqual(Data("initial", -1))
-          Thread.sleep(3000)
-          reloadable.get.shouldEqual(Data("0", 0))
-          Thread.sleep(3000)
-          reloadable.get.shouldEqual(Data("1", 1))
-        }.unsafeToFuture(),
-        7 seconds
-      )
+    "survive after errors in restart handler" in new mocks {
+      val restart = mock[RestartingService[String, String]]
+      var counter: Int = 0
+      when(restart.restart(any(), any())).thenAnswer((invocation: InvocationOnMock) => {
+        counter += 1
+        if (counter == 2) {
+          IO.raiseError(new Exception("!"))
+        } else {
+          IO(invocation.getArgument[String](0) + invocation.getArgument[String](1))
+        }
+      })
+
+      (for {
+        initialReloadable <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(1 second, 1 second).map(_.toString)
+        )
+
+        mappedReloadable <- initialReloadable.mapF(s => IO.delay(s * 2), Restart((a, b) => restart.restart(a, b)))
+
+        _ <- IO.sleep(3500 millis)
+        cur <- mappedReloadable.get
+        _ = verify(restart, times(3)).restart(any(), any())
+        _ = verify(restart).restart("0", "initialinitial")
+        _ = verify(restart).restart("1", "0initialinitial")
+        _ = verify(restart).restart("2", "0initialinitial")
+
+        _ <- mappedReloadable.stop
+        _ <- IO.sleep(1500 millis)
+        _ = verify(restart, times(3)).restart(any(), any())
+      } yield {
+        cur shouldBe "20initialinitial"
+      }).unsafeRunSync()
+    }
+
+    "don't stop observable even for long stop operations" in new mocks {
+      import cats.implicits._
+
+
+      val stop = mock[StoppingService[String, String]]
+      when(stop.stop(any())).thenReturn(IO.never)
+      (for {
+        initialReloadable <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(1 second, 1 second).map(_.toString)
+        )
+        doubleF <- initialReloadable.mapF(s => IO.delay(s * 2), Stop((s: String) => stop.stop(s)))
+        maskF <- doubleF.mapF(s => IO.delay(s.take(1) + "***"), Stop((s: String) => stop.stop(s)))
+
+        _ <- IO.sleep(1100 millis)
+        double1 <- doubleF.get
+        mask1 <- maskF.get
+
+        _ <- IO.sleep(1 second)
+        double2 <- doubleF.get
+        mask2 <- maskF.get
+
+        _ <- initialReloadable.stop
+      } yield {
+        double1 shouldBe "00"
+        mask1 shouldBe "0***"
+        double2 shouldBe "11"
+        mask2 shouldBe "1***"
+      }).unsafeRunSync()
     }
   }
 }

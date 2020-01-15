@@ -4,7 +4,6 @@ import java.util.concurrent.TimeUnit
 
 import cats.effect.{Async, ContextShift}
 import com.typesafe.scalalogging.LazyLogging
-import io.grpc.LoadBalancer
 import javax.net.ssl.TrustManagerFactory
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
@@ -17,11 +16,10 @@ object EtcdClient {
       endpoints: String,
       credential: Credentials,
       authority: String,
-      loadBalancerFactory: LoadBalancer.Factory,
       trustManagerFactory: TrustManagerFactory
   )(implicit scheduler: Scheduler) =
     new EtcdClient(
-      ChannelManager(endpoints, credential, Some(authority), Some(loadBalancerFactory), Some(trustManagerFactory))
+      ChannelManager(endpoints, credential, Some(authority), Some(trustManagerFactory))
     )
 }
 

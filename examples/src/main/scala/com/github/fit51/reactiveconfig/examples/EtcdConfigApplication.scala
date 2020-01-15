@@ -1,5 +1,6 @@
 package com.github.fit51.reactiveconfig.examples
 
+import cats.Functor
 import cats.MonadError
 import cats.data.OptionT
 import cats.effect.concurrent.MVar
@@ -22,6 +23,7 @@ import scala.concurrent.duration.{Duration, _}
 import scala.io.StdIn
 import scala.util.Try
 import scala.util.control.NonFatal
+import monix.eval.TaskLift
 
 /**
   * Start etcd before running.
@@ -36,26 +38,35 @@ object EtcdConfigApplication extends App {
   implicit val scheduler = Scheduler.global
 
   def init[F[_]: ContextShift: Async: Concurrent: Timer: TaskLike](
+      etcdClient: EtcdClient[F] with Watch[F],
       goods: Map[ProductId, Count]
   )(implicit scheduler: Scheduler): F[CommandLineShopService[F]] = {
     for {
       _      <- FillConfig.fill
-      config <- ReactiveConfigEtcd[F, Json](ChannelManager.noAuth("http://127.0.0.1:2379"))
+      config <- ReactiveConfigEtcd[F, Json](etcdClient)
 
-      storeConfig = config.reloadable[StoreConfig]("store.store")
+      storeConfig <- config.reloadable[StoreConfig]("store.store")
       implicit0(storeService: StoreService[F]) <- StoreModule.StoreService[F](goods, storeConfig)
 
-      advertsList = config.reloadable[List[ProductId]]("store.adverts")
-      advertsConfig = storeConfig.combine(advertsList) { (store, list) =>
+      advertsList <- config.reloadable[List[ProductId]]("store.adverts")
+      advertsConfig <- storeConfig.combine(advertsList) { (store, list) =>
         AdvertsConfig(store.priceList, list)
       }
       implicit0(advertsService: AdvertsService[F]) = new AdvertsService[F](advertsConfig)
     } yield new CommandLineShopService[F]()
   }
 
-  val f = init[Task](FillConfig.store).flatMap(_.flow).runToFuture
+  val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
+  val future =
+    (for {
+      client <- Task.pure(new EtcdClient[Task](chManager) with Watch[Task] {
+        override val taskLift = TaskLift[Task]
+      })
+      shopService <- init(client, FillConfig.store)
+      _ <- shopService.flow
+    } yield ()).runToFuture
 
-  Await.result(f, Duration.Inf)
+  Await.result(future, Duration.Inf)
 }
 
 object CommandLineShop {
@@ -64,10 +75,10 @@ object CommandLineShop {
   object Commands {
     val buyRegexp = """^2\s(\S+)\s([\d]+\.[\d])$""".r
     def showPrice(s: String): Option[Command] =
-      if (s.strip().equalsIgnoreCase("1")) Some(ShowPrice) else None
+      if (s.equalsIgnoreCase("1")) Some(ShowPrice) else None
 
     def exit(s: String): Option[Command] =
-      if (s.strip().equalsIgnoreCase("0")) Some(Exit) else None
+      if (s.equalsIgnoreCase("0")) Some(Exit) else None
 
     def buy(s: String): Option[Buy] =
       Try(
@@ -117,7 +128,7 @@ object CommandLineShop {
           }.mkString("\n")
         )
         advertsHeader <- F.pure("----------------Special offers!---------------")
-        adverts       <- F.delay(adverts.getBanners)
+        adverts       <- adverts.getBanners
         _             <- F.delay(println(List(annotation, header, content, advertsHeader, adverts).mkString("\n")))
       } yield ()
     }
@@ -170,7 +181,7 @@ object StoreModule {
 
   class StoreService[F[_]: Bracket[*[_], Throwable]](
       goodsMVar: MVar[F, Map[ProductId, Count]],
-      config: Reloadable[F, StoreConfig]
+      reloadable: Reloadable[F, StoreConfig]
   ) {
     private val F = implicitly[Bracket[F, Throwable]]
 
@@ -188,12 +199,13 @@ object StoreModule {
     def getPriceList: F[Seq[(ProductId, Count, Money)]] =
       for {
         goods <- goodsMVar.read
-        withPrices <- F.pure(config.get.priceList.flatMap {
+        config <- reloadable.get
+        withPrices = config.priceList.flatMap {
           case (productId, price) => goods.get(productId).map(count => (productId, count, price))
-        })
+        }
       } yield withPrices.toSeq
 
-    def getPriceListVersion: F[String] = F.pure(config.get.version)
+    def getPriceListVersion: F[String] = reloadable.get.map(_.version)
 
     //Sells product for cash, returns change
     def sell(product: ProductId, count: Count, cash: Money): F[Money] = updateGoods { goods =>
@@ -202,8 +214,9 @@ object StoreModule {
           .fromOption(goods.get(product))
           .getOrElseF(F.raiseError(new Exception("Wrong productId")))
         _ <- F.raiseError(new Exception(s"No more products with id $product left")).whenA(productCount < 1)
+        config <- reloadable.get
         price <- OptionT
-          .fromOption(config.get.priceList.get(product))
+          .fromOption(config.priceList.get(product))
           .getOrElseF(F.raiseError(new Exception("InternalError, not price found")))
         change       <- F.pure(cash - price)
         _            <- F.raiseError(new Exception(s"Not enough cash, need ${-change} more")).whenA(change < 0)
@@ -218,14 +231,16 @@ object AdvertsModule {
 
   case class AdvertsConfig(priceList: Map[ProductId, Money], adverts: List[ProductId])
 
-  class AdvertsService[F[_]](config: Reloadable[F, AdvertsConfig]) {
-    def getBanners: String = {
-      config.get.priceList
-        .filterKeys(config.get.adverts.contains)
-        .map {
-          case (id, price) => s"\t- Get $id only for $price!"
-        }
-        .mkString("\n")
+  class AdvertsService[F[_]: Functor](reloadable: Reloadable[F, AdvertsConfig]) {
+    def getBanners: F[String] = {
+      reloadable.get.map { config =>
+        config.priceList
+          .filterKeys(config.adverts.contains)
+          .map {
+            case (id, price) => s"\t- Get $id only for $price!"
+          }
+          .mkString("\n")
+      }
     }
   }
 }
