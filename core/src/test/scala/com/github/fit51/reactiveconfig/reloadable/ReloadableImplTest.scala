@@ -7,12 +7,14 @@ import monix.execution.Scheduler.Implicits.global
 import monix.reactive.Observable
 import org.mockito.ArgumentMatchers.any
 import org.mockito.invocation.InvocationOnMock
-import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito.{never, times, verify, when}
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 
 class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
 
@@ -31,6 +33,11 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
       override def clock: Clock[IO] = Clock.create
       override def sleep(duration: FiniteDuration): IO[Unit] =
         Task.sleep(duration).to[IO]
+    }
+
+    implicit val shift = new cats.effect.ContextShift[IO] {
+      override def shift: IO[Unit] = Task.shift.to[IO]
+      override def evalOn[A](ec: ExecutionContext)(fa: IO[A]): IO[A] = fa
     }
   }
 
@@ -255,9 +262,6 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     "don't stop observable even for long stop operations" in new mocks {
-      import cats.implicits._
-
-
       val stop = mock[StoppingService[String, String]]
       when(stop.stop(any())).thenReturn(IO.never)
       (for {
@@ -282,6 +286,26 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
         mask1 shouldBe "0***"
         double2 shouldBe "11"
         mask2 shouldBe "1***"
+      }).unsafeRunSync()
+    }
+
+    "do side effects using forEachF" in new mocks {
+      val buffer = mutable.ListBuffer[String]()
+      (for {
+        initialReloadable <- Reloadable[IO, String](
+          initial = "initial",
+          ob = Observable.intervalAtFixedRate(1 second, 1 second).map(_.toString)
+        )
+        doubleF <- initialReloadable.mapF(s => IO.delay(s * 2))
+
+        fiber <- doubleF
+          .forEachF(s => IO.delay(buffer += s))
+          .start
+
+        _ <- IO.sleep(2500 millis)
+        _ <- fiber.cancel
+      } yield {
+        buffer.toList shouldBe List("initialinitial", "00", "11")
       }).unsafeRunSync()
     }
   }
