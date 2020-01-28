@@ -1,21 +1,22 @@
 package com.github.fit51.reactiveconfig.etcd
 
 import cats.effect.concurrent.{Deferred, MVar}
-import monix.eval.Task
-import monix.execution.Ack.{Continue, Stop}
-import monix.execution.{Ack, Scheduler}
-import monix.reactive.{Observable, OverflowStrategy}
-import monix.reactive.observers.{BufferedSubscriber, Subscriber}
-import monix.reactive.subjects.PublishSubject
+import cats.syntax.applicative._
+import cats.syntax.functor._
 import com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.{WatchCreateRequest, WatchGrpc, WatchRequest, WatchResponse}
 import com.github.fit51.reactiveconfig.etcd.GrpcMonix.monixSubscriberToGrpcObserver
 import monix.catnap.CircuitBreaker
-import cats.syntax.functor._
-import cats.syntax.applicative._
+import monix.eval.Task
+import monix.execution.Ack.{Continue, Stop}
 import monix.execution.exceptions.ExecutionRejectedException
+import monix.execution.{Ack, Scheduler}
+import monix.reactive.Observable
+import monix.reactive.observers.Subscriber
+import monix.reactive.subjects.PublishSubject
+import monix.eval.TaskLift
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -24,6 +25,8 @@ trait Watch[F[_]] {
   self: EtcdClient[F] =>
   import monix.execution.schedulers.CanBlock.permit
   import EtcdUtils._
+
+  implicit def taskLift: TaskLift[F]
 
   /**
     * This CB protects subscribe method.
@@ -119,10 +122,10 @@ trait Watch[F[_]] {
 
   /** Subscribes on Watch Events for defined keyRange
     */
-  def watch(keyRange: KeyRange): Task[Observable[KeyValue]] = {
+  def watch(keyRange: KeyRange): F[Observable[KeyValue]] = {
     val watchSubject = PublishSubject[KeyValue]
     Deferred[Task, Unit].flatMap { subscribed =>
       protectedSubscribe(Subscriber(watchSubject, scheduler), keyRange, subscribed)
-    }.as(watchSubject)
+    }.as(watchSubject: Observable[KeyValue]).to[F]
   }
 }

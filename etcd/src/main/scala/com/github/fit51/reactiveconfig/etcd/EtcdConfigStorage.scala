@@ -33,7 +33,7 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](etcd: EtcdClient[
   private var revision                                    = 0L
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
-  def load(): F[TrieMap[String, Value[ParsedData]]] =
+  override def load(): F[TrieMap[String, Value[ParsedData]]] =
     etcd
       .getRecursiveSinceRevision(prefix, revision)
       .map {
@@ -44,12 +44,15 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](etcd: EtcdClient[
           storage
       }
 
-  def watch(): Observable[ParsedKeyValue[ParsedData]] =
-    Observable
-      .fromTask(etcd.watch(EtcdUtils.getRange(prefix)))
-      .flatten
-      .map(saveKeyValue(_))
-      .collect { case Some(value) => value }
+  override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
+    etcd.watch(EtcdUtils.getRange(prefix)).map { observable =>
+      val hotObservable = observable
+        .map(saveKeyValue(_))
+        .collect { case Some(value) => value }
+        .publish
+      hotObservable.connect()
+      hotObservable
+    }
 
   private def saveKeyValue(kv: KeyValue, checkVersions: Boolean = false): Option[ParsedKeyValue[ParsedData]] =
     encoder.parse(kv.value.utf8) match {
@@ -67,8 +70,9 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](etcd: EtcdClient[
                 storage.put(key, value)
             }
             .getOrElse(storage.put(key, value))
-        } else
+        } else {
           storage.update(key, value)
+        }
         Some(ParsedKeyValue[ParsedData](key, value))
     }
 }

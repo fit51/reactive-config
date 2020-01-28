@@ -40,8 +40,8 @@ lazy val etcd = project
   .settings(
     name := "reactive-config-etcd",
     libraryDependencies ++= Seq(
-      "io.grpc"              % "grpc-netty"                      % "1.24.0",
-      "io.netty"             % "netty-tcnative-boringssl-static" % "2.0.7.Final",
+      "io.grpc"              % "grpc-netty"                      % "1.22.3",
+      "io.netty"             % "netty-tcnative-boringssl-static" % "2.0.25.Final",
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % scalapb.compiler.Version.scalapbVersion,
       "com.coreos"           % "jetcd-core"                      % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc")),
       "com.coreos"           % "jetcd-common"                    % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc"))

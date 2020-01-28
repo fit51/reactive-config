@@ -5,19 +5,20 @@ import java.nio.file.{Files, Path, WatchEvent}
 import java.util
 
 import better.files.File
-import cats.MonadError
 import cats.effect.Sync
+import cats.MonadError
 import cats.syntax.option._
-import com.github.fit51.reactiveconfig.{ParsedKeyValue, Value}
 import com.github.fit51.reactiveconfig.parser.ConfigParser
 import com.github.fit51.reactiveconfig.storage.ConfigStorage
+import com.github.fit51.reactiveconfig.{ParsedKeyValue, Value}
 import com.typesafe.config._
 import com.typesafe.scalalogging.LazyLogging
 import monix.execution.Scheduler
 import monix.reactive.Observable
 import monix.reactive.subjects.PublishSubject
-import scala.collection.JavaConverters._
+
 import scala.collection.concurrent.TrieMap
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.{Failure, Success}
 
@@ -43,10 +44,8 @@ class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path)(
 ) extends ConfigStorage[F, ParsedData] with LazyLogging {
 
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
-  private val fileWatch: Observable[WatchEvent.Kind[Path]] =
-    FileWatch.watch(File(path.getParent), PublishSubject[WatchEvent.Kind[Path]])
 
-  def load(): F[TrieMap[String, Value[ParsedData]]] =
+  override def load(): F[TrieMap[String, Value[ParsedData]]] =
     if (!Files.exists(path))
       MonadError[F, Throwable].raiseError(new FileNotFoundException(path.toString))
     else
@@ -63,31 +62,33 @@ class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path)(
           )
       }
 
-  def watch(): Observable[ParsedKeyValue[ParsedData]] =
-    fileWatch.flatMap { _ =>
-      Observable.fromIterable {
+  override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
+    Sync[F].delay {
+      FileWatch.watch(File(path.getParent), PublishSubject[WatchEvent.Kind[Path]]) flatMapLatest { _ =>
         ConfigFactory.invalidateCaches()
-        ConfigFactory
-          .parseFile(File(path).toJava, ConfigParseOptions.defaults())
-          .resolve(ConfigResolveOptions.defaults())
-          .root()
-          .entrySet()
-          .asScala
-          .map { entry =>
-            val maybeJson = parseHoconEntryToJson(entry)
-            if (maybeJson.exists(json => storage.get(entry.getKey).exists(_.parsedData == json)))
-              None
-            else
-              flattenHoconToJsonMap(
-                key = entry.getKey,
-                entry = entry,
-                maybeJson = maybeJson,
-                revision = storage.get(entry.getKey).map(_.version).getOrElse(0L) + 1,
-                storage = mutable.Map.empty[String, Value[ParsedData]]
-              ).map(kv => ParsedKeyValue(kv._1, kv._2)).some
-          }
-          .collect { case Some(kvs) => kvs }
-          .flatten
+        Observable.fromIterable(
+          ConfigFactory
+            .parseFile(File(path).toJava, ConfigParseOptions.defaults())
+            .resolve(ConfigResolveOptions.defaults())
+            .root()
+            .entrySet()
+            .asScala
+            .map { entry =>
+              val maybeJson = parseHoconEntryToJson(entry)
+              if (maybeJson.exists(json => storage.get(entry.getKey).exists(_.parsedData == json)))
+                None
+              else
+                flattenHoconToJsonMap(
+                  key = entry.getKey,
+                  entry = entry,
+                  maybeJson = maybeJson,
+                  revision = storage.get(entry.getKey).map(_.version).getOrElse(0L) + 1,
+                  storage = mutable.Map.empty[String, Value[ParsedData]]
+                ).map(kv => ParsedKeyValue(kv._1, kv._2)).some
+            }
+            .collect { case Some(kvs) => kvs }
+            .flatten
+        )
       }
     }
 
