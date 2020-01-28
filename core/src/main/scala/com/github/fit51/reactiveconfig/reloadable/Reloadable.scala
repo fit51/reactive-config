@@ -1,5 +1,6 @@
 package com.github.fit51.reactiveconfig.reloadable
 
+import cats.Id
 import cats.MonadError
 import cats.syntax.applicative._
 import cats.syntax.applicativeError._
@@ -28,62 +29,136 @@ object Reloadable {
     (for {
       connectableObservable <- Task.pure(ob.publish)
       canceler   = connectableObservable.connect()
-      reloadable = new Reloadable[F, A](initial, connectableObservable)
+      reloadable = new ReloadableImpl[F, A](initial, connectableObservable)
       fiber <- connectableObservable
         .consumeWith(Consumer.foreach { newValue =>
           reloadable.value = newValue
+          reloadable.valueF = newValue.pure[F]
         })
         .start
     } yield {
       reloadable.canceler = (fiber.cancel >> Task.delay(canceler.cancel())).to[F]
-      reloadable
+      reloadable: Reloadable[F, A]
     }).to[F]
 
-  type Id[X] = X
-
-  implicit val taskLikeId = new TaskLike[Id] {
+  implicit private[reloadable] val taskLikeId = new TaskLike[Id] {
     override def apply[A](fa: Id[A]): Task[A] = Task.pure(fa)
   }
 }
 
 /**
-  * Reloadable is a wrapped [[B]] value, that can be accessed at any time.
-  * Inside it encapsulates logic for updating [[B]] on [[A]] changes.
+  * Reloadable is a wrapped [[A]] value, that can be accessed at any time.
   *
-  * @see [[ReloadableInternal]]
-  * @param initial   value of type [[B]]
-  * @param ob        observable of [[A]] changes
-  * @param start     function to get [[B]] from [[A]]. Is used in [[behaviour]]
-  * @param behaviour [[ReloadBehaviour]]
-  * @tparam F [_] reloading effect
-  * @tparam A input
-  * @tparam B output
+  * @tparam F[_] reloading effect
+  * @tparam A wrapped value
   **/
-class Reloadable[F[_], A] private (initial: A, ob: Observable[A])(
+trait Reloadable[F[_], A] {
+
+  /**
+    * Returns current value of this Reloadable.
+    */
+  def unsafeGet: A
+
+  /**
+    * Returns current value of this Reloadable.
+    */
+  def get: F[A]
+
+  /**
+    * Applies given function that may contains side-effect for each element of Reloadable.
+    */
+  def forEachF(f: A => F[Unit]): F[Unit]
+
+  /**
+    * Returns a new Reloadable by mapping the supplied function over the elements of
+    * the source Reloadable.
+    *
+    * @param f is the mapping function that transforms the source
+    * @param reloadBehaviour is reload policy which may release or restart allocated resources
+    *
+    * @return a new Reloadable that's the result of mapping the given
+    *         function over the source
+    */
+  def map[B](
+      f: A => B,
+      reloadBehaviour: ReloadBehaviour[F, A, B] = ReloadBehaviour.simpleBehaviour[F, A, B]
+  ): F[Reloadable[F, B]]
+
+  /**
+    * Returns a new Reloadable by mapping the supplied function that returns possibly lazy
+    * or asynchronous result.
+    *
+    * @param f is the mapping function that transforms the source
+    * @param reloadBehaviour is reload policy which may release or restart allocated resources
+    *
+    * @return a new Reloadable that's the result of mapping the given
+    *         function over the source
+    */
+  def mapF[B](
+      f: A => F[B],
+      reloadBehaviour: ReloadBehaviour[F, A, B] = ReloadBehaviour.simpleBehaviour[F, A, B]
+  ): F[Reloadable[F, B]]
+
+  /**
+    * Creates a new Reloadable from the source and another given Reloadable, by emitting elements
+    * created from pairs.
+    *
+    * @param other is Reloadable that gets paired with current Reloadable
+    * @param reloadBehaviour is reload policy which may release or restart allocated resources
+    */
+  def combine[B, C](
+      other: Reloadable[F, B],
+      reloadBehaviour: ReloadBehaviour[F, (A, B), C] = ReloadBehaviour.simpleBehaviour[F, (A, B), C]
+  )(f: (A, B) => C): F[Reloadable[F, C]]
+
+  /**
+    * Creates a new Reloadable from the source and another given Reloadable, by emitting elements
+    * created from pairs. Creating new elements may contain lazy or asynchronous effect.
+    *
+    * @param other is Reloadable that gets paired with current Reloadable
+    * @param reloadBehaviour is reload policy which may release or restart allocated resources
+    */
+  def combineF[B, C](
+      other: Reloadable[F, B],
+      reloadBehaviour: ReloadBehaviour[F, (A, B), C] = ReloadBehaviour.simpleBehaviour[F, (A, B), C]
+  )(f: (A, B) => F[C]): F[Reloadable[F, C]]
+
+  /**
+    * Stops current Reloadable and cancels created subscriptions.
+    */
+  def stop: F[Unit]
+
+  protected[reloadable] def observable: Observable[A]
+}
+
+private class ReloadableImpl[F[_], A](initial: A, ob: Observable[A])(
     implicit scheduler: Scheduler,
     F: MonadError[F, Throwable],
     T: TaskLike[F],
     L: TaskLift[F]
-) extends StrictLogging {
+) extends Reloadable[F, A] with StrictLogging {
   import Reloadable._
 
   @volatile
-  private var value = initial
+  private[reloadable] var value = initial
 
-  protected[reloadable] val observable: Observable[A] = ob
+  @volatile
+  private[reloadable] var valueF = initial.pure[F]
 
-  def unsafeGet: A =
+  override protected[reloadable] val observable: Observable[A] = ob
+
+  override def unsafeGet: A =
     value
 
-  def get: F[A] =
-    value.pure[F]
+  override def get: F[A] =
+    valueF
 
-  def forEachF(f: A => F[Unit]): F[Unit] =
+  override def forEachF(f: A => F[Unit]): F[Unit] =
     (this.get >>= f) >> observable.mapEvalF(f).lastL.to[F]
 
-  def map[B](
+  override def map[B](
       f: A => B,
-      reloadBehaviour: ReloadBehaviour[F, A, B] = ReloadBehaviour.simpleBehaviour[F, A, B]
+      reloadBehaviour: ReloadBehaviour[F, A, B]
   ): F[Reloadable[F, B]] =
     for {
       init <- get
@@ -97,9 +172,9 @@ class Reloadable[F[_], A] private (initial: A, ob: Observable[A])(
       }
     } yield result
 
-  def mapF[B](
+  override def mapF[B](
       f: A => F[B],
-      reloadBehaviour: ReloadBehaviour[F, A, B] = ReloadBehaviour.simpleBehaviour[F, A, B]
+      reloadBehaviour: ReloadBehaviour[F, A, B]
   ): F[Reloadable[F, B]] =
     (for {
       initB <- f(value)
@@ -116,9 +191,9 @@ class Reloadable[F[_], A] private (initial: A, ob: Observable[A])(
         log("Failed to construct init value for Reloadable.mapF", excp) >> F.raiseError(excp)
     }
 
-  def combine[B, C](
+  override def combine[B, C](
       other: Reloadable[F, B],
-      reloadBehaviour: ReloadBehaviour[F, (A, B), C] = ReloadBehaviour.simpleBehaviour[F, (A, B), C]
+      reloadBehaviour: ReloadBehaviour[F, (A, B), C]
   )(f: (A, B) => C): F[Reloadable[F, C]] =
     for {
       val1 <- this.get
@@ -137,9 +212,9 @@ class Reloadable[F[_], A] private (initial: A, ob: Observable[A])(
       }
     } yield result
 
-  def combineF[B, C](
+  override def combineF[B, C](
       other: Reloadable[F, B],
-      reloadBehaviour: ReloadBehaviour[F, (A, B), C] = ReloadBehaviour.simpleBehaviour[F, (A, B), C]
+      reloadBehaviour: ReloadBehaviour[F, (A, B), C]
   )(f: (A, B) => F[C]): F[Reloadable[F, C]] =
     (for {
       val1         <- this.get
@@ -159,9 +234,9 @@ class Reloadable[F[_], A] private (initial: A, ob: Observable[A])(
         log("Failed to construct init value for Reloadable.combineF", excp) >> F.raiseError(excp)
     }
 
-  private var canceler: F[Unit] = F.unit
+  private[reloadable] var canceler: F[Unit] = F.unit
 
-  def stop: F[Unit] =
+  override def stop: F[Unit] =
     canceler
 
   private def mapEvalAndSkipErrors[G[_]: TaskLike, A, B](ob: Observable[A], f: A => G[B]): Observable[B] =
@@ -241,8 +316,8 @@ private class ReleasePrevOperator[A](init: A, release: A => Task[Unit]) extends 
 
       private def releaseWithLogging(elem: A): Unit =
         release(elem).runToFuture.onComplete {
-          case Failure(excp) => logger.error(s"Failed to release $elem", excp)
-          case _             => ()
+          case Failure(e) => logger.error(s"Failed to release $elem", e)
+          case _          => ()
         }
     }
 }
