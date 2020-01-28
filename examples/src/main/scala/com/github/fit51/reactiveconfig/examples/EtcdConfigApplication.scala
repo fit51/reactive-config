@@ -23,7 +23,6 @@ import scala.concurrent.duration.{Duration, _}
 import scala.io.StdIn
 import scala.util.Try
 import scala.util.control.NonFatal
-import monix.eval.TaskLift
 
 /**
   * Start etcd before running.
@@ -45,7 +44,7 @@ object EtcdConfigApplication extends App {
       _      <- FillConfig.fill
       config <- ReactiveConfigEtcd[F, Json](etcdClient)
 
-      storeConfig <- config.reloadable[StoreConfig]("store.store")
+      storeConfig                              <- config.reloadable[StoreConfig]("store.store")
       implicit0(storeService: StoreService[F]) <- StoreModule.StoreService[F](goods, storeConfig)
 
       advertsList <- config.reloadable[List[ProductId]]("store.adverts")
@@ -59,11 +58,9 @@ object EtcdConfigApplication extends App {
   val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
   val future =
     (for {
-      client <- Task.pure(new EtcdClient[Task](chManager) with Watch[Task] {
-        override val taskLift = TaskLift[Task]
-      })
+      client      <- Task.pure(EtcdClient.withWatch[Task](chManager))
       shopService <- init(client, FillConfig.store)
-      _ <- shopService.flow
+      _           <- shopService.flow
     } yield ()).runToFuture
 
   Await.result(future, Duration.Inf)
@@ -198,7 +195,7 @@ object StoreModule {
 
     def getPriceList: F[Seq[(ProductId, Count, Money)]] =
       for {
-        goods <- goodsMVar.read
+        goods  <- goodsMVar.read
         config <- reloadable.get
         withPrices = config.priceList.flatMap {
           case (productId, price) => goods.get(productId).map(count => (productId, count, price))
@@ -213,7 +210,7 @@ object StoreModule {
         productCount <- OptionT
           .fromOption(goods.get(product))
           .getOrElseF(F.raiseError(new Exception("Wrong productId")))
-        _ <- F.raiseError(new Exception(s"No more products with id $product left")).whenA(productCount < 1)
+        _      <- F.raiseError(new Exception(s"No more products with id $product left")).whenA(productCount < 1)
         config <- reloadable.get
         price <- OptionT
           .fromOption(config.priceList.get(product))

@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.LazyLogging
 import javax.net.ssl.TrustManagerFactory
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
+import monix.eval.TaskLift
 import monix.execution.Scheduler
 
 import scala.concurrent.duration._
@@ -21,6 +22,13 @@ object EtcdClient {
     new EtcdClient(
       ChannelManager(endpoints, credential, Some(authority), Some(trustManagerFactory))
     )
+
+  def withWatch[F[_]: Async: ContextShift: TaskLift](
+      chanellManager: ChannelManager
+  )(implicit scheduler: Scheduler) =
+    new EtcdClient(chanellManager) with Watch[F] {
+      override val taskLift = TaskLift[F]
+    }
 }
 
 class EtcdClient[F[_]: Async: ContextShift](val manager: ChannelManager)(implicit val scheduler: Scheduler)
