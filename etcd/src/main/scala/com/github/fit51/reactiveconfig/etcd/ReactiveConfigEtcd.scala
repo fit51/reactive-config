@@ -1,5 +1,6 @@
 package com.github.fit51.reactiveconfig.etcd
 
+import cats.data.NonEmptyList
 import cats.effect.{Async, ContextShift}
 import com.github.fit51.reactiveconfig.config.{ReactiveConfig, ReactiveConfigImpl}
 import com.github.fit51.reactiveconfig.parser.ConfigParser
@@ -12,11 +13,11 @@ object ReactiveConfigEtcd {
 
   def apply[F[_]: Async: ContextShift: TaskLike, ParsedData](
       etcdClient: EtcdClient[F] with Watch[F],
-      prefix: String = ""
+      prefixes: NonEmptyList[String] = NonEmptyList.one("")
   )(implicit scheduler: Scheduler, configParser: ConfigParser[ParsedData]): F[ReactiveConfig[F, ParsedData]] = {
     val F = implicitly[Async[F]]
     for {
-      storage <- F.pure(new EtcdConfigStorage[F, ParsedData](etcdClient, prefix))
+      storage <- F.pure(new EtcdConfigStorage[F, ParsedData](etcdClient, prefixes))
       config  <- ReactiveConfigImpl(storage)
     } yield config
   }

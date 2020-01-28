@@ -52,35 +52,41 @@ class TypesafeConfigStorageTest extends WordSpecLike with Matchers with MockitoS
     "config should be able to reload primitive value on change" in new mocks {
       (for {
         reloadable <- config.reloadable[Int]("changeable.parameter.value")
-        first <- reloadable.get
+        first      <- reloadable.get
         _ <- IO.delay(
           File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
         )
-        _ <- IO.sleep(300 millis)
+        _      <- IO.sleep(300 millis)
         second <- reloadable.get
       } yield {
         first shouldBe 1
         second shouldBe 2
-      }).guarantee(IO.delay(
-        File(path.getParent.resolve("changeable.conf")).overwrite(changeable(1))
-      )).unsafeRunSync()
+      }).guarantee(
+          IO.delay(
+            File(path.getParent.resolve("changeable.conf")).overwrite(changeable(1))
+          )
+        )
+        .unsafeRunSync()
     }
 
     "config should be able to reload case class on change" in new mocks {
       (for {
         reloadable <- config.reloadable[Parameter]("changeable.parameter")
-        first <- reloadable.get
+        first      <- reloadable.get
         _ <- IO.delay(
           File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
         )
-        _ <- IO.sleep(300 millis)
+        _      <- IO.sleep(300 millis)
         second <- reloadable.get
       } yield {
         first shouldBe Parameter(1)
         second shouldBe Parameter(2)
-      }).guarantee(IO.delay(
-        File(path.getParent.resolve("changeable.conf")).overwrite(changeable(1))
-      )).unsafeRunSync()
+      }).guarantee(
+          IO.delay(
+            File(path.getParent.resolve("changeable.conf")).overwrite(changeable(1))
+          )
+        )
+        .unsafeRunSync()
     }
   }
 }
