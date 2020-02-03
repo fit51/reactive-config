@@ -1,7 +1,8 @@
 package com.github.fit51.reactiveconfig.etcd
-import cats.data.NonEmptyList
+
+import cats.data.NonEmptySet
 import cats.effect.{Async, ContextShift}
-import cats.syntax.all._
+import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import monix.execution.Scheduler
 import monix.reactive.Observable
@@ -21,14 +22,14 @@ object EtcdConfigStorage {
     **/
   def apply[F[_]: Async: ContextShift, Json](
       etcd: EtcdClient[F] with Watch[F],
-      prefixes: NonEmptyList[String]
+      prefixes: NonEmptySet[String]
   )(implicit s: Scheduler, encoder: ConfigParser[Json]): EtcdConfigStorage[F, Json] =
     new EtcdConfigStorage[F, Json](etcd, prefixes)
 }
 
 class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](
     etcd: EtcdClient[F] with Watch[F],
-    prefixes: NonEmptyList[String]
+    prefixes: NonEmptySet[String]
 )(
     implicit s: Scheduler,
     encoder: ConfigParser[ParsedData]
@@ -38,7 +39,7 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
   override def load(): F[TrieMap[String, Value[ParsedData]]] =
-    prefixes.traverse { prefix =>
+    prefixes.toList.traverse { prefix =>
       etcd
         .getRecursiveSinceRevision(prefix, revision)
         .map {
@@ -46,13 +47,13 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](
             logger.info(s"EtcdConfig: Updated to rev: $rev")
             kvs.foreach(saveKeyValue(_, checkVersions = true))
         }
-    } >> storage.pure
+    }.flatMap(_ => storage.pure[F])
 
   override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
-    prefixes
+    prefixes.toList
       .map(prefix => etcd.watch(EtcdUtils.getRange(prefix)))
       .sequence
-      .map(obs => Observable.fromIterable(obs.toList).merge)
+      .map(obs => Observable.fromIterable(obs).merge)
       .map { merged =>
         val hotObservable = merged
           .map(saveKeyValue(_))

@@ -12,7 +12,10 @@ lazy val commonSettings = Seq(
     "io.circe"                   %% "circe-generic"  % "0.12.2" % Test,
     "org.slf4j"                  % "slf4j-api"       % "1.7.28" % Test
   ),
-  scalafmtOnCompile := true
+  scalafmtOnCompile := true,
+  resolvers += Resolver.sonatypeRepo("releases"),
+  addCompilerPlugin("org.typelevel" % "kind-projector"      % "0.11.0" cross CrossVersion.full),
+  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
 )
 
 lazy val core = project
@@ -80,11 +83,6 @@ lazy val examples = project
   .in(file("examples"))
   .dependsOn(etcd, typesafe, circe)
   .settings(commonSettings)
-  .settings(
-    resolvers += Resolver.sonatypeRepo("releases"),
-    addCompilerPlugin("org.typelevel" % "kind-projector"      % "0.11.0" cross CrossVersion.full),
-    addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
-  )
   .settings(
     name := "reactive-config-examples",
     libraryDependencies ++= Seq(

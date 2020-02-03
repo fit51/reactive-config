@@ -1,6 +1,6 @@
 package com.github.fit51.reactiveconfig.tests
 
-import cats.data.NonEmptyList
+import cats.data.NonEmptySet
 import cats.implicits._
 import com.github.fit51.reactiveconfig.config.ReactiveConfig
 import com.github.fit51.reactiveconfig.etcd.{ChannelManager, EtcdClient, ReactiveConfigEtcd, Watch}
@@ -46,7 +46,7 @@ class EtcdConfigServiceTest extends WordSpecLike with Matchers with Eventually {
 
     for {
       _      <- data.traverse(kv => etcdClient.put(kv.k, kv.v))
-      config <- ReactiveConfigEtcd[Task, Json](etcdClient, NonEmptyList.apply("common", List("prefix1")))
+      config <- ReactiveConfigEtcd[Task, Json](etcdClient, NonEmptySet.of("common", "prefix1"))
       r1     <- config.reloadable[String]("common.key.prefix.key1")
       r2     <- config.reloadable[String]("prefix1.key.prefix.key2")
     } yield Init(etcdClient, config, r1, r2)
