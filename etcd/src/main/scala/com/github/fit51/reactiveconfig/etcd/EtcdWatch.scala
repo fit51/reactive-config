@@ -48,11 +48,11 @@ trait Watch[F[_]] {
   private lazy val watchService = WatchGrpc.stub(manager.channel)
 
   type WatchId = Long
-  private val watchId = MVar[Task].of[Option[WatchId]](None).runSyncUnsafe()
-  private def fillWatchId(id: WatchId): Task[Unit] =
-    watchId.take >> watchId.put(Some(id))
-  private def emptyWatchId: Task[Unit] =
-    watchId.take >> watchId.put(None)
+  private val watchIds = MVar[Task].of[Map[String, WatchId]](Map.empty).runSyncUnsafe()
+  private def putWatchId(key: String, id: WatchId): Task[Unit] =
+    watchIds.take.flatMap(m => watchIds.put(m + (key -> id)))
+  private def removeWatchId(key: String): Task[Unit] =
+    watchIds.take.flatMap(m => watchIds.put(m - key))
 
   /**
     * @param subscriber will be subscribed to keyRange Events
@@ -71,11 +71,11 @@ trait Watch[F[_]] {
           subscriber.feed(keyValues)
         case v if v.created =>
           logger.info("Subscribed on Watch!")
-          fillWatchId(v.watchId) >>
+          putWatchId(keyRange.start, v.watchId) >>
             p.complete(()).attempt.as(Continue) runToFuture
         case v if v.canceled =>
           logger.warn("Etcd Watch cancelled")
-          emptyWatchId.map { _ =>
+          removeWatchId(keyRange.start).map { _ =>
             // Run in background
             protectedSubscribe(subscriber, keyRange, p).runToFuture
           }.as(Stop).runToFuture
@@ -83,7 +83,7 @@ trait Watch[F[_]] {
 
       override def onError(ex: Throwable): Unit = {
         logger.error("ETCD: Watch requestObserver crashed ", ex)
-        emptyWatchId.map { _ =>
+        removeWatchId(keyRange.start).map { _ =>
           // Run in background
           protectedSubscribe(subscriber, keyRange, p).runToFuture
         }.runToFuture
@@ -91,7 +91,7 @@ trait Watch[F[_]] {
 
       override def onComplete(): Unit = {
         logger.warn(s"ETCD: Watch finished")
-        emptyWatchId.runToFuture
+        removeWatchId(keyRange.start).runToFuture
       }
     }
 
@@ -110,8 +110,9 @@ trait Watch[F[_]] {
   ): Task[Unit] =
     circuitBreaker.protect {
       for {
-        id <- watchId.read
-        _  <- Task.raiseError(new Exception("Watch already exists")).whenA(id.nonEmpty)
+        map <- watchIds.read
+        id = map.get(keyRange.start)
+        _ <- Task.raiseError(new Exception("Watch already exists")).whenA(id.nonEmpty)
         _ = subscribe(subscriber, keyRange, p)
         _ <- p.get
       } yield ()

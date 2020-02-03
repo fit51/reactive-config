@@ -57,14 +57,14 @@ class ReactiveConfigImplTest extends WordSpecLike with Matchers with MockitoSuga
       intercept[ReactiveConfigException](config.getOrThrow[String]("key0")).getMessage
         .shouldEqual("Failed to find ValueByKey on key: key0")
     }
-    */
+     */
 
     "return reloadable" in new mocks {
       (for {
         reloadable <- config.reloadable[String]("key1")
-        value1 <- reloadable.get
-        _ <- IO.sleep(3.seconds)
-        value2 <- reloadable.get
+        value1     <- reloadable.get
+        _          <- IO.sleep(3.seconds)
+        value2     <- reloadable.get
       } yield {
         value1 shouldBe "value1"
         value2 shouldBe "value2"

@@ -16,7 +16,7 @@ class EtcdClientTest extends WordSpecLike with BeforeAndAfterAll with Matchers {
   import EtcdUtils._
   implicit val scheduler = Scheduler.global
 
-  val chManager  = ChannelManager.noAuth("http://127.0.0.1:2379")
+  val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
   val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
     val taskLift = TaskLift[Task]
   }

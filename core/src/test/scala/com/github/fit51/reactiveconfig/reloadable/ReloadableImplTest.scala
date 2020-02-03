@@ -36,7 +36,7 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     implicit val shift = new cats.effect.ContextShift[IO] {
-      override def shift: IO[Unit] = Task.shift.to[IO]
+      override def shift: IO[Unit]                                   = Task.shift.to[IO]
       override def evalOn[A](ec: ExecutionContext)(fa: IO[A]): IO[A] = fa
     }
   }
@@ -50,10 +50,10 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
           ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
         )
         initial <- reloadable.get
-        _ <- IO.sleep(3 seconds)
-        first <- reloadable.get
-        _ <- IO.sleep(3 seconds)
-        second <- reloadable.get
+        _       <- IO.sleep(3 seconds)
+        first   <- reloadable.get
+        _       <- IO.sleep(3 seconds)
+        second  <- reloadable.get
       } yield {
         initial shouldBe "initial"
         first shouldBe "0"
@@ -69,11 +69,11 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
           ob = Observable.intervalAtFixedRate(2 second, 2 second).take(2).map(_.toString)
         )
         mappedReloadable <- initialReloadable.map(function)
-        initial <- mappedReloadable.get
-        _ <- IO.sleep(3 seconds)
-        first <- mappedReloadable.get
-        _ <- IO.sleep(3 seconds)
-        second <- mappedReloadable.get
+        initial          <- mappedReloadable.get
+        _                <- IO.sleep(3 seconds)
+        first            <- mappedReloadable.get
+        _                <- IO.sleep(3 seconds)
+        second           <- mappedReloadable.get
       } yield {
         initial shouldBe "initial_changed"
         first shouldBe "0_changed"
@@ -101,12 +101,12 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
 
         initial1 <- mappedReloadable1.get
         initial2 <- mappedReloadable2.get
-        _ <- IO.sleep(3 seconds)
+        _        <- IO.sleep(3 seconds)
         _ = verify(stop).stop("initial_changed")
         _ = verify(restart).restart("0", "initial_changed")
-        first1 <- mappedReloadable1.get
-        first2 <- mappedReloadable2.get
-        _ <- IO.sleep(3 seconds)
+        first1  <- mappedReloadable1.get
+        first2  <- mappedReloadable2.get
+        _       <- IO.sleep(3 seconds)
         second1 <- mappedReloadable1.get
         second2 <- mappedReloadable2.get
         _ = verify(stop).stop("0_changed")
@@ -132,10 +132,10 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
         mappedReloadable <- initialReloadable.mapF(function)
 
         initial <- mappedReloadable.get
-        _ <- IO.sleep(3 seconds)
-        first <- mappedReloadable.get
-        _ <- IO.sleep(3 seconds)
-        second <- mappedReloadable.get
+        _       <- IO.sleep(3 seconds)
+        first   <- mappedReloadable.get
+        _       <- IO.sleep(3 seconds)
+        second  <- mappedReloadable.get
       } yield {
         initial shouldBe "initial_changed"
         first shouldBe "0_changed"
@@ -159,11 +159,11 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
         )
 
         combinedReloadable <- initialReloadable1.combine(initialReloadable2)(function)
-        initial <- combinedReloadable.get
-        _ <- IO.sleep(3 seconds)
-        first <- combinedReloadable.get
-        _ <- IO.sleep(3 seconds)
-        second <- combinedReloadable.get
+        initial            <- combinedReloadable.get
+        _                  <- IO.sleep(3 seconds)
+        first              <- combinedReloadable.get
+        _                  <- IO.sleep(3 seconds)
+        second             <- combinedReloadable.get
       } yield {
         initial shouldBe Data("initial", -1)
         first shouldBe Data("0", 0)
@@ -185,11 +185,11 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
         )
 
         combinedReloadable <- initialReloadable1.combineF(initialReloadable2)(function)
-        initial <- combinedReloadable.get
-        _ <- IO.sleep(3 seconds)
-        first <- combinedReloadable.get
-        _ <- IO.sleep(3 seconds)
-        second <- combinedReloadable.get
+        initial            <- combinedReloadable.get
+        _                  <- IO.sleep(3 seconds)
+        first              <- combinedReloadable.get
+        _                  <- IO.sleep(3 seconds)
+        second             <- combinedReloadable.get
       } yield {
         initial shouldBe Data("initial", -1)
         first shouldBe Data("0", 0)
@@ -214,7 +214,7 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
         )
         mappedReloadable <- initialReloadable.mapF(s => IO.delay(s * 2), Stop((s: String) => stop.stop(s)))
 
-        _ <- IO.sleep(3500 millis)
+        _   <- IO.sleep(3500 millis)
         cur <- mappedReloadable.get
         _ = verify(stop, times(3)).stop(any())
 
@@ -227,7 +227,7 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     "survive after errors in restart handler" in new mocks {
-      val restart = mock[RestartingService[String, String]]
+      val restart      = mock[RestartingService[String, String]]
       var counter: Int = 0
       when(restart.restart(any(), any())).thenAnswer((invocation: InvocationOnMock) => {
         counter += 1
@@ -246,7 +246,7 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
 
         mappedReloadable <- initialReloadable.mapF(s => IO.delay(s * 2), Restart((a, b) => restart.restart(a, b)))
 
-        _ <- IO.sleep(3500 millis)
+        _   <- IO.sleep(3500 millis)
         cur <- mappedReloadable.get
         _ = verify(restart, times(3)).restart(any(), any())
         _ = verify(restart).restart("0", "initialinitial")
@@ -270,15 +270,15 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
           ob = Observable.intervalAtFixedRate(1 second, 1 second).map(_.toString)
         )
         doubleF <- initialReloadable.mapF(s => IO.delay(s * 2), Stop((s: String) => stop.stop(s)))
-        maskF <- doubleF.mapF(s => IO.delay(s.take(1) + "***"), Stop((s: String) => stop.stop(s)))
+        maskF   <- doubleF.mapF(s => IO.delay(s.take(1) + "***"), Stop((s: String) => stop.stop(s)))
 
-        _ <- IO.sleep(1100 millis)
+        _       <- IO.sleep(1100 millis)
         double1 <- doubleF.get
-        mask1 <- maskF.get
+        mask1   <- maskF.get
 
-        _ <- IO.sleep(1 second)
+        _       <- IO.sleep(1 second)
         double2 <- doubleF.get
-        mask2 <- maskF.get
+        mask2   <- maskF.get
 
         _ <- initialReloadable.stop
       } yield {
