@@ -1,7 +1,9 @@
 package com.github.fit51.reactiveconfig.reloadable
 
+import cats.~>
 import cats.Id
 import cats.MonadError
+import cats.kernel.Eq
 import cats.syntax.applicative._
 import cats.syntax.applicativeError._
 import cats.syntax.either._
@@ -22,10 +24,10 @@ import scala.util.control.NonFatal
 import scala.util.Failure
 
 object Reloadable {
-  def apply[F[_], A](
+  def apply[F[_]: TaskLike: TaskLift, A](
       initial: A,
       ob: Observable[A]
-  )(implicit scheduler: Scheduler, F: MonadError[F, Throwable], T: TaskLike[F], L: TaskLift[F]): F[Reloadable[F, A]] =
+  )(implicit scheduler: Scheduler, F: MonadError[F, Throwable]): F[Reloadable[F, A]] =
     (for {
       connectableObservable <- Task.pure(ob.publish)
       canceler   = connectableObservable.connect()
@@ -52,7 +54,7 @@ object Reloadable {
   * @tparam F[_] reloading effect
   * @tparam A wrapped value
   **/
-trait Reloadable[F[_], A] {
+trait Reloadable[F[_], A] { self =>
 
   /**
     * Returns current value of this Reloadable.
@@ -68,6 +70,15 @@ trait Reloadable[F[_], A] {
     * Applies given function that may contains side-effect for each element of Reloadable.
     */
   def forEachF(f: A => F[Unit]): F[Unit]
+
+  /**
+    * Returns a new Reloadable with suppressed consecutive duplicated elemented elements.
+    * Elements are compared by given function.
+    *
+    * @param makeKey is a function that returns a K key for each element, a value that's
+    * then used to do the deduplication
+    */
+  def distinctByKey[K: Eq](makeKey: (A) => K): F[Reloadable[F, A]]
 
   /**
     * Returns a new Reloadable by mapping the supplied function over the elements of
@@ -129,13 +140,32 @@ trait Reloadable[F[_], A] {
   def stop: F[Unit]
 
   protected[reloadable] def observable: Observable[A]
+
+  def makeVolatile: Volatile[F, A] =
+    new Volatile[F, A] {
+      override def unsafeGet: A = self.unsafeGet
+      override def get: F[A]    = self.get
+    }
 }
 
-private class ReloadableImpl[F[_], A](initial: A, ob: Observable[A])(
+trait Volatile[F[_], A] { self =>
+
+  def unsafeGet: A
+
+  def get: F[A]
+
+  def mapK[G[_]](natTranform: F ~> G): Volatile[G, A] =
+    new Volatile[G, A] {
+      override def unsafeGet: A =
+        self.unsafeGet
+      override def get: G[A] =
+        natTranform.apply(self.get)
+    }
+}
+
+private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observable[A])(
     implicit scheduler: Scheduler,
-    F: MonadError[F, Throwable],
-    T: TaskLike[F],
-    L: TaskLift[F]
+    F: MonadError[F, Throwable]
 ) extends Reloadable[F, A] with StrictLogging {
   import Reloadable._
 
@@ -155,6 +185,13 @@ private class ReloadableImpl[F[_], A](initial: A, ob: Observable[A])(
 
   override def forEachF(f: A => F[Unit]): F[Unit] =
     (this.get >>= f) >> observable.mapEvalF(f).lastL.to[F]
+
+  override def distinctByKey[K: Eq](makeKey: (A) => K): F[Reloadable[F, A]] =
+    for {
+      init <- get
+      obs = (init +: this.observable).distinctUntilChangedByKey(makeKey).drop(1)
+      result <- Reloadable.apply(init, obs)
+    } yield result
 
   override def map[B](
       f: A => B,

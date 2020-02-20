@@ -1,8 +1,12 @@
 package com.github.fit51.reactiveconfig.etcd
 
 import cats.data.NonEmptySet
-import cats.effect.{Async, ContextShift}
-import cats.implicits._
+import cats.effect.Sync
+import cats.instances.list._
+import cats.syntax.applicative._
+import cats.syntax.traverse._
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 import com.typesafe.scalalogging.LazyLogging
 import monix.execution.Scheduler
 import monix.reactive.Observable
@@ -20,14 +24,14 @@ object EtcdConfigStorage {
   /**
     * Creates new ConfigStorage for etcd fetching data wrapped in arbitrary F
     **/
-  def apply[F[_]: Async: ContextShift, Json](
+  def apply[F[_]: Sync, Json](
       etcd: EtcdClient[F] with Watch[F],
       prefixes: NonEmptySet[String]
   )(implicit s: Scheduler, encoder: ConfigParser[Json]): EtcdConfigStorage[F, Json] =
     new EtcdConfigStorage[F, Json](etcd, prefixes)
 }
 
-class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](
+class EtcdConfigStorage[F[_]: Sync, ParsedData](
     etcd: EtcdClient[F] with Watch[F],
     prefixes: NonEmptySet[String]
 )(
@@ -39,7 +43,7 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
   override def load(): F[TrieMap[String, Value[ParsedData]]] =
-    prefixes.toList.traverse { prefix =>
+    prefixes.toNonEmptyList.toList.traverse { prefix =>
       etcd
         .getRecursiveSinceRevision(prefix, revision)
         .map {
@@ -50,7 +54,7 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](
     }.flatMap(_ => storage.pure[F])
 
   override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
-    prefixes.toList
+    prefixes.toNonEmptyList.toList
       .map(prefix => etcd.watch(EtcdUtils.getRange(prefix)))
       .sequence
       .map(obs => Observable.fromIterable(obs).merge)
