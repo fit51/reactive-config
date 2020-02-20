@@ -21,7 +21,7 @@ object ReactiveConfigImpl {
     **/
   def apply[F[_]: TaskLike: TaskLift, ParsedData](
       configStorage: ConfigStorage[F, ParsedData]
-  )(implicit s: Scheduler, F: MonadError[F, Throwable]): F[ReactiveConfigImpl[F, ParsedData]] =
+  )(implicit s: Scheduler, F: MonadError[F, Throwable]): F[ReactiveConfig[F, ParsedData]] =
     for {
       storage    <- configStorage.load()
       observable <- configStorage.watch()
