@@ -3,12 +3,14 @@ package com.github.fit51.reactiveconfig.tests
 import cats.data.NonEmptySet
 import cats.implicits._
 import com.github.fit51.reactiveconfig.config.ReactiveConfig
-import com.github.fit51.reactiveconfig.etcd.{ChannelManager, EtcdClient, ReactiveConfigEtcd, Watch}
+import com.github.fit51.reactiveconfig.etcd.{ChannelManager, EtcdClient, GrpcMonix, ReactiveConfigEtcd, Watch}
 import com.github.fit51.reactiveconfig.reloadable.Reloadable
 import io.circe.Json
 import monix.eval.{Task, TaskLift}
 import org.scalatest.{Matchers, WordSpecLike}
 import io.circe.parser._
+import io.grpc.stub.StreamObserver
+import monix.reactive.observers.Subscriber
 import org.scalatest.concurrent.Eventually
 
 import scala.concurrent.Await
@@ -41,7 +43,8 @@ class EtcdConfigServiceTest extends WordSpecLike with Matchers with Eventually {
 
     val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
     val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
-      val taskLift = TaskLift[Task]
+      val taskLift                                                    = TaskLift[Task]
+      override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
     }
 
     for {

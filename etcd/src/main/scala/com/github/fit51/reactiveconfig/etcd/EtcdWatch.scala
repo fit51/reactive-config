@@ -7,7 +7,7 @@ import com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.{WatchCreateRequest, WatchGrpc, WatchRequest, WatchResponse}
-import com.github.fit51.reactiveconfig.etcd.GrpcMonix.monixSubscriberToGrpcObserver
+import io.grpc.stub.StreamObserver
 import monix.catnap.CircuitBreaker
 import monix.eval.Task
 import monix.execution.Ack.{Continue, Stop}
@@ -25,6 +25,8 @@ trait Watch[F[_]] {
   self: EtcdClient[F] =>
   import monix.execution.schedulers.CanBlock.permit
   import EtcdUtils._
+
+  def monixToGrpc[T]: Subscriber[T] => StreamObserver[T]
 
   implicit def taskLift: TaskLift[F]
 
@@ -95,7 +97,7 @@ trait Watch[F[_]] {
       }
     }
 
-    val observer = watchService.watch(monixSubscriberToGrpcObserver(s))
+    val observer = watchService.watch(monixToGrpc(s))
     observer.onNext(
       WatchRequest(
         CreateRequest(WatchCreateRequest(keyRange.start.bytes, keyRange.end.bytes))
