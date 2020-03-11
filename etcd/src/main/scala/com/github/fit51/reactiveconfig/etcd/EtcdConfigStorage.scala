@@ -1,7 +1,7 @@
 package com.github.fit51.reactiveconfig.etcd
 
 import cats.data.NonEmptySet
-import cats.effect.{Async, ContextShift}
+import cats.effect.Sync
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import monix.execution.Scheduler
@@ -20,14 +20,14 @@ object EtcdConfigStorage {
   /**
     * Creates new ConfigStorage for etcd fetching data wrapped in arbitrary F
     **/
-  def apply[F[_]: Async: ContextShift, Json](
+  def apply[F[_]: Sync, Json](
       etcd: EtcdClient[F] with Watch[F],
       prefixes: NonEmptySet[String]
   )(implicit s: Scheduler, encoder: ConfigParser[Json]): EtcdConfigStorage[F, Json] =
     new EtcdConfigStorage[F, Json](etcd, prefixes)
 }
 
-class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](
+class EtcdConfigStorage[F[_]: Sync, ParsedData](
     etcd: EtcdClient[F] with Watch[F],
     prefixes: NonEmptySet[String]
 )(

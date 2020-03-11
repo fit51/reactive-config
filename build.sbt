@@ -1,16 +1,18 @@
+val circeVersion = "0.12.3"
+
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.8",
-  crossScalaVersions := Seq("2.12.8", "2.13.1"),
+  scalaVersion := "2.12.10",
+  crossScalaVersions := Seq("2.12.10", "2.13.1"),
   libraryDependencies ++= Seq(
-    "io.monix"                   %% "monix"          % "3.0.0",
-    "org.typelevel"              %% "cats-effect"    % "2.0.0",
+    "io.monix"                   %% "monix"          % "3.1.0" % Provided,
+    "org.typelevel"              %% "cats-effect"    % "2.0.0" % Provided,
     "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.2",
     "org.mockito"                % "mockito-core"    % "2.7.19" % Test,
     "org.scalatest"              %% "scalatest"      % "3.0.8" % Test,
     "ch.qos.logback"             % "logback-classic" % "1.2.3" % Test,
     "ch.qos.logback"             % "logback-core"    % "1.2.3" % Test,
-    "io.circe"                   %% "circe-generic"  % "0.12.2" % Test,
-    "org.slf4j"                  % "slf4j-api"       % "1.7.28" % Test
+    "io.circe"                   %% "circe-generic"  % circeVersion % Test,
+    "org.slf4j"                  % "slf4j-api"       % "1.7.25" % Test
   ),
   scalafmtOnCompile := true,
   resolvers += Resolver.sonatypeRepo("releases"),
@@ -32,7 +34,7 @@ lazy val circe = project
   .settings(
     name := "reactive-config-circe",
     libraryDependencies ++= Seq(
-      "io.circe" %% "circe-parser" % "0.12.2"
+      "io.circe" %% "circe-parser" % circeVersion % Provided
     )
   )
 
@@ -75,7 +77,8 @@ lazy val typesafe = project
       "com.typesafe" % "config" % "1.3.1",
       //    TODO monix-nio is more convenient for our purposes but it uses Monix v 3.0.0-M3 which is incompatible with 3.0.0-RC2
       //    TODO better-files used instead. One should use monix-nio in future
-      "com.github.pathikrit" %% "better-files" % "3.8.0"
+      "com.github.pathikrit" %% "better-files" % "3.8.0",
+      "io.circe" %% "circe-parser" % circeVersion % Test
     )
   )
 
@@ -88,7 +91,7 @@ lazy val examples = project
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "ch.qos.logback" % "logback-core"    % "1.2.3",
-      "io.circe"       %% "circe-generic"  % "0.12.2"
+      "io.circe"       %% "circe-generic"  % circeVersion % Provided
     )
   )
 

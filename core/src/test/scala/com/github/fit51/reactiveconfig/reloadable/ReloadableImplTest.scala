@@ -2,12 +2,13 @@ package com.github.fit51.reactiveconfig.reloadable
 
 import cats.effect.Clock
 import cats.effect.IO
+import cats.instances.int._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
 import monix.reactive.Observable
 import org.mockito.ArgumentMatchers.any
 import org.mockito.invocation.InvocationOnMock
-import org.mockito.Mockito.{never, times, verify, when}
+import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
 
@@ -306,6 +307,34 @@ class ReloadableImplTest extends WordSpecLike with Matchers with MockitoSugar {
         _ <- fiber.cancel
       } yield {
         buffer.toList shouldBe List("initialinitial", "00", "11")
+      }).unsafeRunSync()
+    }
+
+    "filter duplicated keys" in new mocks {
+      val buffer1 = mutable.ListBuffer[Int]()
+      val buffer2 = mutable.ListBuffer[Int]()
+      (for {
+        initialReloadable <- Reloadable[IO, Int](
+          initial = 0,
+          ob = Observable.fromIterable(List(1, 1, -1, -1, 2, 2, 2, 1, 1, -1, -1, 3, -3)).delayExecution(1 second)
+        )
+        filteredR  <- initialReloadable.distinctByKey(i => i * i * i)
+        absR       <- filteredR.map(_.abs)
+        filtered2R <- absR.distinctByKey(identity)
+
+        fiber1 <- filteredR
+          .forEachF(i => IO.delay(buffer1 += i))
+          .start
+
+        fiber2 <- filtered2R
+          .forEachF(i => IO.delay(buffer2 += i))
+          .start
+
+        _ <- fiber1.join
+        _ <- fiber2.join
+      } yield {
+        buffer1.toList shouldBe List(0, 1, -1, 2, 1, -1, 3, -3)
+        buffer2.toList shouldBe List(0, 1, 2, 1, 3)
       }).unsafeRunSync()
     }
   }
