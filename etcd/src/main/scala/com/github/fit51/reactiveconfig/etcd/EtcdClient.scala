@@ -30,7 +30,7 @@ object EtcdClient {
   )(implicit scheduler: Scheduler) =
     new EtcdClient(chanellManager) with Watch[F] {
       override val taskLift                                           = TaskLift[F]
-      override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserver _
+      override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
     }
 }
 
