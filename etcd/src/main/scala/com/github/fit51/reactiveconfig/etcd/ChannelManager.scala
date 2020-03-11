@@ -25,22 +25,20 @@ object ChannelManager {
   def noAuth(
       endpoints: String,
       authority: Option[String] = None,
-      loadBalancerFactory: Option[LoadBalancer.Factory] = None,
       trustManagerFactory: Option[TrustManagerFactory] = None
   )(implicit exec: ExecutionContext): ChannelManager = {
     val uris = endpoints.split(',').map(new URI(_)).toList
-    new ChannelManager(uris, authority, loadBalancerFactory, trustManagerFactory)
+    new ChannelManager(uris, authority, trustManagerFactory)
   }
 
   def apply(
       endpoints: String,
       credential: Credentials,
       authority: Option[String] = None,
-      loadBalancerFactory: Option[LoadBalancer.Factory] = None,
       trustManagerFactory: Option[TrustManagerFactory] = None
   )(implicit exec: ExecutionContext): ChannelManager with Authorization = {
     val uris = endpoints.split(',').map(new URI(_)).toList
-    new ChannelManager(uris, authority, loadBalancerFactory, trustManagerFactory) with Authorization {
+    new ChannelManager(uris, authority, trustManagerFactory) with Authorization {
       override val credentials = credential
     }
   }
@@ -57,7 +55,6 @@ object ChannelManager {
 class ChannelManager(
     uris: List[URI],
     authority: Option[String],
-    lbf: Option[LoadBalancer.Factory],
     tmf: Option[TrustManagerFactory]
 )(implicit val exec: ExecutionContext)
     extends StrictLogging {

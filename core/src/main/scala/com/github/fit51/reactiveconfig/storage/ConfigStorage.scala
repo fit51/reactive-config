@@ -20,5 +20,5 @@ trait ConfigStorage[F[_], ParsedData] {
     * @return stream of changed key-value pairs.
     * @see[[ParsedKeyValue]]
     */
-  def watch(): Observable[ParsedKeyValue[ParsedData]]
+  def watch(): F[Observable[ParsedKeyValue[ParsedData]]]
 }

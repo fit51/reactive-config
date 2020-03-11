@@ -1,6 +1,8 @@
 package com.github.fit51.reactiveconfig.etcd
-import cats.effect.{Async, ContextShift}
-import cats.syntax.all._
+
+import cats.data.NonEmptySet
+import cats.effect.Sync
+import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import monix.execution.Scheduler
 import monix.reactive.Observable
@@ -18,14 +20,17 @@ object EtcdConfigStorage {
   /**
     * Creates new ConfigStorage for etcd fetching data wrapped in arbitrary F
     **/
-  def apply[F[_]: Async: ContextShift, Json](
+  def apply[F[_]: Sync, Json](
       etcd: EtcdClient[F] with Watch[F],
-      prefix: String
+      prefixes: NonEmptySet[String]
   )(implicit s: Scheduler, encoder: ConfigParser[Json]): EtcdConfigStorage[F, Json] =
-    new EtcdConfigStorage[F, Json](etcd, prefix)
+    new EtcdConfigStorage[F, Json](etcd, prefixes)
 }
 
-class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](etcd: EtcdClient[F] with Watch[F], prefix: String)(
+class EtcdConfigStorage[F[_]: Sync, ParsedData](
+    etcd: EtcdClient[F] with Watch[F],
+    prefixes: NonEmptySet[String]
+)(
     implicit s: Scheduler,
     encoder: ConfigParser[ParsedData]
 ) extends ConfigStorage[F, ParsedData] with LazyLogging {
@@ -33,23 +38,30 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](etcd: EtcdClient[
   private var revision                                    = 0L
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
-  def load(): F[TrieMap[String, Value[ParsedData]]] =
-    etcd
-      .getRecursiveSinceRevision(prefix, revision)
-      .map {
-        case (kvs, rev) =>
-          revision = rev
-          logger.info(s"EtcdConfig: Updated to rev: $rev")
-          kvs.foreach(saveKeyValue(_, checkVersions = true))
-          storage
-      }
+  override def load(): F[TrieMap[String, Value[ParsedData]]] =
+    prefixes.toList.traverse { prefix =>
+      etcd
+        .getRecursiveSinceRevision(prefix, revision)
+        .map {
+          case (kvs, rev) =>
+            logger.info(s"EtcdConfig: Updated to rev: $rev")
+            kvs.foreach(saveKeyValue(_, checkVersions = true))
+        }
+    }.flatMap(_ => storage.pure[F])
 
-  def watch(): Observable[ParsedKeyValue[ParsedData]] =
-    Observable
-      .fromTask(etcd.watch(EtcdUtils.getRange(prefix)))
-      .flatten
-      .map(saveKeyValue(_))
-      .collect { case Some(value) => value }
+  override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
+    prefixes.toList
+      .map(prefix => etcd.watch(EtcdUtils.getRange(prefix)))
+      .sequence
+      .map(obs => Observable.fromIterable(obs).merge)
+      .map { merged =>
+        val hotObservable = merged
+          .map(saveKeyValue(_))
+          .collect { case Some(value) => value }
+          .publish
+        hotObservable.connect()
+        hotObservable
+      }
 
   private def saveKeyValue(kv: KeyValue, checkVersions: Boolean = false): Option[ParsedKeyValue[ParsedData]] =
     encoder.parse(kv.value.utf8) match {
@@ -67,8 +79,9 @@ class EtcdConfigStorage[F[_]: Async: ContextShift, ParsedData](etcd: EtcdClient[
                 storage.put(key, value)
             }
             .getOrElse(storage.put(key, value))
-        } else
+        } else {
           storage.update(key, value)
+        }
         Some(ParsedKeyValue[ParsedData](key, value))
     }
 }
