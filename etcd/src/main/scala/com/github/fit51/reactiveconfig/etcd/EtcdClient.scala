@@ -7,8 +7,10 @@ import com.typesafe.scalalogging.LazyLogging
 import javax.net.ssl.TrustManagerFactory
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
+import io.grpc.stub.StreamObserver
 import monix.eval.TaskLift
 import monix.execution.Scheduler
+import monix.reactive.observers.Subscriber
 
 import scala.concurrent.duration._
 
@@ -27,7 +29,8 @@ object EtcdClient {
       chanellManager: ChannelManager
   )(implicit scheduler: Scheduler) =
     new EtcdClient(chanellManager) with Watch[F] {
-      override val taskLift = TaskLift[F]
+      override val taskLift                                           = TaskLift[F]
+      override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
     }
 }
 

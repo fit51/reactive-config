@@ -7,7 +7,9 @@ import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers.any
 import com.github.fit51.reactiveconfig.parser.ConfigParser
+import io.grpc.stub.StreamObserver
 import monix.reactive.Observable
+import monix.reactive.observers.Subscriber
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
 
@@ -23,7 +25,8 @@ class ReactiveConfigEtcdTest extends WordSpecLike with Matchers with MockitoSuga
     override def parse(rawData: String): Try[ParsedData] = Try(???)
   }
   class EtcdClientTask(m: ChannelManager) extends EtcdClient[Task](m) with Watch[Task] {
-    override implicit def taskLift: TaskLift[Task] = implicitly[TaskLift[Task]]
+    override implicit def taskLift: TaskLift[Task]                  = implicitly[TaskLift[Task]]
+    override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
   }
 
   val intersectPrefixes1 = NonEmptySet.of("", "any.other")
