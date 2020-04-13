@@ -89,6 +89,7 @@ lazy val examples = project
   .settings(
     name := "reactive-config-examples",
     libraryDependencies ++= Seq(
+      "io.circe" %% "circe-parser" % circeVersion,
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "ch.qos.logback" % "logback-core"    % "1.2.3",
       "io.circe"       %% "circe-generic"  % circeVersion % Provided
