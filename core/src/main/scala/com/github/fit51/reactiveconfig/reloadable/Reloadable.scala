@@ -35,7 +35,6 @@ object Reloadable {
       fiber <- connectableObservable
         .consumeWith(Consumer.foreach { newValue =>
           reloadable.value = newValue
-          reloadable.valueF = newValue.pure[F]
         })
         .start
     } yield {
@@ -192,8 +191,7 @@ private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observ
   @volatile
   private[reloadable] var value = initial
 
-  @volatile
-  private[reloadable] var valueF = initial.pure[F]
+  private[reloadable] val valueF = Task.delay(value).to[F]
 
   override protected[reloadable] val observable: Observable[A] = ob
 
