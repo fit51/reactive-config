@@ -1,9 +1,9 @@
-val publishVersion = "0.1.0-alpha1"
+val publishVersion = "0.1.0"
 
 version in ThisBuild := {
   val branch = git.gitCurrentBranch.value
   if (branch == "master") publishVersion
-  else s"${publishVersion}-$branch-SNAPSHOT"
+  else s"$publishVersion-$branch-SNAPSHOT"
 }
 
 organization in ThisBuild := "com.github.fit51"
