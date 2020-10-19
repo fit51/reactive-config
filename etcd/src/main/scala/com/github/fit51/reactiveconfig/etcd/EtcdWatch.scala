@@ -9,24 +9,25 @@ import com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.Cr
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.{WatchCreateRequest, WatchGrpc, WatchRequest, WatchResponse}
 import io.grpc.stub.StreamObserver
 import monix.catnap.CircuitBreaker
-import monix.eval.Task
+import monix.eval.{Task, TaskLift}
 import monix.execution.Ack.{Continue, Stop}
 import monix.execution.exceptions.ExecutionRejectedException
 import monix.execution.{Ack, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 import monix.reactive.subjects.PublishSubject
-import monix.eval.TaskLift
 
-import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 trait Watch[F[_]] {
   self: EtcdClient[F] =>
-  import monix.execution.schedulers.CanBlock.permit
   import EtcdUtils._
+  import monix.execution.schedulers.CanBlock.permit
 
   def monixToGrpc[T]: Subscriber[T] => StreamObserver[T]
+
+  def onErrorDelay: FiniteDuration
 
   implicit def taskLift: TaskLift[F]
 
@@ -87,7 +88,7 @@ trait Watch[F[_]] {
         logger.error("ETCD: Watch requestObserver crashed ", ex)
         removeWatchId(keyRange.start).map { _ =>
           // Run in background
-          protectedSubscribe(subscriber, keyRange, p).runToFuture
+          (Task.sleep(onErrorDelay) >> protectedSubscribe(subscriber, keyRange, p)).runToFuture
         }.runToFuture
       }
 

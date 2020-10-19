@@ -3,11 +3,11 @@ package com.github.fit51.reactiveconfig.etcd
 import java.util.concurrent.TimeUnit
 
 import cats.effect.{Async, ContextShift}
-import com.typesafe.scalalogging.LazyLogging
-import javax.net.ssl.TrustManagerFactory
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
+import com.typesafe.scalalogging.LazyLogging
 import io.grpc.stub.StreamObserver
+import javax.net.ssl.TrustManagerFactory
 import monix.eval.TaskLift
 import monix.execution.Scheduler
 import monix.reactive.observers.Subscriber
@@ -26,11 +26,13 @@ object EtcdClient {
     )
 
   def withWatch[F[_]: Async: ContextShift: TaskLift](
-      chanellManager: ChannelManager
+      channelManager: ChannelManager,
+      watchOnErrorDelay: FiniteDuration
   )(implicit scheduler: Scheduler) =
-    new EtcdClient(chanellManager) with Watch[F] {
+    new EtcdClient(channelManager) with Watch[F] {
       override val taskLift                                           = TaskLift[F]
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
+      override val onErrorDelay                                       = watchOnErrorDelay
     }
 }
 

@@ -1,7 +1,6 @@
 package com.github.fit51.reactiveconfig.examples
 
-import cats.Functor
-import cats.MonadError
+import cats.{Functor, MonadError}
 import cats.data.OptionT
 import cats.effect.concurrent.MVar
 import cats.effect.{Async, Bracket, Concurrent, ContextShift, ExitCase, Sync, Timer}
@@ -58,7 +57,7 @@ object EtcdConfigApplication extends App {
   val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
   val future =
     (for {
-      client      <- Task.pure(EtcdClient.withWatch[Task](chManager))
+      client      <- Task.pure(EtcdClient.withWatch[Task](chManager, 10 seconds))
       shopService <- init(client, FillConfig.store)
       _           <- shopService.flow
     } yield ()).runToFuture
