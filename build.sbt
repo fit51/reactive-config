@@ -49,7 +49,8 @@ lazy val etcd = project
       "io.netty"             % "netty-tcnative-boringssl-static" % "2.0.25.Final",
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % scalapb.compiler.Version.scalapbVersion,
       "com.coreos"           % "jetcd-core"                      % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc")),
-      "com.coreos"           % "jetcd-common"                    % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc"))
+      "com.coreos"           % "jetcd-common"                    % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc")),
+      "com.pauldijou"        %% "jwt-core"                       % "4.2.0"
     )
   )
   .settings {
@@ -78,7 +79,7 @@ lazy val typesafe = project
       //    TODO monix-nio is more convenient for our purposes but it uses Monix v 3.0.0-M3 which is incompatible with 3.0.0-RC2
       //    TODO better-files used instead. One should use monix-nio in future
       "com.github.pathikrit" %% "better-files" % "3.8.0",
-      "io.circe" %% "circe-parser" % circeVersion % Test
+      "io.circe"             %% "circe-parser" % circeVersion % Test
     )
   )
 
@@ -89,7 +90,7 @@ lazy val examples = project
   .settings(
     name := "reactive-config-examples",
     libraryDependencies ++= Seq(
-      "io.circe" %% "circe-parser" % circeVersion,
+      "io.circe"       %% "circe-parser"   % circeVersion,
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "ch.qos.logback" % "logback-core"    % "1.2.3",
       "io.circe"       %% "circe-generic"  % circeVersion % Provided
