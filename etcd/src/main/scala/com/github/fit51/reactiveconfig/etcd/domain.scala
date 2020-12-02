@@ -3,9 +3,10 @@ package com.github.fit51.reactiveconfig.etcd
 import java.net.URI
 
 import cats.effect.{Async, ContextShift}
-import com.google.protobuf.ByteString
 import com.coreos.jetcd.resolver.URIResolverLoader
+import com.google.protobuf.ByteString
 import io.grpc.{Attributes, NameResolver}
+import pdi.jwt.JwtClaim
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -48,3 +49,9 @@ class SmartNameResolverFactory(uris: List[URI], authority: String, loader: URIRe
   override def newNameResolver(targetUri: URI, params: Attributes): NameResolver =
     new SmartNameResolver(authority, uris.asJava, loader)
 }
+
+sealed trait Token {
+  def value: String
+}
+final case class SimpleToken(override val value: String)               extends Token
+final case class JwtToken(override val value: String, claim: JwtClaim) extends Token

@@ -1,18 +1,19 @@
 package com.github.fit51.reactiveconfig.examples
 
 import cats.effect.{Async, ContextShift}
-import com.github.fit51.reactiveconfig.etcd.{ChannelManager, EtcdClient}
-import monix.eval.Task
-import monix.execution.Scheduler
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import com.github.fit51.reactiveconfig.etcd.{ChannelManager, EtcdClient}
+import io.circe.generic.auto._
+import monix.eval.Task
+import monix.execution.Scheduler
+
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import io.circe.generic.auto._
 
 object EtcdConfigMutateConfig extends App {
   implicit val scheduler = Scheduler.global
-
+  implicit val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
   Await.result(FillConfig.fill[Task].runToFuture, Duration.Inf)
 }
 
@@ -35,10 +36,10 @@ object FillConfig {
 
   import io.circe.syntax._
 
-  def fill[F[_]: ContextShift: Async](implicit scheduler: Scheduler): F[Unit] = {
+  def fill[F[_]: ContextShift: Async](implicit scheduler: Scheduler, chManager: ChannelManager): F[Unit] = {
     val F = implicitly[Async[F]]
     for {
-      client <- F.pure(new EtcdClient[F](ChannelManager.noAuth("http://127.0.0.1:2379")))
+      client <- F.pure(new EtcdClient[F](chManager))
       storeConfig = StoreConfig(priceList, "1")
       _ <- client.put("store.store", storeConfig.asJson.noSpaces)
       _ <- client.put("store.adverts", adverts.asJson.noSpaces)

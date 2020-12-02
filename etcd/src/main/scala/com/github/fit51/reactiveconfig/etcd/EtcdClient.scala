@@ -1,5 +1,6 @@
 package com.github.fit51.reactiveconfig.etcd
 
+import java.time.Clock
 import java.util.concurrent.TimeUnit
 
 import cats.effect.{Async, ContextShift}
@@ -20,7 +21,7 @@ object EtcdClient {
       credential: Credentials,
       authority: String,
       trustManagerFactory: TrustManagerFactory
-  )(implicit scheduler: Scheduler) =
+  )(implicit scheduler: Scheduler, clock: Clock) =
     new EtcdClient(
       ChannelManager(endpoints, credential, Some(authority), Some(trustManagerFactory))
     )

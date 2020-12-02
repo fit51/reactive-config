@@ -1,7 +1,8 @@
 package com.github.fit51.reactiveconfig.examples
 
-import cats.Functor
-import cats.MonadError
+import java.time.Clock
+
+import cats.{Functor, MonadError}
 import cats.data.OptionT
 import cats.effect.concurrent.MVar
 import cats.effect.{Async, Bracket, Concurrent, ContextShift, ExitCase, Sync, Timer}
@@ -28,6 +29,8 @@ import scala.util.control.NonFatal
   * Start etcd before running.
   * Run docker command, it will start etcd on 127.0.0.1:2379 without authentication:
   * sudo docker run -e ALLOW_NONE_AUTHENTICATION=yes -p 2379:2379 bitnami/etcd:latest
+  * For run with authentication:
+  * sudo docker run -e ETCD_ROOT_PASSWORD=test -p 2379:2379 bitnami/etcd:latest
   */
 object EtcdConfigApplication extends App {
 
@@ -35,6 +38,10 @@ object EtcdConfigApplication extends App {
   import StoreModule._
 
   implicit val scheduler = Scheduler.global
+  implicit val clock     = Clock.systemDefaultZone()
+
+  implicit val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
+  //implicit val chManager = ChannelManager("http://127.0.0.1:2379", Credentials("root", "test"))
 
   def init[F[_]: ContextShift: Async: Concurrent: Timer: TaskLike](
       etcdClient: EtcdClient[F] with Watch[F],
@@ -55,7 +62,6 @@ object EtcdConfigApplication extends App {
     } yield new CommandLineShopService[F]()
   }
 
-  val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
   val future =
     (for {
       client      <- Task.pure(EtcdClient.withWatch[Task](chManager))
