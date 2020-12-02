@@ -16,8 +16,8 @@ See [reactive-config-etcd]()
 
 ```scala
 libraryDependencies ++= Seq(
-    "com.github.fit51" %% "reactive-config-circe" % "0.0.3",
-    "com.github.fit51" %% "reactive-config-etcd"  % "0.0.3"
+    "com.github.fit51" %% "reactive-config-circe" % "0.1.0-alpha2",
+    "com.github.fit51" %% "reactive-config-etcd"  % "0.1.0-alpha2"
 )
 ```
 
