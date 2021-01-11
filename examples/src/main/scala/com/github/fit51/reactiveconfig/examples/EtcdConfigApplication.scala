@@ -151,7 +151,8 @@ object CommandLineShop {
             printPriceList() >> flow
           case Some(_ @Exit) =>
             F.delay(println("Good buy!"))
-          case None => F.delay(println("Error parsing command... Try again")) >> flow
+          case None =>
+            F.delay(println("Error parsing command... Try again")) >> flow
         }
       } yield ()
   }

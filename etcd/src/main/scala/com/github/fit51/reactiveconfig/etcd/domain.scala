@@ -5,10 +5,23 @@ import java.net.URI
 import cats.effect.{Async, ContextShift}
 import com.google.protobuf.ByteString
 import com.coreos.jetcd.resolver.URIResolverLoader
+import io.grpc.internal.GrpcUtil
 import io.grpc.{Attributes, NameResolver}
+import io.netty.channel.DefaultChannelConfig
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
+import scala.concurrent.duration._
+
+case class ChannelOptions(
+    //Is disabled by default, if so default os socket timeout would cause channel failure (20 seconds)
+    //Min value is 10 seconds
+    keepAliveTime: FiniteDuration = GrpcUtil.KEEPALIVE_TIME_NANOS_DISABLED nanos,
+    // Min value is 10 seconds
+    keepAliveTimeout: FiniteDuration = 20 seconds,
+    // ChannelOption.CONNECT_TIMEOUT_MILLIS let's us configure reconnect timeout.
+    connectTimeout: FiniteDuration = 30.seconds
+)
 
 case class Credentials(user: String, password: String)
 

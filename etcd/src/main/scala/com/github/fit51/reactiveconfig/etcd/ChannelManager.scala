@@ -1,6 +1,7 @@
 package com.github.fit51.reactiveconfig.etcd
 
 import java.net.URI
+import java.util.concurrent.TimeUnit
 
 import com.coreos.jetcd.resolver.URIResolverLoader
 import com.typesafe.scalalogging.StrictLogging
@@ -12,6 +13,7 @@ import io.grpc.netty.{GrpcSslContexts, NettyChannelBuilder}
 import io.netty.handler.ssl.ClientAuth
 import javax.net.ssl.TrustManagerFactory
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.{AuthGrpc, AuthenticateRequest, AuthenticateResponse}
+import io.netty.channel.ChannelOption
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -24,21 +26,23 @@ object ChannelManager {
     */
   def noAuth(
       endpoints: String,
+      options: ChannelOptions = ChannelOptions(),
       authority: Option[String] = None,
       trustManagerFactory: Option[TrustManagerFactory] = None
   )(implicit exec: ExecutionContext): ChannelManager = {
     val uris = endpoints.split(',').map(new URI(_)).toList
-    new ChannelManager(uris, authority, trustManagerFactory)
+    new ChannelManager(uris, options, authority, trustManagerFactory)
   }
 
   def apply(
       endpoints: String,
       credential: Credentials,
+      options: ChannelOptions = ChannelOptions(),
       authority: Option[String] = None,
       trustManagerFactory: Option[TrustManagerFactory] = None
   )(implicit exec: ExecutionContext): ChannelManager with Authorization = {
     val uris = endpoints.split(',').map(new URI(_)).toList
-    new ChannelManager(uris, authority, trustManagerFactory) with Authorization {
+    new ChannelManager(uris, options, authority, trustManagerFactory) with Authorization {
       override val credentials = credential
     }
   }
@@ -54,18 +58,27 @@ object ChannelManager {
   */
 class ChannelManager(
     uris: List[URI],
+    options: ChannelOptions,
     authority: Option[String],
     tmf: Option[TrustManagerFactory]
 )(implicit val exec: ExecutionContext)
     extends StrictLogging {
 
   protected[etcd] def channelBuilder = {
+
+    /** In current version 1.22.3 of grcp-netty
+      * ManagedChannelImpl would automatically reconnect with exponential backoff
+      * Stub Api would fail and we have to retry it ourselves.
+      */
     val builder = NettyChannelBuilder
       .forTarget("etcd")
       .nameResolverFactory(
         new SmartNameResolverFactory(uris, authority.getOrElse("etcd"), URIResolverLoader.defaultLoader)
       )
       .defaultLoadBalancingPolicy("pick_first")
+      .keepAliveTime(options.keepAliveTime.toSeconds, TimeUnit.SECONDS)
+      .keepAliveTimeout(options.keepAliveTimeout.toSeconds, TimeUnit.SECONDS)
+      .withOption[Integer](ChannelOption.CONNECT_TIMEOUT_MILLIS, options.connectTimeout.toMillis.toInt)
 
     if (authority.isDefined)
       builder.sslContext(getSslContext)

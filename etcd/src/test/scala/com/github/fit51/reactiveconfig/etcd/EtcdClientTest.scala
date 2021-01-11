@@ -22,6 +22,7 @@ class EtcdClientTest extends WordSpecLike with Matchers {
     val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
     new EtcdClient[Task](chManager) with Watch[Task] {
       val taskLift                                                    = TaskLift[Task]
+      override val onErrorDelay                                       = 2 seconds
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
     }
   }
@@ -93,6 +94,7 @@ class EtcdClientTest extends WordSpecLike with Matchers {
       val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
         val taskLift = TaskLift[Task]
 
+        override val onErrorDelay                                       = 2 seconds
         override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = contractBreakingImplMonixToGrpcObserver
       }
 

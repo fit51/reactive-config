@@ -19,10 +19,11 @@ object EtcdClient {
       endpoints: String,
       credential: Credentials,
       authority: String,
-      trustManagerFactory: TrustManagerFactory
+      trustManagerFactory: TrustManagerFactory,
+      options: ChannelOptions = ChannelOptions()
   )(implicit scheduler: Scheduler) =
     new EtcdClient(
-      ChannelManager(endpoints, credential, Some(authority), Some(trustManagerFactory))
+      ChannelManager(endpoints, credential, options, Some(authority), Some(trustManagerFactory))
     )
 
   def withWatch[F[_]: Async: ContextShift: TaskLift](
