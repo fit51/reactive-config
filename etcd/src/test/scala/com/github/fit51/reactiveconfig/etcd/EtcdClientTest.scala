@@ -1,28 +1,36 @@
 package com.github.fit51.reactiveconfig.etcd
 
+import com.dimafeng.testcontainers.{ForAllTestContainer, GenericContainer}
 import io.grpc.stub.StreamObserver
 import monix.eval.{Task, TaskLift}
 import monix.execution.Scheduler
 import monix.reactive.observers.Subscriber
 import org.scalatest.{Assertion, Matchers, WordSpecLike}
+import org.testcontainers.containers.wait.strategy.Wait
 
 import scala.concurrent.duration._
 import scala.util.Try
 
 /**
-  * This is service test, start etcd before running.
-  * Run docker command, it will start etcd on 127.0.0.1:2379 without authentication:
-  * sudo docker run -e ALLOW_NONE_AUTHENTICATION=yes -p 2379:2379 bitnami/etcd:latest
+  * This is service test, which starts the test container
+  * based on the image bitnami/etcd:latest
   */
-class EtcdClientTest extends WordSpecLike with Matchers {
+class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer {
   import EtcdUtils._
-  implicit val scheduler = Scheduler.global
+  implicit val scheduler: Scheduler = Scheduler.global
+
+  override val container: GenericContainer = GenericContainer(
+    "bitnami/etcd:latest",
+    exposedPorts = List(2379),
+    env = Map("ALLOW_NONE_AUTHENTICATION" -> "yes"),
+    waitStrategy = Wait.forHttp("/health")
+  )
 
   def init: EtcdClient[Task] with Watch[Task] = {
-    val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
+    val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
     new EtcdClient[Task](chManager) with Watch[Task] {
-      val taskLift                                                    = TaskLift[Task]
-      override val onErrorDelay                                       = 2 seconds
+      val taskLift: TaskLift[Task]                                    = TaskLift[Task]
+      override val onErrorDelay: FiniteDuration                       = 2 seconds
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
     }
   }
@@ -75,7 +83,7 @@ class EtcdClientTest extends WordSpecLike with Matchers {
       } yield {
         kv.get.value.utf8 shouldEqual "value"
       }
-      t.runSyncUnsafe(3 seconds)
+      t.runSyncUnsafe()
 
       close(etcdClient)
     }
@@ -90,11 +98,10 @@ class EtcdClientTest extends WordSpecLike with Matchers {
     }
 
     "break during watch with Invalid StreamObserver converter" in {
-      val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
+      val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
       val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
-        val taskLift = TaskLift[Task]
-
-        override val onErrorDelay                                       = 2 seconds
+        val taskLift: TaskLift[Task]                                    = TaskLift[Task]
+        override val onErrorDelay: FiniteDuration                       = 2 seconds
         override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = contractBreakingImplMonixToGrpcObserver
       }
 

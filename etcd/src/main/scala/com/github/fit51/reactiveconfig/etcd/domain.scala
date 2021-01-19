@@ -7,7 +7,6 @@ import com.google.protobuf.ByteString
 import com.coreos.jetcd.resolver.URIResolverLoader
 import io.grpc.internal.GrpcUtil
 import io.grpc.{Attributes, NameResolver}
-import io.netty.channel.DefaultChannelConfig
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
