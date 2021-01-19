@@ -52,7 +52,7 @@ class EtcdConfigServiceTest extends WordSpecLike with Matchers with Eventually w
     val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
     val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
       val taskLift: TaskLift[Task]                                    = TaskLift[Task]
-      override val onErrorDelay: FiniteDuration                       = 10 seconds
+      override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(10 seconds)
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
     }
 

@@ -57,7 +57,7 @@ object EtcdConfigApplication extends App {
   val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
   val future =
     (for {
-      client      <- Task.pure(EtcdClient.withWatch[Task](chManager, 10 seconds))
+      client      <- Task.pure(EtcdClient.withWatch[Task](chManager, SimpleDelayPolicy(10 seconds)))
       shopService <- init(client, FillConfig.store)
       _           <- shopService.flow
     } yield ()).runToFuture

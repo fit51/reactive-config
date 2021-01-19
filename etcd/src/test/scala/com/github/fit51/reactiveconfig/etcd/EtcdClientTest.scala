@@ -30,7 +30,7 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
     val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
     new EtcdClient[Task](chManager) with Watch[Task] {
       val taskLift: TaskLift[Task]                                    = TaskLift[Task]
-      override val onErrorDelay: FiniteDuration                       = 2 seconds
+      override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(2 seconds)
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
     }
   }
@@ -101,7 +101,7 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
       val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
       val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
         val taskLift: TaskLift[Task]                                    = TaskLift[Task]
-        override val onErrorDelay: FiniteDuration                       = 2 seconds
+        override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(2 seconds)
         override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = contractBreakingImplMonixToGrpcObserver
       }
 

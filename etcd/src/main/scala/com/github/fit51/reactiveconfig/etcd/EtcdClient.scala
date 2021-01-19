@@ -28,12 +28,12 @@ object EtcdClient {
 
   def withWatch[F[_]: Async: ContextShift: TaskLift](
       channelManager: ChannelManager,
-      watchOnErrorDelay: FiniteDuration
+      watchErrorRetryPolicy: RetryPolicy
   )(implicit scheduler: Scheduler) =
     new EtcdClient(channelManager) with Watch[F] {
-      override val taskLift                                           = TaskLift[F]
+      override val taskLift: TaskLift[F]                              = TaskLift[F]
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
-      override val onErrorDelay                                       = watchOnErrorDelay
+      override val errorRetryPolicy: RetryPolicy                      = watchErrorRetryPolicy
     }
 }
 

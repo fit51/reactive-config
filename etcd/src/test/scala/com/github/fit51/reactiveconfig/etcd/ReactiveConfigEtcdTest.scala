@@ -25,7 +25,7 @@ class ReactiveConfigEtcdTest extends WordSpecLike with Matchers with MockitoSuga
   }
   class EtcdClientTask(m: ChannelManager) extends EtcdClient[Task](m) with Watch[Task] {
     override implicit def taskLift: TaskLift[Task]                  = implicitly[TaskLift[Task]]
-    override val onErrorDelay                                       = 2 seconds
+    override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(2 seconds)
     override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
   }
 

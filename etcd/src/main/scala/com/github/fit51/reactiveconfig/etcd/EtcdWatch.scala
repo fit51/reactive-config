@@ -16,7 +16,6 @@ import monix.reactive.observers.Subscriber
 import monix.reactive.subjects.PublishSubject
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 trait Watch[F[_]] {
   self: EtcdClient[F] =>
@@ -25,7 +24,7 @@ trait Watch[F[_]] {
 
   def monixToGrpc[T]: Subscriber[T] => StreamObserver[T]
 
-  def onErrorDelay: FiniteDuration
+  def errorRetryPolicy: RetryPolicy
 
   implicit def taskLift: TaskLift[F]
 
@@ -69,7 +68,7 @@ trait Watch[F[_]] {
         logger.error("ETCD: Watch requestObserver crashed ", ex)
         removeWatchId(keyRange.start).map { _ =>
           // Run in background
-          (Task.sleep(onErrorDelay) >> protectedSubscribe(subscriber, keyRange, p)).runToFuture
+          (Task.sleep(errorRetryPolicy.next) >> protectedSubscribe(subscriber, keyRange, p)).runToFuture
         }.runToFuture
       }
 
