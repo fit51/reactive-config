@@ -52,7 +52,8 @@ lazy val etcd = project
       "io.netty"             % "netty-handler-proxy"             % "4.1.53.Final",
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % scalapb.compiler.Version.scalapbVersion,
       "com.coreos"           % "jetcd-core"                      % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc")),
-      "com.coreos"           % "jetcd-common"                    % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc"))
+      "com.coreos"           % "jetcd-common"                    % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc")),
+      "com.pauldijou"        %% "jwt-core"                       % "4.2.0"
     )
   )
   .settings {

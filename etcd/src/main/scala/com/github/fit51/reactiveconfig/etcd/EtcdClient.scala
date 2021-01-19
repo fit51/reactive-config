@@ -1,17 +1,17 @@
 package com.github.fit51.reactiveconfig.etcd
 
-import java.util.concurrent.TimeUnit
-
 import cats.effect.{Async, ContextShift}
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
 import com.typesafe.scalalogging.LazyLogging
 import io.grpc.stub.StreamObserver
-import javax.net.ssl.TrustManagerFactory
 import monix.eval.TaskLift
 import monix.execution.Scheduler
 import monix.reactive.observers.Subscriber
 
+import java.time.Clock
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.TrustManagerFactory
 import scala.concurrent.duration._
 
 object EtcdClient {
@@ -21,7 +21,7 @@ object EtcdClient {
       authority: String,
       trustManagerFactory: TrustManagerFactory,
       options: ChannelOptions = ChannelOptions()
-  )(implicit scheduler: Scheduler) =
+  )(implicit scheduler: Scheduler, clock: Clock) =
     new EtcdClient(
       ChannelManager(endpoints, credential, options, Some(authority), Some(trustManagerFactory))
     )
