@@ -26,16 +26,15 @@ import scala.util.Failure
 object Reloadable {
   def apply[F[_]: TaskLike: TaskLift, A](
       initial: A,
-      ob: Observable[A]
+      ob: Observable[A],
+      mbKey: Option[String] = None
   )(implicit scheduler: Scheduler, F: MonadError[F, Throwable]): F[Reloadable[F, A]] =
     (for {
       connectableObservable <- Task.pure(ob.publish)
       canceler   = connectableObservable.connect()
       reloadable = new ReloadableImpl[F, A](initial, connectableObservable)
       fiber <- connectableObservable
-        .consumeWith(Consumer.foreach { newValue =>
-          reloadable.value = newValue
-        })
+        .consumeWith(Consumer.foreachEval(reloadable.modifyCurrentValue(mbKey, _)))
         .start
     } yield {
       reloadable.canceler = (fiber.cancel >> Task.delay(canceler.cancel())).to[F]
@@ -192,6 +191,12 @@ private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observ
   private[reloadable] var value = initial
 
   private[reloadable] val valueF = Task.delay(value).to[F]
+
+  private[reloadable] def modifyCurrentValue(mbKey: Option[String], value: A): F[Unit] =
+    Task.delay {
+      mbKey.foreach(key => logger.info(s"Updated key $key"))
+      this.value = value
+    }.to[F]
 
   override protected[reloadable] val observable: Observable[A] = ob
 
