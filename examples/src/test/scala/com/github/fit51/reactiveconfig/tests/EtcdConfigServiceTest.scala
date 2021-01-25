@@ -2,27 +2,35 @@ package com.github.fit51.reactiveconfig.tests
 
 import cats.data.NonEmptySet
 import cats.implicits._
+import com.dimafeng.testcontainers.{ForAllTestContainer, GenericContainer}
 import com.github.fit51.reactiveconfig.config.ReactiveConfig
-import com.github.fit51.reactiveconfig.etcd.{ChannelManager, EtcdClient, GrpcMonix, ReactiveConfigEtcd, Watch}
+import com.github.fit51.reactiveconfig.etcd._
 import com.github.fit51.reactiveconfig.reloadable.Reloadable
 import io.circe.Json
-import monix.eval.{Task, TaskLift}
-import org.scalatest.{Matchers, WordSpecLike}
 import io.circe.parser._
 import io.grpc.stub.StreamObserver
+import monix.eval.{Task, TaskLift}
 import monix.reactive.observers.Subscriber
 import org.scalatest.concurrent.Eventually
+import org.scalatest.{Matchers, WordSpecLike}
+import org.testcontainers.containers.wait.strategy.Wait
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * This is service test, start etcd before running.
-  * Run docker command, it will start etcd on 127.0.0.1:2379 without authentication:
-  * sudo docker run -e ALLOW_NONE_AUTHENTICATION=yes -p 2379:2379 bitnami/etcd:latest
+  * This is service test, which starts the test container
+  * based on the image bitnami/etcd:latest
   */
-class EtcdConfigServiceTest extends WordSpecLike with Matchers with Eventually {
+class EtcdConfigServiceTest extends WordSpecLike with Matchers with Eventually with ForAllTestContainer {
   import monix.execution.Scheduler.Implicits.global
+
+  override val container: GenericContainer = GenericContainer(
+    "bitnami/etcd:latest",
+    exposedPorts = List(2379),
+    env = Map("ALLOW_NONE_AUTHENTICATION" -> "yes"),
+    waitStrategy = Wait.forHttp("/health")
+  )
 
   case class KV(k: String, v: String)
   implicit class AwaitTask[T](f: Task[T]) {
@@ -38,12 +46,13 @@ class EtcdConfigServiceTest extends WordSpecLike with Matchers with Eventually {
   )
 
   def init: Task[Init] = {
-    import com.github.fit51.reactiveconfig.parser.CirceConfigParser.parser
     import com.github.fit51.reactiveconfig.parser.CirceConfigDecoder.decoder
+    import com.github.fit51.reactiveconfig.parser.CirceConfigParser.parser
 
-    val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
+    val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
     val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
-      val taskLift                                                    = TaskLift[Task]
+      val taskLift: TaskLift[Task]                                    = TaskLift[Task]
+      override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(10 seconds)
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
     }
 

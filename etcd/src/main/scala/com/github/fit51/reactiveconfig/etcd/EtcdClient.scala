@@ -1,18 +1,17 @@
 package com.github.fit51.reactiveconfig.etcd
 
-import java.time.Clock
-import java.util.concurrent.TimeUnit
-
 import cats.effect.{Async, ContextShift}
-import com.typesafe.scalalogging.LazyLogging
-import javax.net.ssl.TrustManagerFactory
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
+import com.typesafe.scalalogging.LazyLogging
 import io.grpc.stub.StreamObserver
 import monix.eval.TaskLift
 import monix.execution.Scheduler
 import monix.reactive.observers.Subscriber
 
+import java.time.Clock
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.TrustManagerFactory
 import scala.concurrent.duration._
 
 object EtcdClient {
@@ -20,18 +19,21 @@ object EtcdClient {
       endpoints: String,
       credential: Credentials,
       authority: String,
-      trustManagerFactory: TrustManagerFactory
+      trustManagerFactory: TrustManagerFactory,
+      options: ChannelOptions = ChannelOptions()
   )(implicit scheduler: Scheduler, clock: Clock) =
     new EtcdClient(
-      ChannelManager(endpoints, credential, Some(authority), Some(trustManagerFactory))
+      ChannelManager(endpoints, credential, options, Some(authority), Some(trustManagerFactory))
     )
 
   def withWatch[F[_]: Async: ContextShift: TaskLift](
-      chanellManager: ChannelManager
+      channelManager: ChannelManager,
+      watchErrorRetryPolicy: RetryPolicy
   )(implicit scheduler: Scheduler) =
-    new EtcdClient(chanellManager) with Watch[F] {
-      override val taskLift                                           = TaskLift[F]
+    new EtcdClient(channelManager) with Watch[F] {
+      override val taskLift: TaskLift[F]                              = TaskLift[F]
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
+      override val errorRetryPolicy: RetryPolicy                      = watchErrorRetryPolicy
     }
 }
 

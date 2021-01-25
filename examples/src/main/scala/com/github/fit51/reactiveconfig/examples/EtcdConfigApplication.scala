@@ -64,7 +64,7 @@ object EtcdConfigApplication extends App {
 
   val future =
     (for {
-      client      <- Task.pure(EtcdClient.withWatch[Task](chManager))
+      client      <- Task.pure(EtcdClient.withWatch[Task](chManager, SimpleDelayPolicy(10 seconds)))
       shopService <- init(client, FillConfig.store)
       _           <- shopService.flow
     } yield ()).runToFuture
@@ -158,7 +158,8 @@ object CommandLineShop {
             printPriceList() >> flow
           case Some(_ @Exit) =>
             F.delay(println("Good buy!"))
-          case None => F.delay(println("Error parsing command... Try again")) >> flow
+          case None =>
+            F.delay(println("Error parsing command... Try again")) >> flow
         }
       } yield ()
   }

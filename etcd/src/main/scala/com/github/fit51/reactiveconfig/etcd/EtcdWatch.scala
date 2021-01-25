@@ -8,44 +8,25 @@ import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.{WatchCreateRequest, WatchGrpc, WatchRequest, WatchResponse}
 import io.grpc.stub.StreamObserver
-import monix.catnap.CircuitBreaker
-import monix.eval.Task
+import monix.eval.{Task, TaskLift}
 import monix.execution.Ack.{Continue, Stop}
-import monix.execution.exceptions.ExecutionRejectedException
 import monix.execution.{Ack, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 import monix.reactive.subjects.PublishSubject
-import monix.eval.TaskLift
 
-import scala.concurrent.duration._
 import scala.concurrent.Future
 
 trait Watch[F[_]] {
   self: EtcdClient[F] =>
-  import monix.execution.schedulers.CanBlock.permit
   import EtcdUtils._
+  import monix.execution.schedulers.CanBlock.permit
 
   def monixToGrpc[T]: Subscriber[T] => StreamObserver[T]
 
-  implicit def taskLift: TaskLift[F]
+  def errorRetryPolicy: RetryPolicy
 
-  /**
-    * This CB protects subscribe method.
-    */
-  private val circuitBreaker = CircuitBreaker[Task].unsafe(
-    maxFailures = 2,
-    resetTimeout = 4.seconds,
-    onOpen = Task {
-      logger.error("ETCD: Watch is unavailiable!")
-    },
-    onHalfOpen = Task {
-      logger.warn("ETCD: Watch is trying to connect!")
-    },
-    onClosed = Task {
-      logger.warn("ETCD: Watch connected to Etcd!")
-    }
-  )
+  implicit def taskLift: TaskLift[F]
 
   private lazy val watchService = WatchGrpc.stub(manager.channel)
 
@@ -87,7 +68,7 @@ trait Watch[F[_]] {
         logger.error("ETCD: Watch requestObserver crashed ", ex)
         removeWatchId(keyRange.start).map { _ =>
           // Run in background
-          protectedSubscribe(subscriber, keyRange, p).runToFuture
+          (Task.sleep(errorRetryPolicy.next) >> protectedSubscribe(subscriber, keyRange, p)).runToFuture
         }.runToFuture
       }
 
@@ -110,18 +91,13 @@ trait Watch[F[_]] {
       keyRange: KeyRange,
       p: Deferred[Task, Unit]
   ): Task[Unit] =
-    circuitBreaker.protect {
-      for {
-        map <- watchIds.read
-        id = map.get(keyRange.start)
-        _ <- Task.raiseError(new Exception("Watch already exists")).whenA(id.nonEmpty)
-        _ = subscribe(subscriber, keyRange, p)
-        _ <- p.get
-      } yield ()
-    }.onErrorRecoverWith {
-      case _: ExecutionRejectedException =>
-        circuitBreaker.awaitClose >> protectedSubscribe(subscriber, keyRange, p)
-    }
+    for {
+      map <- watchIds.read
+      id = map.get(keyRange.start)
+      _ <- Task.raiseError(new Exception("Watch already exists")).whenA(id.nonEmpty)
+      _ = subscribe(subscriber, keyRange, p)
+      _ <- p.get
+    } yield ()
 
   /** Subscribes on Watch Events for defined keyRange
     */

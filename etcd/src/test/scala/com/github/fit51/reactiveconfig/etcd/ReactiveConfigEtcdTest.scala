@@ -16,7 +16,6 @@ import org.scalatestplus.mockito.MockitoSugar
 import scala.util.Try
 import scala.concurrent.duration._
 
-//Does not work with Java 11, due to Mockito issue, use Java 8
 class ReactiveConfigEtcdTest extends WordSpecLike with Matchers with MockitoSugar {
   import monix.execution.Scheduler.Implicits.global
 
@@ -26,6 +25,7 @@ class ReactiveConfigEtcdTest extends WordSpecLike with Matchers with MockitoSuga
   }
   class EtcdClientTask(m: ChannelManager) extends EtcdClient[Task](m) with Watch[Task] {
     override implicit def taskLift: TaskLift[Task]                  = implicitly[TaskLift[Task]]
+    override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(2 seconds)
     override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
   }
 
