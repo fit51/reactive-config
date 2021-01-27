@@ -1,10 +1,6 @@
-val publishVersion = "0.1.0"
+enablePlugins(GitVersioning)
 
-version in ThisBuild := {
-  val branch = git.gitCurrentBranch.value
-  if (branch == "master") publishVersion
-  else s"$publishVersion-$branch-SNAPSHOT"
-}
+git.useGitDescribe := true
 
 organization in ThisBuild := "com.github.fit51"
 homepage in ThisBuild := Some(url("https://github.com/fit51/reactive-config"))
@@ -15,7 +11,7 @@ scmInfo in ThisBuild := Some(
 developers in ThisBuild := List(
   Developer("fit51", "Pavel Kondratyuk", "fit511@yandex.ru", url("https://github.com/fit51")),
   Developer("danilbykov", "Danil Bykov", "d.bykov@tinkoff.ru", url("https://github.com/danilbykov")),
-  Developer("Spinyk", "Alexander Dyumaev", "Spinyk@bk.ru", url("https://github.com/Spinyk"))
+  Developer("realvikr", "Viktor Sinchikov", "v.sinchikov@tinkoff.ru", url("https://github.com/realvikr"))
 )
 licenses in ThisBuild += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 publishMavenStyle in ThisBuild := true
