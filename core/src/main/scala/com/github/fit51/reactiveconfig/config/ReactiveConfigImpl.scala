@@ -53,6 +53,6 @@ class ReactiveConfigImpl[F[_], ParsedData](
         .filter(_.key == key)
         .map(kv => decoder.decode(kv.value.parsedData))
         .collect { case Success(v) => v }
-      result <- Reloadable(initial, observable)
+      result <- Reloadable(initial, observable, key.some)
     } yield result
 }
