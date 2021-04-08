@@ -1,6 +1,7 @@
 package com.github.fit51.reactiveconfig.typesafe
 
 import better.files.File
+import cats.effect.Blocker
 import cats.effect.Clock
 import cats.effect.IO
 import com.github.fit51.reactiveconfig.config.ReactiveConfigImpl
@@ -8,6 +9,7 @@ import io.circe.generic.auto._
 import io.circe.Json
 import java.nio.file.Paths
 import monix.eval.Task
+import monix.execution.Scheduler
 import monix.execution.Scheduler.Implicits.global
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
@@ -23,7 +25,7 @@ class TypesafeConfigStorageTest extends WordSpecLike with Matchers with MockitoS
 
   trait mocks {
     val path    = Paths.get("typesafe/src/test/resources/application.conf")
-    val storage = TypesafeConfigStorage[IO, Json](path)
+    val storage = TypesafeConfigStorage[IO, Json](path, Blocker.liftExecutionContext(Scheduler.io()))
     val config  = Await.result(ReactiveConfigImpl[IO, Json](storage).unsafeToFuture, 1 second)
 
     implicit val timer = new cats.effect.Timer[IO] {

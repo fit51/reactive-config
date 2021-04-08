@@ -5,6 +5,7 @@ import java.nio.file.{Files, Path, WatchEvent}
 import java.util
 
 import better.files.File
+import cats.effect.Blocker
 import cats.effect.Sync
 import cats.MonadError
 import cats.syntax.option._
@@ -30,17 +31,15 @@ object TypesafeConfigStorage {
     * Keep in mind, that, internally, storage renders HOCON to JSON and passes it to ConfigParser
     * You have to provide Json Parser to [[TypesafeConfigStorage]]
     **/
-  def apply[F[_]: Sync, Json](path: Path)(
+  def apply[F[_]: Sync, Json](path: Path, blocker: Blocker)(
       implicit error: MonadError[F, Throwable],
-      s: Scheduler,
       encoder: ConfigParser[Json]
   ): TypesafeConfigStorage[F, Json] =
-    new TypesafeConfigStorage[F, Json](path)
+    new TypesafeConfigStorage[F, Json](path, blocker)
 }
 
-class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path)(
-    implicit s: Scheduler,
-    encoder: ConfigParser[ParsedData]
+class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path, blocker: Blocker)(
+    implicit encoder: ConfigParser[ParsedData]
 ) extends ConfigStorage[F, ParsedData] with LazyLogging {
 
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
@@ -64,7 +63,7 @@ class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path)(
 
   override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
     Sync[F].delay {
-      FileWatch.watch(File(path.getParent), PublishSubject[WatchEvent.Kind[Path]]) flatMapLatest { _ =>
+      FileWatch.watch(File(path.getParent), PublishSubject[WatchEvent.Kind[Path]], blocker) flatMapLatest { _ =>
         ConfigFactory.invalidateCaches()
         Observable.fromIterable(
           ConfigFactory
