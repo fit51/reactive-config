@@ -3,6 +3,8 @@ package com.github.fit51.reactiveconfig.reloadable
 import cats.~>
 import cats.Id
 import cats.MonadError
+import cats.effect.Bracket
+import cats.effect.Resource
 import cats.kernel.Eq
 import cats.syntax.applicative._
 import cats.syntax.applicativeError._
@@ -107,6 +109,18 @@ trait Reloadable[F[_], A] { self =>
       f: A => F[B],
       reloadBehaviour: ReloadBehaviour[F, A, B] = ReloadBehaviour.simpleBehaviour[F, A, B]
   ): F[Reloadable[F, B]]
+
+  /**
+    * Returns a new Reloadable by mapping the supplied function that returns closeable resource.
+    *
+    * @param f is the mapping function that transforms the source
+    *
+    * @return a new Reloadable that's the result of mapping the given
+    *         function over the source
+    */
+  def mapResource[B](
+      f: A => Resource[F, B]
+  )(implicit bracket: Bracket[F, Throwable]): F[Reloadable[F, B]]
 
   /**
     * Creates a new Reloadable from the source and another given Reloadable, by emitting elements
@@ -250,6 +264,14 @@ private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observ
       case excp =>
         log("Failed to construct init value for Reloadable.mapF", excp) >> F.raiseError(excp)
     }
+
+  override def mapResource[B](
+      f: A => Resource[F, B]
+  )(implicit bracket: Bracket[F, Throwable]): F[Reloadable[F, B]] =
+    mapF(
+      a => f(a).allocated,
+      Stop((pair: (B, F[Unit])) => pair._2)
+    ).flatMap(_.map(_._1))
 
   override def combine[B, C](
       other: Reloadable[F, B],

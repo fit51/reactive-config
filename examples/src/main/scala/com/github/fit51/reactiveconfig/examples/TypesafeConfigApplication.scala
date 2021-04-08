@@ -3,6 +3,7 @@ package com.github.fit51.reactiveconfig.examples
 import java.nio.file.Paths
 
 import monix.eval.Task
+import cats.effect.Blocker
 import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
@@ -17,6 +18,7 @@ case class SimpleLib(foo: String, whatever: String)
 
 object TypesafeConfigApplication extends App with LazyLogging {
   implicit val scheduler = monix.execution.Scheduler.global
+  val blocker            = Blocker.liftExecutionContext(monix.execution.Scheduler.io())
 
   import CirceConfigParser._
   import CirceConfigDecoder._
@@ -45,7 +47,7 @@ object TypesafeConfigApplication extends App with LazyLogging {
     } yield ()
 
   val app = for {
-    storage <- Task.eval(TypesafeConfigStorage[Task, Json](Paths.get("examples/config/application.conf")))
+    storage <- Task.eval(TypesafeConfigStorage[Task, Json](Paths.get("examples/config/application.conf"), blocker))
     config  <- ReactiveConfigImpl[Task, Json](storage)
     _       <- Task.eval(println("Now change examples/config/application.conf file and see what happens!"))
     fiber   <- useConfig(config).start
