@@ -25,8 +25,7 @@ import scala.io.StdIn
 import scala.util.Try
 import scala.util.control.NonFatal
 
-/**
-  * Start etcd before running.
+/** Start etcd before running.
   * Run docker command, it will start etcd on 127.0.0.1:2379 without authentication:
   * sudo docker run -e ALLOW_NONE_AUTHENTICATION=yes -p 2379:2379 bitnami/etcd:latest
   * For run with authentication:
@@ -46,7 +45,7 @@ object EtcdConfigApplication extends App {
   def init[F[_]: ContextShift: Async: Concurrent: Timer: TaskLike](
       etcdClient: EtcdClient[F] with Watch[F],
       goods: Map[ProductId, Count]
-  )(implicit scheduler: Scheduler): F[CommandLineShopService[F]] = {
+  )(implicit scheduler: Scheduler): F[CommandLineShopService[F]] =
     for {
       _      <- FillConfig.fill
       config <- ReactiveConfigEtcd[F, Json](etcdClient)
@@ -60,7 +59,6 @@ object EtcdConfigApplication extends App {
       }
       implicit0(advertsService: AdvertsService[F]) = new AdvertsService[F](advertsConfig)
     } yield new CommandLineShopService[F]()
-  }
 
   val future =
     (for {
@@ -88,9 +86,8 @@ object CommandLineShop {
         buyRegexp.findFirstMatchIn(s).map(m => Buy(m.group(1), m.group(2).toDouble))
       ).toOption.flatten
 
-    def fromString(s: String): Option[Command] = {
+    def fromString(s: String): Option[Command] =
       showPrice(s) orElse buy(s) orElse exit(s)
-    }
 
     sealed trait Command
     case object ShowPrice                             extends Command
@@ -98,8 +95,8 @@ object CommandLineShop {
     case class Buy(productId: ProductId, cash: Money) extends Command
   }
 
-  class CommandLineShopService[F[_]: MonadError[*[_], Throwable]: Sync: Timer](
-      implicit store: StoreModule.StoreService[F],
+  class CommandLineShopService[F[_]: MonadError[*[_], Throwable]: Sync: Timer](implicit
+      store: StoreModule.StoreService[F],
       adverts: AdvertsModule.AdvertsService[F]
   ) {
     import Commands._
@@ -126,8 +123,8 @@ object CommandLineShop {
         header             <- store.getPriceListVersion.map(v => s"PriceList v_$v")
         goodsWithPriceList <- store.getPriceList
         content <- F.pure(
-          goodsWithPriceList.map {
-            case (productId, count, price) => String.format(format, productId.toString, count.toString, price.toString)
+          goodsWithPriceList.map { case (productId, count, price) =>
+            String.format(format, productId.toString, count.toString, price.toString)
           }.mkString("\n")
         )
         advertsHeader <- F.pure("----------------Special offers!---------------")
@@ -136,14 +133,13 @@ object CommandLineShop {
       } yield ()
     }
 
-    def buy(c: Buy): F[Unit] = {
+    def buy(c: Buy): F[Unit] =
       FE.handleErrorWith(for {
         change <- store.sell(c.productId, 1, c.cash)
         _      <- F.delay(println(s"Thanks for purchasing ${c.productId}. Here is your change $change"))
-      } yield ()) {
-        case NonFatal(e) => F.delay(println(s"Error: ${e.getMessage}"))
+      } yield ()) { case NonFatal(e) =>
+        F.delay(println(s"Error: ${e.getMessage}"))
       }
-    }
 
     def flow: F[_] =
       for {
@@ -190,11 +186,10 @@ object StoreModule {
     private val F = implicitly[Bracket[F, Throwable]]
 
     def updateGoods[A](f: Map[ProductId, Count] => F[(Map[ProductId, Count], A)]): F[A] =
-      F.bracketCase(goodsMVar.take)(
-        goods =>
-          f(goods) >>= { (input) =>
-            goodsMVar.put(input._1).as(input._2)
-          }
+      F.bracketCase(goodsMVar.take)(goods =>
+        f(goods) >>= { input =>
+          goodsMVar.put(input._1).as(input._2)
+        }
       ) {
         case (goods, _ @(ExitCase.Canceled | ExitCase.Error(_))) => goodsMVar.put(goods)
         case _                                                   => F.unit
@@ -204,8 +199,8 @@ object StoreModule {
       for {
         goods  <- goodsMVar.read
         config <- reloadable.get
-        withPrices = config.priceList.flatMap {
-          case (productId, price) => goods.get(productId).map(count => (productId, count, price))
+        withPrices = config.priceList.flatMap { case (productId, price) =>
+          goods.get(productId).map(count => (productId, count, price))
         }
       } yield withPrices.toSeq
 
@@ -236,15 +231,14 @@ object AdvertsModule {
   case class AdvertsConfig(priceList: Map[ProductId, Money], adverts: List[ProductId])
 
   class AdvertsService[F[_]: Functor](reloadable: Reloadable[F, AdvertsConfig]) {
-    def getBanners: F[String] = {
+    def getBanners: F[String] =
       reloadable.get.map { config =>
         config.priceList
           .filterKeys(config.adverts.contains)
-          .map {
-            case (id, price) => s"\t- Get $id only for $price!"
+          .map { case (id, price) =>
+            s"\t- Get $id only for $price!"
           }
           .mkString("\n")
       }
-    }
   }
 }

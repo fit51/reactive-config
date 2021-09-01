@@ -31,17 +31,16 @@ object TypesafeConfigApplication extends App with LazyLogging {
 
       _ <- Observable
         .interval(1 second)
-        .mapEval(
-          _ =>
-            for {
-              some      <- someR.get
-              libConfig <- libConfigR.get
-              combined  <- combinedR.get
-            } yield {
-              println(s"some: $some")
-              println(s"lib: $libConfig")
-              println(s"all together: $combined")
-            }
+        .mapEval(_ =>
+          for {
+            some      <- someR.get
+            libConfig <- libConfigR.get
+            combined  <- combinedR.get
+          } yield {
+            println(s"some: $some")
+            println(s"lib: $libConfig")
+            println(s"all together: $combined")
+          }
         )
         .lastL
     } yield ()

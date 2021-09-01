@@ -2,7 +2,7 @@ val circeVersion = "0.12.3"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.10",
-  crossScalaVersions := Seq("2.12.10", "2.13.1"),
+  crossScalaVersions := Seq("2.12.14", "2.13.5"),
   libraryDependencies ++= Seq(
     "io.monix"                   %% "monix"                          % "3.1.0" % Provided,
     "org.typelevel"              %% "cats-effect"                    % "2.0.0" % Provided,
@@ -17,7 +17,7 @@ lazy val commonSettings = Seq(
   ),
   scalafmtOnCompile := true,
   resolvers += Resolver.sonatypeRepo("releases"),
-  addCompilerPlugin("org.typelevel" % "kind-projector"      % "0.11.0" cross CrossVersion.full),
+  addCompilerPlugin("org.typelevel" % "kind-projector"      % "0.13.1" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
 )
 

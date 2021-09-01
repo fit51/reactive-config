@@ -11,9 +11,8 @@ object CirceConfigParser {
 
 class CirceConfigParser extends ConfigParser[Json] with StrictLogging {
   override def parse(rawData: String): Try[Json] =
-    parser.parse(rawData).toTry.recoverWith {
-      case e =>
-        logger.error(s"Unable to parse json from String: $rawData", e)
-        Failure(ReactiveConfigException(e.getMessage))
+    parser.parse(rawData).toTry.recoverWith { case e =>
+      logger.error(s"Unable to parse json from String: $rawData", e)
+      Failure(ReactiveConfigException(e.getMessage))
     }
 }

@@ -35,9 +35,7 @@ object Reloadable {
       connectableObservable <- Task.pure(ob.publish)
       canceler   = connectableObservable.connect()
       reloadable = new ReloadableImpl[F, A](initial, connectableObservable)
-      fiber <- connectableObservable
-        .consumeWith(Consumer.foreachEval(reloadable.modifyCurrentValue(mbKey, _)))
-        .start
+      fiber <- connectableObservable.consumeWith(Consumer.foreachEval(reloadable.modifyCurrentValue(mbKey, _))).start
     } yield {
       reloadable.canceler = (fiber.cancel >> Task.delay(canceler.cancel())).to[F]
       reloadable: Reloadable[F, A]
@@ -48,31 +46,26 @@ object Reloadable {
   }
 }
 
-/**
-  * Reloadable is a wrapped [[A]] value, that can be accessed at any time.
+/** Reloadable is a wrapped [[A]] value, that can be accessed at any time.
   *
   * @tparam F[_] reloading effect
   * @tparam A wrapped value
-  **/
+  */
 trait Reloadable[F[_], A] { self =>
 
-  /**
-    * Returns current value of this Reloadable.
+  /** Returns current value of this Reloadable.
     */
   def unsafeGet: A
 
-  /**
-    * Returns current value of this Reloadable.
+  /** Returns current value of this Reloadable.
     */
   def get: F[A]
 
-  /**
-    * Applies given function that may contains side-effect for each element of Reloadable.
+  /** Applies given function that may contains side-effect for each element of Reloadable.
     */
   def forEachF(f: A => F[Unit]): F[Unit]
 
-  /**
-    * Returns a new Reloadable with suppressed consecutive duplicated elemented elements.
+  /** Returns a new Reloadable with suppressed consecutive duplicated elemented elements.
     * Elements are compared by given function.
     *
     * @param makeKey is a function that returns a K key for each element, a value that's
@@ -80,8 +73,7 @@ trait Reloadable[F[_], A] { self =>
     */
   def distinctByKey[K: Eq](makeKey: (A) => K): F[Reloadable[F, A]]
 
-  /**
-    * Returns a new Reloadable by mapping the supplied function over the elements of
+  /** Returns a new Reloadable by mapping the supplied function over the elements of
     * the source Reloadable.
     *
     * @param f is the mapping function that transforms the source
@@ -95,8 +87,7 @@ trait Reloadable[F[_], A] { self =>
       reloadBehaviour: ReloadBehaviour[F, A, B] = ReloadBehaviour.simpleBehaviour[F, A, B]
   ): F[Reloadable[F, B]]
 
-  /**
-    * Returns a new Reloadable by mapping the supplied function that returns possibly lazy
+  /** Returns a new Reloadable by mapping the supplied function that returns possibly lazy
     * or asynchronous result.
     *
     * @param f is the mapping function that transforms the source
@@ -110,8 +101,7 @@ trait Reloadable[F[_], A] { self =>
       reloadBehaviour: ReloadBehaviour[F, A, B] = ReloadBehaviour.simpleBehaviour[F, A, B]
   ): F[Reloadable[F, B]]
 
-  /**
-    * Returns a new Reloadable by mapping the supplied function that returns closeable resource.
+  /** Returns a new Reloadable by mapping the supplied function that returns closeable resource.
     *
     * @param f is the mapping function that transforms the source
     *
@@ -122,8 +112,7 @@ trait Reloadable[F[_], A] { self =>
       f: A => Resource[F, B]
   )(implicit bracket: Bracket[F, Throwable]): F[Reloadable[F, B]]
 
-  /**
-    * Creates a new Reloadable from the source and another given Reloadable, by emitting elements
+  /** Creates a new Reloadable from the source and another given Reloadable, by emitting elements
     * created from pairs.
     *
     * @param other is Reloadable that gets paired with current Reloadable
@@ -134,8 +123,7 @@ trait Reloadable[F[_], A] { self =>
       reloadBehaviour: ReloadBehaviour[F, (A, B), C] = ReloadBehaviour.simpleBehaviour[F, (A, B), C]
   )(f: (A, B) => C): F[Reloadable[F, C]]
 
-  /**
-    * Creates a new Reloadable from the source and another given Reloadable, by emitting elements
+  /** Creates a new Reloadable from the source and another given Reloadable, by emitting elements
     * created from pairs. Creating new elements may contain lazy or asynchronous effect.
     *
     * @param other is Reloadable that gets paired with current Reloadable
@@ -146,17 +134,15 @@ trait Reloadable[F[_], A] { self =>
       reloadBehaviour: ReloadBehaviour[F, (A, B), C] = ReloadBehaviour.simpleBehaviour[F, (A, B), C]
   )(f: (A, B) => F[C]): F[Reloadable[F, C]]
 
-  /**
-    * Stops current Reloadable and cancels created subscriptions.
+  /** Stops current Reloadable and cancels created subscriptions.
     */
   def stop: F[Unit]
 
   protected[reloadable] def observable: Observable[A]
 
-  /**
-    * Returns a new Reloadable wrapped in another effect G.
+  /** Returns a new Reloadable wrapped in another effect G.
     */
-  def mapK[G[_]: TaskLike: TaskLift: MonadError[?[_], Throwable]]: G[Reloadable[G, A]]
+  def mapK[G[_]: TaskLike: TaskLift: MonadError[*[_], Throwable]]: G[Reloadable[G, A]]
 
   def makeVolatile: Volatile[F, A] =
     new Volatile[F, A] {
@@ -165,8 +151,7 @@ trait Reloadable[F[_], A] { self =>
     }
 }
 
-/**
-  * A Volatile is simplified Reloadable.
+/** A Volatile is simplified Reloadable.
   *
   * Reloadable provides a lot of possibilities for mapping and combining Reloadables but
   * it has complex interface where F[_] is used in covariant as well as in contravariant
@@ -195,10 +180,11 @@ trait Volatile[F[_], A] { self =>
     }
 }
 
-private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observable[A])(
-    implicit scheduler: Scheduler,
+private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observable[A])(implicit
+    scheduler: Scheduler,
     F: MonadError[F, Throwable]
-) extends Reloadable[F, A] with StrictLogging {
+) extends Reloadable[F, A]
+    with StrictLogging {
   import Reloadable._
 
   @volatile
@@ -260,9 +246,8 @@ private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observ
         case restart: Restart[F, A, B] =>
           mapAndRestartF(initB, observable, restart)
       }
-    } yield result) handleErrorWith {
-      case excp =>
-        log("Failed to construct init value for Reloadable.mapF", excp) >> F.raiseError(excp)
+    } yield result) handleErrorWith { case excp =>
+      log("Failed to construct init value for Reloadable.mapF", excp) >> F.raiseError(excp)
     }
 
   override def mapResource[B](
@@ -311,9 +296,8 @@ private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observ
         case restart: Restart[F, (A, B), C] =>
           mapAndRestartF(combinedInit, combinedObs, restart)
       }
-    } yield result) handleErrorWith {
-      case excp =>
-        log("Failed to construct init value for Reloadable.combineF", excp) >> F.raiseError(excp)
+    } yield result) handleErrorWith { case excp =>
+      log("Failed to construct init value for Reloadable.combineF", excp) >> F.raiseError(excp)
     }
 
   private[reloadable] var canceler: F[Unit] = F.unit
@@ -321,7 +305,7 @@ private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observ
   override def stop: F[Unit] =
     canceler
 
-  override def mapK[G[_]: TaskLike: TaskLift: MonadError[?[_], Throwable]]: G[Reloadable[G, A]] =
+  override def mapK[G[_]: TaskLike: TaskLift: MonadError[*[_], Throwable]]: G[Reloadable[G, A]] =
     Reloadable[G, A](initial, ob)
 
   private def mapEvalAndSkipErrors[G[_]: TaskLike, A, B](ob: Observable[A], f: A => G[B]): Observable[B] =
@@ -344,16 +328,11 @@ private class ReloadableImpl[F[_]: TaskLike: TaskLift, A](initial: A, ob: Observ
       restart: Restart[F, I, O]
   ): F[Reloadable[F, O]] = {
     val nextObservable = obs
-      .scanEvalF(init.asRight[O].pure[F]) {
-        case (state, newEl) =>
-          val o = state.fold(identity, identity)
-          restart
-            .restart(newEl, o)
-            .map(_.asRight[O])
-            .handleErrorWith {
-              case e =>
-                log("Failed to restart", e).as(o.asLeft[O])
-            }
+      .scanEvalF(init.asRight[O].pure[F]) { case (state, newEl) =>
+        val o = state.fold(identity, identity)
+        restart.restart(newEl, o).map(_.asRight[O]).handleErrorWith { case e =>
+          log("Failed to restart", e).as(o.asLeft[O])
+        }
       }
       .collect { case Right(o) => o }
     Reloadable.apply(init, nextObservable)
@@ -373,7 +352,7 @@ private class ReleasePrevOperator[A](init: A, release: A => Task[Unit]) extends 
       implicit val scheduler              = out.scheduler
       @volatile private[this] var prev: A = init
 
-      override def onNext(elem: A): Future[Ack] = {
+      override def onNext(elem: A): Future[Ack] =
         try {
           val nonUsed = prev
           prev = elem
@@ -387,7 +366,6 @@ private class ReleasePrevOperator[A](init: A, release: A => Task[Unit]) extends 
             onError(ex)
             Stop
         }
-      }
 
       override def onError(ex: Throwable): Unit = {
         releaseWithLogging(prev)

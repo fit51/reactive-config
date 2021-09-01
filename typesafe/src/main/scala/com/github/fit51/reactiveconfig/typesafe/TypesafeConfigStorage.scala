@@ -25,22 +25,22 @@ import scala.util.{Failure, Success}
 
 object TypesafeConfigStorage {
 
-  /**
-    * Creates new ConfigStorage for TypesafeConfig fetching data from HOCON file.
+  /** Creates new ConfigStorage for TypesafeConfig fetching data from HOCON file.
     * Note: Were use here [[Json]] as type parameter for [[ConfigParser]]
     * Keep in mind, that, internally, storage renders HOCON to JSON and passes it to ConfigParser
     * You have to provide Json Parser to [[TypesafeConfigStorage]]
-    **/
-  def apply[F[_]: Sync, Json](path: Path, blocker: Blocker)(
-      implicit error: MonadError[F, Throwable],
+    */
+  def apply[F[_]: Sync, Json](path: Path, blocker: Blocker)(implicit
+      error: MonadError[F, Throwable],
       encoder: ConfigParser[Json]
   ): TypesafeConfigStorage[F, Json] =
     new TypesafeConfigStorage[F, Json](path, blocker)
 }
 
-class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path, blocker: Blocker)(
-    implicit encoder: ConfigParser[ParsedData]
-) extends ConfigStorage[F, ParsedData] with LazyLogging {
+class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path, blocker: Blocker)(implicit
+    encoder: ConfigParser[ParsedData]
+) extends ConfigStorage[F, ParsedData]
+    with LazyLogging {
 
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
@@ -56,8 +56,8 @@ class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path, blocker: Blocker
           .root()
           .entrySet()
           .asScala
-          .foldLeft(storage)(
-            (storage, entry) => flattenHoconToJsonMap(entry.getKey, entry, parseHoconEntryToJson(entry), 0L, storage)
+          .foldLeft(storage)((storage, entry) =>
+            flattenHoconToJsonMap(entry.getKey, entry, parseHoconEntryToJson(entry), 0L, storage)
           )
       }
 

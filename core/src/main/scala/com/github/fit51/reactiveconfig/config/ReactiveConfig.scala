@@ -18,7 +18,7 @@ trait ReactiveConfig[F[_], ParsedData] { self =>
 
   def reloadable[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): F[Reloadable[F, T]]
 
-  def mapK[G[_]: TaskLike: TaskLift: MonadError[?[_], Throwable]](transform: F ~> G): ReactiveConfig[G, ParsedData] =
+  def mapK[G[_]: TaskLike: TaskLift: MonadError[*[_], Throwable]](transform: F ~> G): ReactiveConfig[G, ParsedData] =
     new ReactiveConfig[G, ParsedData] {
       override def unsafeGet[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): Try[T] =
         self.unsafeGet(key)

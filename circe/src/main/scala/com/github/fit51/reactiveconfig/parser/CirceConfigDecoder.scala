@@ -12,9 +12,8 @@ object CirceConfigDecoder {
 
 class CirceConfigDecoder[T](implicit d: Decoder[T]) extends ConfigDecoder[T, Json] with StrictLogging {
   override def decode(parsed: Json): Try[T] =
-    d.decodeJson(parsed).toTry.recoverWith {
-      case e =>
-        logger.error(s"Unable to decode json: $parsed", e)
-        Failure(ReactiveConfigException(e.getMessage))
+    d.decodeJson(parsed).toTry.recoverWith { case e =>
+      logger.error(s"Unable to decode json: $parsed", e)
+      Failure(ReactiveConfigException(e.getMessage))
     }
 }
