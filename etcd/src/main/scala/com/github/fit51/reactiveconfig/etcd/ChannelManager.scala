@@ -21,8 +21,7 @@ import scala.util.{Failure, Success, Try}
 
 object ChannelManager {
 
-  /**
-    * @param endpoints Format: https://host1.d.c:2379,https://host2.d.c:2379
+  /** @param endpoints Format: https://host1.d.c:2379,https://host2.d.c:2379
     * @return
     */
   def noAuth(
@@ -50,9 +49,7 @@ object ChannelManager {
   }
 }
 
-/**
-  *
-  * @param uris
+/** @param uris
   *                  Connection URI. Ex: https://host1.d.c:2379,https://host2.d.c:2379
   * @param authority
   *                  Authority enables TLS, Certificate provided by Server should contain Authority as CN or SAN
@@ -89,9 +86,7 @@ class ChannelManager(
   }
 
   protected def getSslContext() = {
-    val sslContext = GrpcSslContexts
-      .forClient()
-      .clientAuth(ClientAuth.REQUIRE)
+    val sslContext = GrpcSslContexts.forClient().clientAuth(ClientAuth.REQUIRE)
     (tmf match {
       case Some(ca) => sslContext.trustManager(ca)
       case None     => sslContext
@@ -108,28 +103,25 @@ trait Authorization extends ChannelManager {
   implicit val clock: Clock
 
   override protected[etcd] def channelBuilder =
-    super.channelBuilder
-      .intercept(new AuthTokenInterceptor)
+    super.channelBuilder.intercept(new AuthTokenInterceptor)
 
   @volatile private var token: Option[Token] = None
   private lazy val api                       = AuthGrpc.blockingStub(channel)
   private lazy val apiAsync                  = AuthGrpc.stub(channel)
 
-  def authenticate: Option[String] = {
+  def authenticate: Option[String] =
     extractToken(Try {
       api.authenticate(
         AuthenticateRequest(credentials.user, credentials.password)
       )
     }).toOption
-  }
 
-  def authenticateAsync: Future[String] = {
+  def authenticateAsync: Future[String] =
     apiAsync
       .authenticate(
         AuthenticateRequest(credentials.user, credentials.password)
       )
       .transform[String](extractToken _)
-  }
 
   private def extractToken(resp: Try[AuthenticateResponse]) = resp match {
     case Success(r) =>

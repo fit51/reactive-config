@@ -4,8 +4,7 @@ import scala.util.Try
 
 trait ConfigDecoder[T, ParsedData] {
 
-  /**
-    * Decode the given [[ParsedData]] to [[T]]
+  /** Decode the given [[ParsedData]] to [[T]]
     */
   def decode(parsed: ParsedData): Try[T]
 }

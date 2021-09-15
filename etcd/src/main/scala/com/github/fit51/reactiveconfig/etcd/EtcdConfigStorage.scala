@@ -17,9 +17,8 @@ import scala.util.{Failure, Success}
 
 object EtcdConfigStorage {
 
-  /**
-    * Creates new ConfigStorage for etcd fetching data wrapped in arbitrary F
-    **/
+  /** Creates new ConfigStorage for etcd fetching data wrapped in arbitrary F
+    */
   def apply[F[_]: Sync, Json](
       etcd: EtcdClient[F] with Watch[F],
       prefixes: NonEmptySet[String]
@@ -30,23 +29,21 @@ object EtcdConfigStorage {
 class EtcdConfigStorage[F[_]: Sync, ParsedData](
     etcd: EtcdClient[F] with Watch[F],
     prefixes: NonEmptySet[String]
-)(
-    implicit s: Scheduler,
+)(implicit
+    s: Scheduler,
     encoder: ConfigParser[ParsedData]
-) extends ConfigStorage[F, ParsedData] with LazyLogging {
+) extends ConfigStorage[F, ParsedData]
+    with LazyLogging {
   @volatile
   private var revision                                    = 0L
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
   override def load(): F[TrieMap[String, Value[ParsedData]]] =
     prefixes.toList.traverse { prefix =>
-      etcd
-        .getRecursiveSinceRevision(prefix, revision)
-        .map {
-          case (kvs, rev) =>
-            logger.info(s"EtcdConfig: Updated to rev: $rev")
-            kvs.foreach(saveKeyValue(_, checkVersions = true))
-        }
+      etcd.getRecursiveSinceRevision(prefix, revision).map { case (kvs, rev) =>
+        logger.info(s"EtcdConfig: Updated to rev: $rev")
+        kvs.foreach(saveKeyValue(_, checkVersions = true))
+      }
     }.flatMap(_ => storage.pure[F])
 
   override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
@@ -55,10 +52,7 @@ class EtcdConfigStorage[F[_]: Sync, ParsedData](
       .sequence
       .map(obs => Observable.fromIterable(obs).merge)
       .map { merged =>
-        val hotObservable = merged
-          .map(saveKeyValue(_))
-          .collect { case Some(value) => value }
-          .publish
+        val hotObservable = merged.map(saveKeyValue(_)).collect { case Some(value) => value }.publish
         hotObservable.connect()
         hotObservable
       }

@@ -19,19 +19,17 @@ object ReactiveConfigEtcd {
   def apply[F[_]: Sync: TaskLike: TaskLift, ParsedData](
       etcdClient: EtcdClient[F] with Watch[F],
       prefixes: NonEmptySet[String] = NonEmptySet.one("")
-  )(implicit scheduler: Scheduler, configParser: ConfigParser[ParsedData]): F[ReactiveConfig[F, ParsedData]] = {
+  )(implicit scheduler: Scheduler, configParser: ConfigParser[ParsedData]): F[ReactiveConfig[F, ParsedData]] =
     for {
       _       <- Sync[F].raiseError(new IntersectionError(prefixes)).whenA(doIntersect(prefixes))
       storage <- new EtcdConfigStorage[F, ParsedData](etcdClient, prefixes).pure[F]
       config  <- ReactiveConfigImpl(storage)
     } yield config
-  }
 
-  def doIntersect(prefixes: NonEmptySet[String]): Boolean = {
+  def doIntersect(prefixes: NonEmptySet[String]): Boolean =
     !prefixes.forall { prefix1 =>
       prefixes.forall { prefix2 =>
         prefix1 == prefix2 || !prefix1.startsWith(prefix2)
       }
     }
-  }
 }

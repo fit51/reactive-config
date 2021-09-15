@@ -16,9 +16,8 @@ import scala.util.{Failure, Success, Try}
 
 object ReactiveConfigImpl {
 
-  /**
-    * Creates new instance of Config using arbitrary F for reloading.
-    **/
+  /** Creates new instance of Config using arbitrary F for reloading.
+    */
   def apply[F[_]: TaskLike: TaskLift, ParsedData](
       configStorage: ConfigStorage[F, ParsedData]
   )(implicit s: Scheduler, F: MonadError[F, Throwable]): F[ReactiveConfig[F, ParsedData]] =
@@ -49,10 +48,9 @@ class ReactiveConfigImpl[F[_], ParsedData](
   def reloadable[T](key: String)(implicit decoder: ConfigDecoder[T, ParsedData]): F[Reloadable[F, T]] =
     for {
       initial <- get(key)
-      observable = watch
-        .filter(_.key == key)
-        .map(kv => decoder.decode(kv.value.parsedData))
-        .collect { case Success(v) => v }
+      observable = watch.filter(_.key == key).map(kv => decoder.decode(kv.value.parsedData)).collect {
+        case Success(v) => v
+      }
       result <- Reloadable(initial, observable, key.some)
     } yield result
 }

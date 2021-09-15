@@ -1,7 +1,7 @@
 val circeVersion = "0.12.3"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.10",
+  scalaVersion := "2.13.5",
   crossScalaVersions := Seq("2.12.14", "2.13.5"),
   libraryDependencies ++= Seq(
     "io.monix"                   %% "monix"                          % "3.1.0" % Provided,

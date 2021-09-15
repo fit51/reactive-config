@@ -57,8 +57,7 @@ class EtcdClient[F[_]: Async: ContextShift](val manager: ChannelManager)(implici
   def get(key: String): F[Option[KeyValue]] =
     kvg.range(RangeRequest(key.bytes)).map(resp => resp.kvs.headOption).liftToF
 
-  /**
-    * @return Updates since revision
+  /** @return Updates since revision
     */
   def getRecursiveSinceRevision(key: String, lastRevision: Long = 0, limit: Long = 0): F[(Seq[KeyValue], Long)] =
     if (lastRevision == 0)

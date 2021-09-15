@@ -6,16 +6,14 @@ import scala.collection.concurrent.TrieMap
 
 trait ConfigStorage[F[_], ParsedData] {
 
-  /**
-    * Load configuration
+  /** Load configuration
     *
     * @return key -> values, that contain ParsedData and key-value version
     * @see [[Value]]
     */
   def load(): F[TrieMap[String, Value[ParsedData]]]
 
-  /**
-    * Start observing config changes
+  /** Start observing config changes
     *
     * @return stream of changed key-value pairs.
     * @see[[ParsedKeyValue]]

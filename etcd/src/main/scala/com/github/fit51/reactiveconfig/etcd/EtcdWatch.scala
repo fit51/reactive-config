@@ -37,8 +37,7 @@ trait Watch[F[_]] {
   private def removeWatchId(key: String): Task[Unit] =
     watchIds.take.flatMap(m => watchIds.put(m - key))
 
-  /**
-    * @param subscriber will be subscribed to keyRange Events
+  /** @param subscriber will be subscribed to keyRange Events
     * @param p          is completed when "Created" WatchResponse is received.
     *                   If error occurs protectedSubscribe is called and p is completed with it's result.
     */
