@@ -101,7 +101,7 @@ trait Watch[F[_]] {
   /** Subscribes on Watch Events for defined keyRange
     */
   def watch(keyRange: KeyRange): F[Observable[KeyValue]] = {
-    val watchSubject = PublishSubject[KeyValue]
+    val watchSubject = PublishSubject[KeyValue]()
     Deferred[Task, Unit].flatMap { subscribed =>
       protectedSubscribe(Subscriber(watchSubject, scheduler), keyRange, subscribed)
     }.as(watchSubject: Observable[KeyValue]).to[F]

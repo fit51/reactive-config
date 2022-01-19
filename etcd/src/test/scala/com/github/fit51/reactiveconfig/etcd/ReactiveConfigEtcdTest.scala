@@ -49,12 +49,14 @@ class ReactiveConfigEtcdTest extends WordSpecLike with Matchers with MockitoSuga
       when(client.getRecursiveSinceRevision(any(), any(), any())).thenReturn(Task.pure((Seq.empty[KeyValue], 0L)))
       when(client.watch(any())).thenReturn(Task.pure(Observable.empty))
 
-      val etcdConfigFail =
-        ReactiveConfigEtcd[Task, ParsedData](client, intersectPrefixes1).redeem(_ => None, _ => Some(Unit))
+      val etcdConfigFail = ReactiveConfigEtcd[Task, ParsedData](client, intersectPrefixes1)
+        .use(_ => Task.unit)
+        .redeem(_ => None, _ => Some(()))
       etcdConfigFail.runSyncUnsafe(10 seconds) shouldBe None
 
-      val etcdConfigOk = ReactiveConfigEtcd[Task, ParsedData](client, okPrefixes1).redeem(_ => None, _ => Some(Unit))
-      etcdConfigOk.runSyncUnsafe(10 seconds) shouldBe Some(Unit)
+      val etcdConfigOk =
+        ReactiveConfigEtcd[Task, ParsedData](client, okPrefixes1).use(_ => Task.unit).redeem(_ => None, _ => Some(()))
+      etcdConfigOk.runSyncUnsafe(10 seconds) shouldBe Some(())
     }
   }
 

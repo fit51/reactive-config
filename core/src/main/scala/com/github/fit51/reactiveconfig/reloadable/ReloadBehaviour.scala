@@ -23,9 +23,10 @@ final case class Stop[F[_], A, B](stop: B => F[_]) extends ReloadBehaviour[F, A,
   *
   * When new [[A]] arrives - restarts current B instance with [[restart]]
   * @param restart shows how to restart current instance[[B]] with new input [[A]]
+  * @param stop shows how to stop last instance[[B]] when corresponded Reloadable is released
   * Note: Use this in cases, when [[B]] supports restart.
   */
-final case class Restart[F[_], A, B](restart: (A, B) => F[B]) extends ReloadBehaviour[F, A, B]
+final case class Restart[F[_], A, B](restart: (A, B) => F[B], stop: B => F[_]) extends ReloadBehaviour[F, A, B]
 
 object ReloadBehaviour {
   private val noOpBehaviour = new Simple[Nothing, Nothing, Nothing]()

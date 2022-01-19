@@ -5,7 +5,7 @@ import java.time.Clock
 import cats.{Functor, MonadError}
 import cats.data.OptionT
 import cats.effect.concurrent.MVar
-import cats.effect.{Async, Bracket, Concurrent, ContextShift, ExitCase, Sync, Timer}
+import cats.effect.{Async, Bracket, Concurrent, ContextShift, ExitCase, Resource, Sync, Timer}
 import cats.syntax.applicative._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -45,27 +45,25 @@ object EtcdConfigApplication extends App {
   def init[F[_]: ContextShift: Async: Concurrent: Timer: TaskLike](
       etcdClient: EtcdClient[F] with Watch[F],
       goods: Map[ProductId, Count]
-  )(implicit scheduler: Scheduler): F[CommandLineShopService[F]] =
+  )(implicit scheduler: Scheduler): Resource[F, CommandLineShopService[F]] =
     for {
-      _      <- FillConfig.fill
-      config <- ReactiveConfigEtcd[F, Json](etcdClient)
-
-      storeConfig                              <- config.reloadable[StoreConfig]("store.store")
-      implicit0(storeService: StoreService[F]) <- StoreModule.StoreService[F](goods, storeConfig)
-
+      _           <- Resource.liftF(FillConfig.fill)
+      config      <- ReactiveConfigEtcd[F, Json](etcdClient)
+      storeConfig <- config.reloadable[StoreConfig]("store.store")
       advertsList <- config.reloadable[List[ProductId]]("store.adverts")
       advertsConfig <- storeConfig.combine(advertsList) { (store, list) =>
         AdvertsConfig(store.priceList, list)
       }
+
+      implicit0(storeService: StoreService[F]) <- Resource.liftF(StoreModule.StoreService[F](goods, storeConfig))
       implicit0(advertsService: AdvertsService[F]) = new AdvertsService[F](advertsConfig)
     } yield new CommandLineShopService[F]()
 
   val future =
     (for {
-      client      <- Task.pure(EtcdClient.withWatch[Task](chManager, SimpleDelayPolicy(10 seconds)))
-      shopService <- init(client, FillConfig.store)
-      _           <- shopService.flow
-    } yield ()).runToFuture
+      client  <- EtcdClient.withWatch[Task](chManager, SimpleDelayPolicy(10 seconds))
+      service <- init(client, FillConfig.store)
+    } yield service).use(_.flow).runToFuture
 
   Await.result(future, Duration.Inf)
 }
