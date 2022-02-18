@@ -47,7 +47,7 @@ object EtcdConfigApplication extends App {
       goods: Map[ProductId, Count]
   )(implicit scheduler: Scheduler): Resource[F, CommandLineShopService[F]] =
     for {
-      _           <- Resource.liftF(FillConfig.fill)
+      _           <- Resource.liftF(FillConfig.fill(etcdClient))
       config      <- ReactiveConfigEtcd[F, Json](etcdClient)
       storeConfig <- config.reloadable[StoreConfig]("store.store")
       advertsList <- config.reloadable[List[ProductId]]("store.adverts")

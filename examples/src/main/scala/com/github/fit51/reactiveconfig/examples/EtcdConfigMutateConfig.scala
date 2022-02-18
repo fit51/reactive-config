@@ -13,8 +13,10 @@ import scala.concurrent.duration.Duration
 
 object EtcdConfigMutateConfig extends App {
   implicit val scheduler = Scheduler.global
-  implicit val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
-  Await.result(FillConfig.fill[Task].runToFuture, Duration.Inf)
+  val chManager          = ChannelManager.noAuth("http://127.0.0.1:2379")
+  val client             = new EtcdClient[Task](chManager)
+  Await.result(FillConfig.fill[Task](client).runToFuture, Duration.Inf)
+  client.close()
 }
 
 object FillConfig {
@@ -36,15 +38,13 @@ object FillConfig {
 
   import io.circe.syntax._
 
-  def fill[F[_]: ContextShift: Async](implicit scheduler: Scheduler, chManager: ChannelManager): F[Unit] = {
+  def fill[F[_]: ContextShift: Async](client: EtcdClient[F])(implicit scheduler: Scheduler): F[Unit] = {
     val F = implicitly[Async[F]]
     for {
-      client <- F.pure(new EtcdClient[F](chManager))
-      storeConfig = StoreConfig(priceList, "1")
-      _ <- client.put("store.store", storeConfig.asJson.noSpaces)
-      _ <- client.put("store.adverts", adverts.asJson.noSpaces)
-      _ <- F.delay(client.close())
-      _ <- F.delay(println("Finish!"))
+      storeConfig <- F.pure(StoreConfig(priceList, "1"))
+      _           <- client.put("store.store", storeConfig.asJson.noSpaces)
+      _           <- client.put("store.adverts", adverts.asJson.noSpaces)
+      _           <- F.delay(println("Finish!"))
     } yield ()
   }
 }

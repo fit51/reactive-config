@@ -1,5 +1,11 @@
+.bloop
+.history
+.metals
+.vscode
 .idea
 .idea_modules
+project/metals.sbt
+project/project
 **/target
 *.log
 /logs/*
