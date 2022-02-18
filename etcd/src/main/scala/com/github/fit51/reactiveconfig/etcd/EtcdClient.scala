@@ -1,6 +1,6 @@
 package com.github.fit51.reactiveconfig.etcd
 
-import cats.effect.{Async, ContextShift}
+import cats.effect.{Async, ContextShift, Resource}
 import com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
 import com.typesafe.scalalogging.LazyLogging
@@ -21,19 +21,27 @@ object EtcdClient {
       authority: String,
       trustManagerFactory: TrustManagerFactory,
       options: ChannelOptions = ChannelOptions()
-  )(implicit scheduler: Scheduler, clock: Clock) =
-    new EtcdClient(
-      ChannelManager(endpoints, credential, options, Some(authority), Some(trustManagerFactory))
-    )
+  )(implicit scheduler: Scheduler, clock: Clock): Resource[F, EtcdClient[F]] =
+    Resource.make(
+      Async[F].delay(
+        new EtcdClient(
+          ChannelManager(endpoints, credential, options, Some(authority), Some(trustManagerFactory))
+        )
+      )
+    ) { etcdClient =>
+      Async[F].delay(etcdClient.close())
+    }
 
   def withWatch[F[_]: Async: ContextShift: TaskLift](
       channelManager: ChannelManager,
       watchErrorRetryPolicy: RetryPolicy
   )(implicit scheduler: Scheduler) =
-    new EtcdClient(channelManager) with Watch[F] {
+    Resource.make(Async[F].delay(new EtcdClient(channelManager) with Watch[F] {
       override val taskLift: TaskLift[F]                              = TaskLift[F]
       override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = GrpcMonix.monixToGrpcObserverBuffered
       override val errorRetryPolicy: RetryPolicy                      = watchErrorRetryPolicy
+    })) { etcdClient =>
+      Async[F].delay(etcdClient.close())
     }
 }
 

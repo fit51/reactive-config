@@ -4,7 +4,7 @@ import better.files.File
 import cats.effect.Blocker
 import cats.effect.Clock
 import cats.effect.IO
-import com.github.fit51.reactiveconfig.config.ReactiveConfigImpl
+import com.github.fit51.reactiveconfig.config.ReactiveConfig
 import io.circe.generic.auto._
 import io.circe.Json
 import java.nio.file.Paths
@@ -26,7 +26,7 @@ class TypesafeConfigStorageTest extends WordSpecLike with Matchers with MockitoS
   trait mocks {
     val path    = Paths.get("typesafe/src/test/resources/application.conf")
     val storage = TypesafeConfigStorage[IO, Json](path, Blocker.liftExecutionContext(Scheduler.io()))
-    val config  = Await.result(ReactiveConfigImpl[IO, Json](storage).unsafeToFuture, 1 second)
+    val config  = Await.result(ReactiveConfig[IO, Json](storage).allocated.map(_._1).unsafeToFuture(), 1 second)
 
     implicit val timer = new cats.effect.Timer[IO] {
       override def clock: Clock[IO] =
@@ -52,43 +52,45 @@ class TypesafeConfigStorageTest extends WordSpecLike with Matchers with MockitoS
     }
 
     "config should be able to reload primitive value on change" in new mocks {
-      (for {
-        reloadable <- config.reloadable[Int]("changeable.parameter.value")
-        first      <- reloadable.get
-        _ <- IO.delay(
-          File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
-        )
-        _      <- IO.sleep(300 millis)
-        second <- reloadable.get
-      } yield {
-        first shouldBe 1
-        second shouldBe 2
-      }).guarantee(
+      config
+        .reloadable[Int]("changeable.parameter.value").use { reloadable =>
+          for {
+            first <- reloadable.get
+            _ <- IO.delay {
+              File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
+            }
+            _      <- IO.sleep(5 seconds)
+            second <- reloadable.get
+          } yield {
+            first shouldBe 1
+            second shouldBe 2
+          }
+        }.guarantee(
           IO.delay(
             File(path.getParent.resolve("changeable.conf")).overwrite(changeable(1))
           )
-        )
-        .unsafeRunSync()
+        ).unsafeRunSync()
     }
 
     "config should be able to reload case class on change" in new mocks {
-      (for {
-        reloadable <- config.reloadable[Parameter]("changeable.parameter")
-        first      <- reloadable.get
-        _ <- IO.delay(
-          File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
-        )
-        _      <- IO.sleep(300 millis)
-        second <- reloadable.get
-      } yield {
-        first shouldBe Parameter(1)
-        second shouldBe Parameter(2)
-      }).guarantee(
+      config
+        .reloadable[Parameter]("changeable.parameter").use { reloadable =>
+          for {
+            first <- reloadable.get
+            _ <- IO.delay(
+              File(path.getParent.resolve("changeable.conf")).overwrite(changeable(2))
+            )
+            _      <- IO.sleep(5 seconds)
+            second <- reloadable.get
+          } yield {
+            first shouldBe Parameter(1)
+            second shouldBe Parameter(2)
+          }
+        }.guarantee(
           IO.delay(
             File(path.getParent.resolve("changeable.conf")).overwrite(changeable(1))
           )
-        )
-        .unsafeRunSync()
+        ).unsafeRunSync()
     }
   }
 }

@@ -1,11 +1,12 @@
 package com.github.fit51.reactiveconfig.typesafe
 
 import java.io.FileNotFoundException
-import java.nio.file.{Files, Path, WatchEvent}
+import java.nio.file.{Files, Path}
 import java.util
 
 import better.files.File
 import cats.effect.Blocker
+import cats.effect.Resource
 import cats.effect.Sync
 import cats.MonadError
 import cats.syntax.option._
@@ -14,9 +15,7 @@ import com.github.fit51.reactiveconfig.storage.ConfigStorage
 import com.github.fit51.reactiveconfig.{ParsedKeyValue, Value}
 import com.typesafe.config._
 import com.typesafe.scalalogging.LazyLogging
-import monix.execution.Scheduler
 import monix.reactive.Observable
-import monix.reactive.subjects.PublishSubject
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.JavaConverters._
@@ -44,7 +43,7 @@ class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path, blocker: Blocker
 
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
-  override def load(): F[TrieMap[String, Value[ParsedData]]] =
+  override def load: F[TrieMap[String, Value[ParsedData]]] =
     if (!Files.exists(path))
       MonadError[F, Throwable].raiseError(new FileNotFoundException(path.toString))
     else
@@ -61,35 +60,38 @@ class TypesafeConfigStorage[F[_]: Sync, ParsedData](path: Path, blocker: Blocker
           )
       }
 
-  override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
-    Sync[F].delay {
-      FileWatch.watch(File(path.getParent), PublishSubject[WatchEvent.Kind[Path]], blocker) flatMapLatest { _ =>
-        ConfigFactory.invalidateCaches()
-        Observable.fromIterable(
-          ConfigFactory
-            .parseFile(File(path).toJava, ConfigParseOptions.defaults())
-            .resolve(ConfigResolveOptions.defaults())
-            .root()
-            .entrySet()
-            .asScala
-            .map { entry =>
-              val maybeJson = parseHoconEntryToJson(entry)
-              if (maybeJson.exists(json => storage.get(entry.getKey).exists(_.parsedData == json)))
-                None
-              else
-                flattenHoconToJsonMap(
-                  key = entry.getKey,
-                  entry = entry,
-                  maybeJson = maybeJson,
-                  revision = storage.get(entry.getKey).map(_.version).getOrElse(0L) + 1,
-                  storage = mutable.Map.empty[String, Value[ParsedData]]
-                ).map(kv => ParsedKeyValue(kv._1, kv._2)).some
-            }
-            .collect { case Some(kvs) => kvs }
-            .flatten
-        )
-      }
-    }
+  override def watch: Resource[F, Observable[ParsedKeyValue[ParsedData]]] =
+    for {
+      fileEvents <- FileWatch.watch(File(path.getParent), blocker)
+      result <- Resource.liftF(Sync[F].delay {
+        fileEvents.flatMapLatest { _ =>
+          ConfigFactory.invalidateCaches()
+          Observable.fromIterable(
+            ConfigFactory
+              .parseFile(File(path).toJava, ConfigParseOptions.defaults())
+              .resolve(ConfigResolveOptions.defaults())
+              .root()
+              .entrySet()
+              .asScala
+              .map { entry =>
+                val maybeJson = parseHoconEntryToJson(entry)
+                if (maybeJson.exists(json => storage.get(entry.getKey).exists(_.parsedData == json)))
+                  None
+                else
+                  flattenHoconToJsonMap(
+                    key = entry.getKey,
+                    entry = entry,
+                    maybeJson = maybeJson,
+                    revision = storage.get(entry.getKey).map(_.version).getOrElse(0L) + 1,
+                    storage = mutable.Map.empty[String, Value[ParsedData]]
+                  ).map(kv => ParsedKeyValue(kv._1, kv._2)).some
+              }
+              .collect { case Some(kvs) => kvs }
+              .flatten
+          )
+        }
+      })
+    } yield result
 
   private def flattenHoconToJsonMap[T <: mutable.Map[String, Value[ParsedData]]](
       key: String,

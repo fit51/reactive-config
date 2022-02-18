@@ -1,8 +1,7 @@
 package com.github.fit51.reactiveconfig.config
 
-import cats.effect.Clock
+import cats.effect.{Clock, Resource}
 import cats.effect.IO
-import cats.instances.future.catsStdInstancesForFuture
 import com.github.fit51.reactiveconfig.parser.ConfigDecoder
 import com.github.fit51.reactiveconfig.storage.ConfigStorage
 import com.github.fit51.reactiveconfig.{ParsedKeyValue, ReactiveConfigException, Value}
@@ -31,7 +30,7 @@ class ReactiveConfigImplTest extends WordSpecLike with Matchers with MockitoSuga
     val watch: Observable[ParsedKeyValue[String]] =
       Observable.evalDelayed(2 seconds, ParsedKeyValue("key1", Value("value2", 1L)))
 
-    val config = new ReactiveConfigImpl[IO, String](storage, watch)
+    val config: ReactiveConfig[IO, String] = new ReactiveConfigImpl[IO, String](storage, watch)
 
     implicit val timer = new cats.effect.Timer[IO] {
       override def clock: Clock[IO] = Clock.create
@@ -60,38 +59,33 @@ class ReactiveConfigImplTest extends WordSpecLike with Matchers with MockitoSuga
      */
 
     "return reloadable" in new mocks {
-      (for {
-        reloadable <- config.reloadable[String]("key1")
-        value1     <- reloadable.get
-        _          <- IO.sleep(3.seconds)
-        value2     <- reloadable.get
-      } yield {
-        value1 shouldBe "value1"
-        value2 shouldBe "value2"
-      }).unsafeRunSync()
+      config
+        .reloadable[String]("key1").use(reloadable =>
+          for {
+            value1 <- reloadable.get
+            _      <- IO.sleep(3.seconds)
+            value2 <- reloadable.get
+          } yield {
+            value1 shouldBe "value1"
+            value2 shouldBe "value2"
+          }
+        ).unsafeRunSync()
     }
 
     "be able to create itself using any effect and future" in new mocks {
       val configStorageIO = mock[ConfigStorage[IO, String]]
 
-      when(configStorageIO.watch()).thenReturn(IO.pure(watch))
-      when(configStorageIO.load()).thenReturn(IO(storage))
+      when(configStorageIO.watch).thenReturn(Resource.pure(watch))
+      when(configStorageIO.load).thenReturn(IO(storage))
 
-      Await.result(ReactiveConfigImpl[IO, String](configStorageIO).unsafeToFuture, 1 second)
+      Await.result(ReactiveConfig[IO, String](configStorageIO).use(_ => IO.unit).unsafeToFuture(), 1 second)
 
       val configStorageTask = mock[ConfigStorage[Task, String]]
 
-      when(configStorageTask.watch()).thenReturn(Task.pure(watch))
-      when(configStorageTask.load()).thenReturn(Task(storage))
+      when(configStorageTask.watch).thenReturn(Resource.pure(watch))
+      when(configStorageTask.load).thenReturn(Task(storage))
 
-      Await.result(ReactiveConfigImpl[Task, String](configStorageTask).runToFuture, 1 second)
-
-      val configStorageFuture = mock[ConfigStorage[Future, String]]
-
-      when(configStorageFuture.watch()).thenReturn(Future.successful(watch))
-      when(configStorageFuture.load()).thenReturn(Future(storage))
-
-      ReactiveConfigImpl[Future, String](configStorageFuture)
+      Await.result(ReactiveConfig[Task, String](configStorageTask).use(_ => Task.unit).runToFuture, 1 second)
     }
   }
 }

@@ -1,6 +1,7 @@
 package com.github.fit51.reactiveconfig.etcd
 
 import cats.data.NonEmptySet
+import cats.effect.Resource
 import cats.effect.Sync
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
@@ -38,7 +39,7 @@ class EtcdConfigStorage[F[_]: Sync, ParsedData](
   private var revision                                    = 0L
   private val storage: TrieMap[String, Value[ParsedData]] = TrieMap.empty
 
-  override def load(): F[TrieMap[String, Value[ParsedData]]] =
+  override def load: F[TrieMap[String, Value[ParsedData]]] =
     prefixes.toList.traverse { prefix =>
       etcd.getRecursiveSinceRevision(prefix, revision).map { case (kvs, rev) =>
         logger.info(s"EtcdConfig: Updated to rev: $rev")
@@ -46,16 +47,21 @@ class EtcdConfigStorage[F[_]: Sync, ParsedData](
       }
     }.flatMap(_ => storage.pure[F])
 
-  override def watch(): F[Observable[ParsedKeyValue[ParsedData]]] =
-    prefixes.toList
-      .map(prefix => etcd.watch(EtcdUtils.getRange(prefix)))
-      .sequence
-      .map(obs => Observable.fromIterable(obs).merge)
-      .map { merged =>
-        val hotObservable = merged.map(saveKeyValue(_)).collect { case Some(value) => value }.publish
-        hotObservable.connect()
-        hotObservable
-      }
+  override def watch: Resource[F, Observable[ParsedKeyValue[ParsedData]]] =
+    for {
+      merged <- Resource.liftF(
+        prefixes.toList
+          .map(prefix => etcd.watch(EtcdUtils.getRange(prefix)))
+          .sequence
+          .map(obs => Observable.fromIterable(obs).merge)
+      )
+      result <- Resource
+        .make(Sync[F].delay {
+          val hotObservable = merged.map(saveKeyValue(_)).collect { case Some(value) => value }.publish
+          val canceller     = hotObservable.connect()
+          (hotObservable, canceller)
+        })(tuple => Sync[F].delay(tuple._2.cancel())).map(_._1)
+    } yield result
 
   private def saveKeyValue(kv: KeyValue, checkVersions: Boolean = false): Option[ParsedKeyValue[ParsedData]] =
     encoder.parse(kv.value.utf8) match {
