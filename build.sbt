@@ -1,4 +1,5 @@
 val circeVersion = "0.12.3"
+val logbackVersion = "1.2.10"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.5",
@@ -9,8 +10,8 @@ lazy val commonSettings = Seq(
     "com.typesafe.scala-logging" %% "scala-logging"                  % "3.9.2",
     "org.mockito"                % "mockito-core"                    % "3.7.7" % Test,
     "org.scalatest"              %% "scalatest"                      % "3.0.8" % Test,
-    "ch.qos.logback"             % "logback-classic"                 % "1.2.3" % Test,
-    "ch.qos.logback"             % "logback-core"                    % "1.2.3" % Test,
+    "ch.qos.logback"             % "logback-classic"                 % logbackVersion % Test,
+    "ch.qos.logback"             % "logback-core"                    % logbackVersion % Test,
     "io.circe"                   %% "circe-generic"                  % circeVersion % Test,
     "org.slf4j"                  % "slf4j-api"                       % "1.7.25" % Test,
     "com.dimafeng"               %% "testcontainers-scala-scalatest" % "0.38.8" % Test
@@ -96,8 +97,8 @@ lazy val examples = project
       "io.monix"       %% "monix"          % "3.1.0",
       "org.typelevel"  %% "cats-effect"    % "2.0.0",
       "io.circe"       %% "circe-parser"   % circeVersion,
-      "ch.qos.logback" % "logback-classic" % "1.2.3",
-      "ch.qos.logback" % "logback-core"    % "1.2.3",
+      "ch.qos.logback" % "logback-classic" % logbackVersion,
+      "ch.qos.logback" % "logback-core"    % logbackVersion,
       "io.circe"       %% "circe-generic"  % circeVersion
     )
   )
