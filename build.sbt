@@ -1,114 +1,154 @@
-val circeVersion = "0.12.3"
-val logbackVersion = "1.2.10"
+val circeVersion = "0.14.1"
+val logbackVersion = "1.4.5"
+
+val scala212 = "2.12.14"
+val scala213 = "2.13.8"
+val allScalaVersions = List(scala212, scala213)
+
+val scalaTestContainers = "com.dimafeng" %% "testcontainers-scala-scalatest" % "0.40.11" % Test
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.5",
-  crossScalaVersions := Seq("2.12.14", "2.13.5"),
+  scalaVersion := scala213,
+  scalacOptions ++= List(
+    "-feature",
+    "-unchecked",
+    "-deprecation",
+    "-Ywarn-unused:imports",
+    "-language:higherKinds",
+    "-language:postfixOps"
+  ) ::: (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, 12)) => List("-Xexperimental")
+    case Some((2, 13)) => List("-Ymacro-annotations")
+    case _ => throw new Exception("!")
+  }),
   libraryDependencies ++= Seq(
-    "io.monix"                   %% "monix"                          % "3.1.0" % Provided,
-    "org.typelevel"              %% "cats-effect"                    % "2.0.0" % Provided,
-    "com.typesafe.scala-logging" %% "scala-logging"                  % "3.9.2",
-    "org.mockito"                % "mockito-core"                    % "3.7.7" % Test,
-    "org.scalatest"              %% "scalatest"                      % "3.0.8" % Test,
-    "ch.qos.logback"             % "logback-classic"                 % logbackVersion % Test,
-    "ch.qos.logback"             % "logback-core"                    % logbackVersion % Test,
-    "io.circe"                   %% "circe-generic"                  % circeVersion % Test,
-    "org.slf4j"                  % "slf4j-api"                       % "1.7.25" % Test,
-    "com.dimafeng"               %% "testcontainers-scala-scalatest" % "0.38.8" % Test
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+    "org.mockito"                % "mockito-core"   % "3.7.7" % Test,
+    "org.scalatest"              %% "scalatest"     % "3.0.8" % Test
   ),
   scalafmtOnCompile := true,
   resolvers += Resolver.sonatypeRepo("releases"),
-  addCompilerPlugin("org.typelevel" % "kind-projector"      % "0.13.1" cross CrossVersion.full),
+  addCompilerPlugin("org.typelevel" % "kind-projector"      % "0.13.2" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
 )
 
-lazy val core = project
+lazy val `reactiveconfig-core` = projectMatrix
   .in(file("core"))
   .settings(commonSettings)
-  .settings(
-    name := "reactive-config-core"
-  )
+  .settings(libraryDependencies += "org.typelevel" %% "cats-core" % "2.7.0")
+  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val circe = project
+lazy val `reactiveconfig-core-zio` = projectMatrix
+  .in(file("core-zio"))
+  .settings(commonSettings)
+  .settings(libraryDependencies += "dev.zio" %% "zio" % "1.0.13")
+  .dependsOn(`reactiveconfig-core` % "compile->compile;test->test")
+  .jvmPlatform(scalaVersions = allScalaVersions)
+
+lazy val `reactiveconfig-core-ce` = projectMatrix
+  .in(file("core-ce"))
+  .settings(commonSettings)
+  .settings(libraryDependencies += "org.typelevel" %% "cats-effect" % "2.5.4")
+  .dependsOn(`reactiveconfig-core` % "compile->compile;test->test")
+  .jvmPlatform(scalaVersions = allScalaVersions)
+
+lazy val `reactiveconfig-circe` = projectMatrix
   .in(file("circe"))
-  .dependsOn(core)
+  .dependsOn(`reactiveconfig-core`)
   .settings(commonSettings)
-  .settings(
-    name := "reactive-config-circe",
-    libraryDependencies ++= Seq(
-      "io.circe" %% "circe-parser" % circeVersion % Provided
-    )
-  )
+  .settings(libraryDependencies ++= List(
+    "io.circe" %% "circe-parser" % circeVersion % Provided,
+    "io.circe" %% "circe-generic" % circeVersion % Test
+  ))
+  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val etcd = project
+lazy val `reactiveconfig-etcd` = projectMatrix
   .in(file("etcd"))
-  .dependsOn(core)
+  .dependsOn(`reactiveconfig-core`)
   .settings(commonSettings)
+  .settings(libraryDependencies ++= List(
+    "io.grpc" % "grpc-netty" % "1.43.2",
+    "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
+    "com.pauldijou" %% "jwt-core" % "4.3.0"
+  ))
   .settings(
-    name := "reactive-config-etcd",
-    libraryDependencies ++= Seq(
-      "io.grpc"              % "grpc-netty"                      % "1.41.0",
-      "io.netty"             % "netty-tcnative-boringssl-static" % "2.0.25.Final",
-      "io.netty"             % "netty-codec-http2"               % "4.1.53.Final",
-      "io.netty"             % "netty-handler-proxy"             % "4.1.53.Final",
-      "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % scalapb.compiler.Version.scalapbVersion,
-      "com.pauldijou"        %% "jwt-core"                       % "4.2.0"
-    )
-  ).settings {
-    val generateSources = TaskKey.apply[Unit]("generateSources")
-
-    def genPackage(f: File): File = f / "com" / "github" / "fit51" / "reactiveconfig" / "etcd" / "gen"
-    generateSources := {
-      Compile / PB.targets := Seq(
-        scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
-      )
-      (PB.generate in Compile).value
-      val genDir    = genPackage((sourceManaged in Compile).value / "scalapb")
-      val targetDir = genPackage((sourceDirectory in Compile).value / "scala")
-      println(s"Generated in: $genDir")
-      println(s"Moved to: $targetDir")
-      IO.copyDirectory(genDir, targetDir, true, true)
-      IO.delete(genDir)
-    }
-  }
-
-lazy val typesafe = project
-  .in(file("typesafe"))
-  .dependsOn(core)
-  .dependsOn(circe % "test->compile")
-  .settings(commonSettings)
-  .settings(
-    name := "reactive-config-typesafe",
-    libraryDependencies ++= Seq(
-      "com.typesafe" % "config" % "1.3.1",
-      //    TODO monix-nio is more convenient for our purposes but it uses Monix v 3.0.0-M3 which is incompatible with 3.0.0-RC2
-      //    TODO better-files used instead. One should use monix-nio in future
-      "com.github.pathikrit" %% "better-files" % "3.8.0",
-      "io.circe"             %% "circe-parser" % circeVersion % Test
+    Compile / PB.protoSources := Seq(
+      (Compile / sourceDirectory).value / "protobuf_auth"
+    ),
+    Compile / PB.targets := Seq(
+      scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
     )
   )
+  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val examples = project
-  .in(file("examples"))
-  .dependsOn(etcd, typesafe, circe)
+lazy val `reactiveconfig-etcd-ce` = projectMatrix
+  .in(file("etcd-ce"))
+  .dependsOn(`reactiveconfig-core-ce`, `reactiveconfig-etcd`)
   .settings(commonSettings)
+  .settings(libraryDependencies ++= List(scalaTestContainers))
   .settings(
-    name := "reactive-config-examples",
+    Compile / PB.protoSources := Seq(
+      (`reactiveconfig-etcd`.jvm(scala213) / Compile / sourceDirectory).value / "protobuf"
+    )
+  )
+  .enablePlugins(Fs2Grpc)
+  .jvmPlatform(scalaVersions = allScalaVersions)
+
+lazy val `reactiveconfig-etcd-zio` = projectMatrix
+  .in(file("etcd-zio"))
+  .dependsOn(`reactiveconfig-core-zio`, `reactiveconfig-etcd`)
+  .settings(commonSettings)
+  .settings(libraryDependencies ++= List(scalaTestContainers))
+  .settings(
+    Compile / PB.protoSources := Seq(
+      (`reactiveconfig-etcd`.jvm(scala213) / Compile / sourceDirectory).value / "protobuf"
+    ),
+    Compile / PB.targets := Seq(
+      scalapb.gen(grpc = true) -> (Compile / sourceManaged).value,
+      scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb"
+    )
+  )
+  .jvmPlatform(scalaVersions = allScalaVersions)
+
+lazy val `reactiveconfig-typesafe` = projectMatrix
+  .in(file("typesafe"))
+  .settings(commonSettings)
+  .settings(libraryDependencies += "com.typesafe" % "config" % "1.4.2")
+  .dependsOn(`reactiveconfig-core`)
+  .jvmPlatform(scalaVersions = allScalaVersions)
+
+lazy val `reactiveconfig-typesafe-ce` = projectMatrix
+  .in(file("typesafe-ce"))
+  .settings(commonSettings)
+  .dependsOn(`reactiveconfig-core-ce`, `reactiveconfig-typesafe`)
+  .settings(libraryDependencies ++= List(
+    "co.fs2" %% "fs2-io" % "2.5.9",
+    "io.circe" %% "circe-parser" % circeVersion % Test
+  ))
+ .jvmPlatform(scalaVersions = allScalaVersions)
+
+lazy val `reactiveconfig-typesafe-zio` = projectMatrix
+  .in(file("typesafe-zio"))
+  .settings(commonSettings)
+  .dependsOn(`reactiveconfig-core-zio`, `reactiveconfig-typesafe`)
+  .settings(libraryDependencies ++= List(
+    "dev.zio" %% "zio-nio" % "1.0.0-RC12",
+    "io.circe" %% "circe-parser" % circeVersion % Test
+  ))
+  .jvmPlatform(scalaVersions = allScalaVersions)
+
+lazy val examples = projectMatrix
+  .in(file("examples"))
+  .settings(commonSettings)
+  .dependsOn(`reactiveconfig-etcd-ce`, `reactiveconfig-typesafe-ce`, `reactiveconfig-circe`)
+  .settings(
+    name := "reactiveconfig-examples",
+    publish / skip := true,
     libraryDependencies ++= Seq(
-      "io.monix"       %% "monix"          % "3.1.0",
-      "org.typelevel"  %% "cats-effect"    % "2.0.0",
-      "io.circe"       %% "circe-parser"   % circeVersion,
       "ch.qos.logback" % "logback-classic" % logbackVersion,
       "ch.qos.logback" % "logback-core"    % logbackVersion,
-      "io.circe"       %% "circe-generic"  % circeVersion
+      "io.circe"       %% "circe-generic"  % circeVersion,
+      "io.circe"       %% "circe-parser"  % circeVersion
     )
   )
-
-scalacOptions in ThisBuild ++= Seq(
-  "-feature",
-  "-unchecked",
-  "-deprecation",
-  "-Ywarn-unused:imports",
-  "-language:higherKinds",
-  "-language:postfixOps"
-)
+  .jvmPlatform(scalaVersions = allScalaVersions)

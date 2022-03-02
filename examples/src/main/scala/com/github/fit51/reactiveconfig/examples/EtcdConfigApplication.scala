@@ -1,71 +1,66 @@
 package com.github.fit51.reactiveconfig.examples
 
-import java.time.Clock
-
 import cats.{Functor, MonadError}
 import cats.data.OptionT
+import cats.effect.{Bracket, Concurrent, ContextShift, ExitCase, Resource, Sync, Timer}
+import cats.effect.IO
 import cats.effect.concurrent.MVar
-import cats.effect.{Async, Bracket, Concurrent, ContextShift, ExitCase, Resource, Sync, Timer}
 import cats.syntax.applicative._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import com.github.fit51.reactiveconfig.ce.config.ReactiveConfig
+import com.github.fit51.reactiveconfig.ce.etcd._
+import com.github.fit51.reactiveconfig.ce.reloadable.Reloadable
+import com.github.fit51.reactiveconfig.circe._
 import com.github.fit51.reactiveconfig.etcd._
 import com.github.fit51.reactiveconfig.examples.CommandLineShop.CommandLineShopService
-import com.github.fit51.reactiveconfig.parser.CirceConfigDecoder.decoder
-import com.github.fit51.reactiveconfig.parser.CirceConfigParser.parser
-import com.github.fit51.reactiveconfig.reloadable.Reloadable
 import io.circe.Json
 import io.circe.generic.auto._
-import monix.eval.{Task, TaskLike}
-import monix.execution.Scheduler
 
-import scala.concurrent.Await
-import scala.concurrent.duration.{Duration, _}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.io.StdIn
 import scala.util.Try
 import scala.util.control.NonFatal
 
-/** Start etcd before running.
-  * Run docker command, it will start etcd on 127.0.0.1:2379 without authentication:
-  * sudo docker run -e ALLOW_NONE_AUTHENTICATION=yes -p 2379:2379 bitnami/etcd:latest
-  * For run with authentication:
-  * sudo docker run -e ETCD_ROOT_PASSWORD=test -p 2379:2379 bitnami/etcd:latest
+/** Start etcd before running. Run docker command, it will start etcd on 127.0.0.1:2379 without authentication: sudo
+  * docker run -e ALLOW_NONE_AUTHENTICATION=yes -p 2379:2379 bitnami/etcd:latest For run with authentication: sudo
+  * docker run -e ETCD_ROOT_PASSWORD=test -p 2379:2379 bitnami/etcd:latest
   */
 object EtcdConfigApplication extends App {
+
+  implicit val ioTimer: Timer[IO]               = IO.timer(global)
+  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(global)
 
   import AdvertsModule._
   import StoreModule._
 
-  implicit val scheduler = Scheduler.global
-  implicit val clock     = Clock.systemDefaultZone()
+  val chManager = ChannelManager.noAuth("127.0.0.1:2379", options = ChannelOptions(20 seconds))
+  // implicit val chManager = ChannelManager("etcd://127.0.0.1:2379", Credentials("root", "test"))
 
-  implicit val chManager = ChannelManager.noAuth("127.0.0.1:2379")
-  //implicit val chManager = ChannelManager("etcd://127.0.0.1:2379", Credentials("root", "test"))
-
-  def init[F[_]: ContextShift: Async: Concurrent: Timer: TaskLike](
-      etcdClient: EtcdClient[F] with Watch[F],
+  def init[F[_]: Concurrent: Timer](
+      etcdClient: EtcdClient[F],
+      config: ReactiveConfig[F, Json],
       goods: Map[ProductId, Count]
-  )(implicit scheduler: Scheduler): Resource[F, CommandLineShopService[F]] =
+  ): Resource[F, CommandLineShopService[F]] =
     for {
-      _           <- Resource.liftF(FillConfig.fill(etcdClient))
-      config      <- ReactiveConfigEtcd[F, Json](etcdClient)
+      _           <- Resource.eval(FillConfig.fill(etcdClient))
       storeConfig <- config.reloadable[StoreConfig]("store.store")
       advertsList <- config.reloadable[List[ProductId]]("store.adverts")
       advertsConfig <- storeConfig.combine(advertsList) { (store, list) =>
         AdvertsConfig(store.priceList, list)
       }
 
-      implicit0(storeService: StoreService[F]) <- Resource.liftF(StoreModule.StoreService[F](goods, storeConfig))
+      implicit0(storeService: StoreService[F]) <- Resource.eval(StoreModule.StoreService[F](goods, storeConfig))
       implicit0(advertsService: AdvertsService[F]) = new AdvertsService[F](advertsConfig)
     } yield new CommandLineShopService[F]()
 
-  val future =
-    (for {
-      client  <- EtcdClient.withWatch[Task](chManager, SimpleDelayPolicy(10 seconds))
-      service <- init(client, FillConfig.store)
-    } yield service).use(_.flow).runToFuture
-
-  Await.result(future, Duration.Inf)
+  (for {
+    channel    <- Resource.make(IO.delay(chManager.channel))(ch => IO.delay(ch.shutdown()))
+    etcdClient <- Resource.pure[IO, EtcdClient[IO]](EtcdClient[IO](channel))
+    config     <- EtcdReactiveConfig[IO, Json](channel, cats.data.NonEmptySet.one("store"))
+    service    <- init(etcdClient, config, FillConfig.store)
+  } yield service).use(_.flow).unsafeRunSync()
 }
 
 object CommandLineShop {
@@ -204,7 +199,7 @@ object StoreModule {
 
     def getPriceListVersion: F[String] = reloadable.get.map(_.version)
 
-    //Sells product for cash, returns change
+    // Sells product for cash, returns change
     def sell(product: ProductId, count: Count, cash: Money): F[Money] = updateGoods { goods =>
       for {
         productCount <- OptionT
