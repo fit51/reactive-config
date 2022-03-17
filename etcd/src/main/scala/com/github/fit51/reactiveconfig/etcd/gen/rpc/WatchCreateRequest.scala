@@ -33,8 +33,9 @@ final case class WatchCreateRequest(
     startRevision: _root_.scala.Long = 0L,
     progressNotify: _root_.scala.Boolean = false,
     filters: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType] = _root_.scala.Seq.empty,
-    prevKv: _root_.scala.Boolean = false
-    ) extends scalapb.GeneratedMessage with scalapb.Message[WatchCreateRequest] with scalapb.lenses.Updatable[WatchCreateRequest] {
+    prevKv: _root_.scala.Boolean = false,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[WatchCreateRequest] {
     private[this] def filtersSerializedSize = {
       if (__filtersSerializedSizeField == 0) __filtersSerializedSizeField = {
         var __s: _root_.scala.Int = 0
@@ -51,14 +52,14 @@ final case class WatchCreateRequest(
       
       {
         val __value = key
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(1, __value)
         }
       };
       
       {
         val __value = rangeEnd
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(2, __value)
         }
       };
@@ -76,7 +77,7 @@ final case class WatchCreateRequest(
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBoolSize(4, __value)
         }
       };
-      if(filters.nonEmpty) {
+      if (filters.nonEmpty) {
         val __localsize = filtersSerializedSize
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__localsize) + __localsize
       }
@@ -87,9 +88,10 @@ final case class WatchCreateRequest(
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBoolSize(6, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -100,13 +102,13 @@ final case class WatchCreateRequest(
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
         val __v = key
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(1, __v)
         }
       };
       {
         val __v = rangeEnd
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(2, __v)
         }
       };
@@ -133,50 +135,7 @@ final case class WatchCreateRequest(
           _output__.writeBool(6, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest = {
-      var __key = this.key
-      var __rangeEnd = this.rangeEnd
-      var __startRevision = this.startRevision
-      var __progressNotify = this.progressNotify
-      val __filters = (_root_.scala.collection.immutable.Vector.newBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType] ++= this.filters)
-      var __prevKv = this.prevKv
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __key = _input__.readBytes()
-          case 18 =>
-            __rangeEnd = _input__.readBytes()
-          case 24 =>
-            __startRevision = _input__.readInt64()
-          case 32 =>
-            __progressNotify = _input__.readBool()
-          case 40 =>
-            __filters += com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.fromValue(_input__.readEnum())
-          case 42 => {
-            val length = _input__.readRawVarint32()
-            val oldLimit = _input__.pushLimit(length)
-            while (_input__.getBytesUntilLimit > 0) {
-              __filters += com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.fromValue(_input__.readEnum)
-            }
-            _input__.popLimit(oldLimit)
-          }
-          case 48 =>
-            __prevKv = _input__.readBool()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest(
-          key = __key,
-          rangeEnd = __rangeEnd,
-          startRevision = __startRevision,
-          progressNotify = __progressNotify,
-          filters = __filters.result(),
-          prevKv = __prevKv
-      )
+      unknownFields.writeTo(_output__)
     }
     def withKey(__v: _root_.com.google.protobuf.ByteString): WatchCreateRequest = copy(key = __v)
     def withRangeEnd(__v: _root_.com.google.protobuf.ByteString): WatchCreateRequest = copy(rangeEnd = __v)
@@ -187,6 +146,8 @@ final case class WatchCreateRequest(
     def addAllFilters(__vs: Iterable[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType]): WatchCreateRequest = copy(filters = filters ++ __vs)
     def withFilters(__v: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType]): WatchCreateRequest = copy(filters = __v)
     def withPrevKv(__v: _root_.scala.Boolean): WatchCreateRequest = copy(prevKv = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -225,36 +186,75 @@ final case class WatchCreateRequest(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.WatchCreateRequest])
 }
 
 object WatchCreateRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest = {
+    var __key: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __rangeEnd: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __startRevision: _root_.scala.Long = 0L
+    var __progressNotify: _root_.scala.Boolean = false
+    val __filters: _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType] = new _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType]
+    var __prevKv: _root_.scala.Boolean = false
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __key = _input__.readBytes()
+        case 18 =>
+          __rangeEnd = _input__.readBytes()
+        case 24 =>
+          __startRevision = _input__.readInt64()
+        case 32 =>
+          __progressNotify = _input__.readBool()
+        case 40 =>
+          __filters += com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.fromValue(_input__.readEnum())
+        case 42 => {
+          val length = _input__.readRawVarint32()
+          val oldLimit = _input__.pushLimit(length)
+          while (_input__.getBytesUntilLimit > 0) {
+            __filters += com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.fromValue(_input__.readEnum())
+          }
+          _input__.popLimit(oldLimit)
+        }
+        case 48 =>
+          __prevKv = _input__.readBool()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest(
-      __fieldsMap.getOrElse(__fields.get(0), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      __fieldsMap.getOrElse(__fields.get(1), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      __fieldsMap.getOrElse(__fields.get(2), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(3), false).asInstanceOf[_root_.scala.Boolean],
-      __fieldsMap.getOrElse(__fields.get(4), Nil).asInstanceOf[_root_.scala.Seq[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor]].iterator.map(__e => com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.fromValue(__e.getNumber)).toSeq,
-      __fieldsMap.getOrElse(__fields.get(5), false).asInstanceOf[_root_.scala.Boolean]
+        key = __key,
+        rangeEnd = __rangeEnd,
+        startRevision = __startRevision,
+        progressNotify = __progressNotify,
+        filters = __filters.result(),
+        prevKv = __prevKv,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Seq[_root_.scalapb.descriptors.EnumValueDescriptor]]).getOrElse(_root_.scala.Seq.empty).iterator.map(__e => com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.fromValue(__e.number)).toSeq,
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.Boolean]).getOrElse(false)
+        key = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        rangeEnd = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        startRevision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        progressNotify = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
+        filters = __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Seq[_root_.scalapb.descriptors.EnumValueDescriptor]]).getOrElse(_root_.scala.Seq.empty).iterator.map(__e => com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.fromValue(__e.number)).toSeq,
+        prevKv = __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.Boolean]).getOrElse(false)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(19)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(19)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(19)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -271,20 +271,21 @@ object WatchCreateRequest extends scalapb.GeneratedMessageCompanion[com.github.f
     filters = _root_.scala.Seq.empty,
     prevKv = false
   )
-  sealed trait FilterType extends _root_.scalapb.GeneratedEnum {
+  sealed abstract class FilterType(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
     type EnumType = FilterType
     def isNoput: _root_.scala.Boolean = false
     def isNodelete: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[FilterType] = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType
+    final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.FilterType.Recognized])
   }
   
   object FilterType extends _root_.scalapb.GeneratedEnumCompanion[FilterType] {
+    sealed trait Recognized extends FilterType
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[FilterType] = this
     /** filter out put event.
       */
     @SerialVersionUID(0L)
-    case object NOPUT extends FilterType {
-      val value = 0
+    case object NOPUT extends FilterType(0) with FilterType.Recognized {
       val index = 0
       val name = "NOPUT"
       override def isNoput: _root_.scala.Boolean = true
@@ -293,23 +294,22 @@ object WatchCreateRequest extends scalapb.GeneratedMessageCompanion[com.github.f
     /** filter out delete event.
       */
     @SerialVersionUID(0L)
-    case object NODELETE extends FilterType {
-      val value = 1
+    case object NODELETE extends FilterType(1) with FilterType.Recognized {
       val index = 1
       val name = "NODELETE"
       override def isNodelete: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    final case class Unrecognized(value: _root_.scala.Int) extends FilterType with _root_.scalapb.UnrecognizedEnum
+    final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends FilterType(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
     
     lazy val values = scala.collection.immutable.Seq(NOPUT, NODELETE)
-    def fromValue(value: _root_.scala.Int): FilterType = value match {
+    def fromValue(__value: _root_.scala.Int): FilterType = __value match {
       case 0 => NOPUT
       case 1 => NODELETE
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.javaDescriptor.getEnumTypes.get(0)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.javaDescriptor.getEnumTypes().get(0)
     def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.scalaDescriptor.enums(0)
   }
   implicit class WatchCreateRequestLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest](_l) {
@@ -341,4 +341,5 @@ object WatchCreateRequest extends scalapb.GeneratedMessageCompanion[com.github.f
     filters,
     prevKv
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.WatchCreateRequest])
 }

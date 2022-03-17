@@ -22,17 +22,18 @@ package com.github.fit51.reactiveconfig.etcd.gen.kv
 final case class Event(
     `type`: com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.PUT,
     kv: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = _root_.scala.None,
-    prevKv: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = _root_.scala.None
-    ) extends scalapb.GeneratedMessage with scalapb.Message[Event] with scalapb.lenses.Updatable[Event] {
+    prevKv: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = _root_.scala.None,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[Event] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
       
       {
-        val __value = `type`
-        if (__value != com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.PUT) {
-          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value.value)
+        val __value = `type`.value
+        if (__value != 0) {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value)
         }
       };
       if (kv.isDefined) {
@@ -43,9 +44,10 @@ final case class Event(
         val __value = prevKv.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -55,9 +57,9 @@ final case class Event(
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
-        val __v = `type`
-        if (__v != com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.PUT) {
-          _output__.writeEnum(1, __v.value)
+        val __v = `type`.value
+        if (__v != 0) {
+          _output__.writeEnum(1, __v)
         }
       };
       kv.foreach { __v =>
@@ -72,30 +74,7 @@ final case class Event(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.kv.Event = {
-      var __type = this.`type`
-      var __kv = this.kv
-      var __prevKv = this.prevKv
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 8 =>
-            __type = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.fromValue(_input__.readEnum())
-          case 18 =>
-            __kv = Option(_root_.scalapb.LiteParser.readMessage(_input__, __kv.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue.defaultInstance)))
-          case 26 =>
-            __prevKv = Option(_root_.scalapb.LiteParser.readMessage(_input__, __prevKv.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue.defaultInstance)))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.kv.Event(
-          `type` = __type,
-          kv = __kv,
-          prevKv = __prevKv
-      )
+      unknownFields.writeTo(_output__)
     }
     def withType(__v: com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType): Event = copy(`type` = __v)
     def getKv: com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue = kv.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue.defaultInstance)
@@ -104,6 +83,8 @@ final case class Event(
     def getPrevKv: com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue = prevKv.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue.defaultInstance)
     def clearPrevKv: Event = copy(prevKv = _root_.scala.None)
     def withPrevKv(__v: com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue): Event = copy(prevKv = Option(__v))
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -124,30 +105,52 @@ final case class Event(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.kv.Event
+    // @@protoc_insertion_point(GeneratedMessage[mvccpb.Event])
 }
 
 object Event extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.kv.Event] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.kv.Event] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.kv.Event = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.kv.Event = {
+    var __type: com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.PUT
+    var __kv: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = _root_.scala.None
+    var __prevKv: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = _root_.scala.None
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 8 =>
+          __type = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.fromValue(_input__.readEnum())
+        case 18 =>
+          __kv = Option(__kv.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 26 =>
+          __prevKv = Option(__prevKv.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.kv.Event(
-      com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.fromValue(__fieldsMap.getOrElse(__fields.get(0), com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.PUT.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      __fieldsMap.get(__fields.get(1)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]],
-      __fieldsMap.get(__fields.get(2)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]]
+        `type` = __type,
+        kv = __kv,
+        prevKv = __prevKv,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.kv.Event] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.kv.Event(
-        com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.PUT.scalaValueDescriptor).number),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]])
+        `type` = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.PUT.scalaValueDescriptor).number),
+        kv = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]]),
+        prevKv = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]])
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = KvProto.javaDescriptor.getMessageTypes.get(1)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = KvProto.javaDescriptor.getMessageTypes().get(1)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = KvProto.scalaDescriptor.messages(1)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -168,41 +171,41 @@ object Event extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactive
     kv = _root_.scala.None,
     prevKv = _root_.scala.None
   )
-  sealed trait EventType extends _root_.scalapb.GeneratedEnum {
+  sealed abstract class EventType(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
     type EnumType = EventType
     def isPut: _root_.scala.Boolean = false
     def isDelete: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[EventType] = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType
+    final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType.Recognized])
   }
   
   object EventType extends _root_.scalapb.GeneratedEnumCompanion[EventType] {
+    sealed trait Recognized extends EventType
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[EventType] = this
     @SerialVersionUID(0L)
-    case object PUT extends EventType {
-      val value = 0
+    case object PUT extends EventType(0) with EventType.Recognized {
       val index = 0
       val name = "PUT"
       override def isPut: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object DELETE extends EventType {
-      val value = 1
+    case object DELETE extends EventType(1) with EventType.Recognized {
       val index = 1
       val name = "DELETE"
       override def isDelete: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    final case class Unrecognized(value: _root_.scala.Int) extends EventType with _root_.scalapb.UnrecognizedEnum
+    final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends EventType(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
     
     lazy val values = scala.collection.immutable.Seq(PUT, DELETE)
-    def fromValue(value: _root_.scala.Int): EventType = value match {
+    def fromValue(__value: _root_.scala.Int): EventType = __value match {
       case 0 => PUT
       case 1 => DELETE
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.javaDescriptor.getEnumTypes.get(0)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.javaDescriptor.getEnumTypes().get(0)
     def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.kv.Event.scalaDescriptor.enums(0)
   }
   implicit class EventLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.kv.Event]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.kv.Event](_l) {
@@ -224,4 +227,5 @@ object Event extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactive
     kv,
     prevKv
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[mvccpb.Event])
 }

@@ -20,8 +20,9 @@ final case class LeaseTimeToLiveResponse(
     iD: _root_.scala.Long = 0L,
     tTL: _root_.scala.Long = 0L,
     grantedTTL: _root_.scala.Long = 0L,
-    keys: _root_.scala.Seq[_root_.com.google.protobuf.ByteString] = _root_.scala.Seq.empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[LeaseTimeToLiveResponse] with scalapb.lenses.Updatable[LeaseTimeToLiveResponse] {
+    keys: _root_.scala.Seq[_root_.com.google.protobuf.ByteString] = _root_.scala.Seq.empty,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[LeaseTimeToLiveResponse] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -55,9 +56,10 @@ final case class LeaseTimeToLiveResponse(
         val __value = __item
         __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(5, __value)
       }
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -94,38 +96,7 @@ final case class LeaseTimeToLiveResponse(
         val __m = __v
         _output__.writeBytes(5, __m)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse = {
-      var __header = this.header
-      var __iD = this.iD
-      var __tTL = this.tTL
-      var __grantedTTL = this.grantedTTL
-      val __keys = (_root_.scala.collection.immutable.Vector.newBuilder[_root_.com.google.protobuf.ByteString] ++= this.keys)
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __header = Option(_root_.scalapb.LiteParser.readMessage(_input__, __header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)))
-          case 16 =>
-            __iD = _input__.readInt64()
-          case 24 =>
-            __tTL = _input__.readInt64()
-          case 32 =>
-            __grantedTTL = _input__.readInt64()
-          case 42 =>
-            __keys += _input__.readBytes()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse(
-          header = __header,
-          iD = __iD,
-          tTL = __tTL,
-          grantedTTL = __grantedTTL,
-          keys = __keys.result()
-      )
+      unknownFields.writeTo(_output__)
     }
     def getHeader: com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader = header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)
     def clearHeader: LeaseTimeToLiveResponse = copy(header = _root_.scala.None)
@@ -137,6 +108,8 @@ final case class LeaseTimeToLiveResponse(
     def addKeys(__vs: _root_.com.google.protobuf.ByteString*): LeaseTimeToLiveResponse = addAllKeys(__vs)
     def addAllKeys(__vs: Iterable[_root_.com.google.protobuf.ByteString]): LeaseTimeToLiveResponse = copy(keys = keys ++ __vs)
     def withKeys(__v: _root_.scala.Seq[_root_.com.google.protobuf.ByteString]): LeaseTimeToLiveResponse = copy(keys = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => header.orNull
@@ -162,39 +135,67 @@ final case class LeaseTimeToLiveResponse(
         case 2 => _root_.scalapb.descriptors.PLong(iD)
         case 3 => _root_.scalapb.descriptors.PLong(tTL)
         case 4 => _root_.scalapb.descriptors.PLong(grantedTTL)
-        case 5 => _root_.scalapb.descriptors.PRepeated(keys.iterator.map(_root_.scalapb.descriptors.PByteString).toVector)
+        case 5 => _root_.scalapb.descriptors.PRepeated(keys.iterator.map(_root_.scalapb.descriptors.PByteString(_)).toVector)
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.LeaseTimeToLiveResponse])
 }
 
 object LeaseTimeToLiveResponse extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse = {
+    var __header: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = _root_.scala.None
+    var __iD: _root_.scala.Long = 0L
+    var __tTL: _root_.scala.Long = 0L
+    var __grantedTTL: _root_.scala.Long = 0L
+    val __keys: _root_.scala.collection.immutable.VectorBuilder[_root_.com.google.protobuf.ByteString] = new _root_.scala.collection.immutable.VectorBuilder[_root_.com.google.protobuf.ByteString]
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __header = Option(__header.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 16 =>
+          __iD = _input__.readInt64()
+        case 24 =>
+          __tTL = _input__.readInt64()
+        case 32 =>
+          __grantedTTL = _input__.readInt64()
+        case 42 =>
+          __keys += _input__.readBytes()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]],
-      __fieldsMap.getOrElse(__fields.get(1), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(2), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(3), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(4), Nil).asInstanceOf[_root_.scala.Seq[_root_.com.google.protobuf.ByteString]]
+        header = __header,
+        iD = __iD,
+        tTL = __tTL,
+        grantedTTL = __grantedTTL,
+        keys = __keys.result(),
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseTimeToLiveResponse(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Seq[_root_.com.google.protobuf.ByteString]]).getOrElse(_root_.scala.Seq.empty)
+        header = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
+        iD = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        tTL = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        grantedTTL = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        keys = __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Seq[_root_.com.google.protobuf.ByteString]]).getOrElse(_root_.scala.Seq.empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(29)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(29)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(29)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -238,4 +239,5 @@ object LeaseTimeToLiveResponse extends scalapb.GeneratedMessageCompanion[com.git
     grantedTTL,
     keys
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.LeaseTimeToLiveResponse])
 }

@@ -62,8 +62,9 @@ final case class RangeRequest(
     minModRevision: _root_.scala.Long = 0L,
     maxModRevision: _root_.scala.Long = 0L,
     minCreateRevision: _root_.scala.Long = 0L,
-    maxCreateRevision: _root_.scala.Long = 0L
-    ) extends scalapb.GeneratedMessage with scalapb.Message[RangeRequest] with scalapb.lenses.Updatable[RangeRequest] {
+    maxCreateRevision: _root_.scala.Long = 0L,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[RangeRequest] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -71,14 +72,14 @@ final case class RangeRequest(
       
       {
         val __value = key
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(1, __value)
         }
       };
       
       {
         val __value = rangeEnd
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(2, __value)
         }
       };
@@ -98,16 +99,16 @@ final case class RangeRequest(
       };
       
       {
-        val __value = sortOrder
-        if (__value != com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.NONE) {
-          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(5, __value.value)
+        val __value = sortOrder.value
+        if (__value != 0) {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(5, __value)
         }
       };
       
       {
-        val __value = sortTarget
-        if (__value != com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.KEY) {
-          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(6, __value.value)
+        val __value = sortTarget.value
+        if (__value != 0) {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(6, __value)
         }
       };
       
@@ -159,9 +160,10 @@ final case class RangeRequest(
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt64Size(13, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -172,13 +174,13 @@ final case class RangeRequest(
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
         val __v = key
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(1, __v)
         }
       };
       {
         val __v = rangeEnd
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(2, __v)
         }
       };
@@ -195,15 +197,15 @@ final case class RangeRequest(
         }
       };
       {
-        val __v = sortOrder
-        if (__v != com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.NONE) {
-          _output__.writeEnum(5, __v.value)
+        val __v = sortOrder.value
+        if (__v != 0) {
+          _output__.writeEnum(5, __v)
         }
       };
       {
-        val __v = sortTarget
-        if (__v != com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.KEY) {
-          _output__.writeEnum(6, __v.value)
+        val __v = sortTarget.value
+        if (__v != 0) {
+          _output__.writeEnum(6, __v)
         }
       };
       {
@@ -248,70 +250,7 @@ final case class RangeRequest(
           _output__.writeInt64(13, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest = {
-      var __key = this.key
-      var __rangeEnd = this.rangeEnd
-      var __limit = this.limit
-      var __revision = this.revision
-      var __sortOrder = this.sortOrder
-      var __sortTarget = this.sortTarget
-      var __serializable = this.serializable
-      var __keysOnly = this.keysOnly
-      var __countOnly = this.countOnly
-      var __minModRevision = this.minModRevision
-      var __maxModRevision = this.maxModRevision
-      var __minCreateRevision = this.minCreateRevision
-      var __maxCreateRevision = this.maxCreateRevision
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __key = _input__.readBytes()
-          case 18 =>
-            __rangeEnd = _input__.readBytes()
-          case 24 =>
-            __limit = _input__.readInt64()
-          case 32 =>
-            __revision = _input__.readInt64()
-          case 40 =>
-            __sortOrder = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.fromValue(_input__.readEnum())
-          case 48 =>
-            __sortTarget = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.fromValue(_input__.readEnum())
-          case 56 =>
-            __serializable = _input__.readBool()
-          case 64 =>
-            __keysOnly = _input__.readBool()
-          case 72 =>
-            __countOnly = _input__.readBool()
-          case 80 =>
-            __minModRevision = _input__.readInt64()
-          case 88 =>
-            __maxModRevision = _input__.readInt64()
-          case 96 =>
-            __minCreateRevision = _input__.readInt64()
-          case 104 =>
-            __maxCreateRevision = _input__.readInt64()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest(
-          key = __key,
-          rangeEnd = __rangeEnd,
-          limit = __limit,
-          revision = __revision,
-          sortOrder = __sortOrder,
-          sortTarget = __sortTarget,
-          serializable = __serializable,
-          keysOnly = __keysOnly,
-          countOnly = __countOnly,
-          minModRevision = __minModRevision,
-          maxModRevision = __maxModRevision,
-          minCreateRevision = __minCreateRevision,
-          maxCreateRevision = __maxCreateRevision
-      )
+      unknownFields.writeTo(_output__)
     }
     def withKey(__v: _root_.com.google.protobuf.ByteString): RangeRequest = copy(key = __v)
     def withRangeEnd(__v: _root_.com.google.protobuf.ByteString): RangeRequest = copy(rangeEnd = __v)
@@ -326,6 +265,8 @@ final case class RangeRequest(
     def withMaxModRevision(__v: _root_.scala.Long): RangeRequest = copy(maxModRevision = __v)
     def withMinCreateRevision(__v: _root_.scala.Long): RangeRequest = copy(minCreateRevision = __v)
     def withMaxCreateRevision(__v: _root_.scala.Long): RangeRequest = copy(maxCreateRevision = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -402,50 +343,102 @@ final case class RangeRequest(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.RangeRequest])
 }
 
 object RangeRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest = {
+    var __key: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __rangeEnd: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __limit: _root_.scala.Long = 0L
+    var __revision: _root_.scala.Long = 0L
+    var __sortOrder: com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.NONE
+    var __sortTarget: com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.KEY
+    var __serializable: _root_.scala.Boolean = false
+    var __keysOnly: _root_.scala.Boolean = false
+    var __countOnly: _root_.scala.Boolean = false
+    var __minModRevision: _root_.scala.Long = 0L
+    var __maxModRevision: _root_.scala.Long = 0L
+    var __minCreateRevision: _root_.scala.Long = 0L
+    var __maxCreateRevision: _root_.scala.Long = 0L
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __key = _input__.readBytes()
+        case 18 =>
+          __rangeEnd = _input__.readBytes()
+        case 24 =>
+          __limit = _input__.readInt64()
+        case 32 =>
+          __revision = _input__.readInt64()
+        case 40 =>
+          __sortOrder = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.fromValue(_input__.readEnum())
+        case 48 =>
+          __sortTarget = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.fromValue(_input__.readEnum())
+        case 56 =>
+          __serializable = _input__.readBool()
+        case 64 =>
+          __keysOnly = _input__.readBool()
+        case 72 =>
+          __countOnly = _input__.readBool()
+        case 80 =>
+          __minModRevision = _input__.readInt64()
+        case 88 =>
+          __maxModRevision = _input__.readInt64()
+        case 96 =>
+          __minCreateRevision = _input__.readInt64()
+        case 104 =>
+          __maxCreateRevision = _input__.readInt64()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest(
-      __fieldsMap.getOrElse(__fields.get(0), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      __fieldsMap.getOrElse(__fields.get(1), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      __fieldsMap.getOrElse(__fields.get(2), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(3), 0L).asInstanceOf[_root_.scala.Long],
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.fromValue(__fieldsMap.getOrElse(__fields.get(4), com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.NONE.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.fromValue(__fieldsMap.getOrElse(__fields.get(5), com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.KEY.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      __fieldsMap.getOrElse(__fields.get(6), false).asInstanceOf[_root_.scala.Boolean],
-      __fieldsMap.getOrElse(__fields.get(7), false).asInstanceOf[_root_.scala.Boolean],
-      __fieldsMap.getOrElse(__fields.get(8), false).asInstanceOf[_root_.scala.Boolean],
-      __fieldsMap.getOrElse(__fields.get(9), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(10), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(11), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(12), 0L).asInstanceOf[_root_.scala.Long]
+        key = __key,
+        rangeEnd = __rangeEnd,
+        limit = __limit,
+        revision = __revision,
+        sortOrder = __sortOrder,
+        sortTarget = __sortTarget,
+        serializable = __serializable,
+        keysOnly = __keysOnly,
+        countOnly = __countOnly,
+        minModRevision = __minModRevision,
+        maxModRevision = __maxModRevision,
+        minCreateRevision = __minCreateRevision,
+        maxCreateRevision = __maxCreateRevision,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.NONE.scalaValueDescriptor).number),
-        com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.KEY.scalaValueDescriptor).number),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(7).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(9).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(10).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(11).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(12).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(13).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
+        key = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        rangeEnd = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        limit = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        revision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        sortOrder = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.NONE.scalaValueDescriptor).number),
+        sortTarget = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.KEY.scalaValueDescriptor).number),
+        serializable = __fieldsMap.get(scalaDescriptor.findFieldByNumber(7).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
+        keysOnly = __fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
+        countOnly = __fieldsMap.get(scalaDescriptor.findFieldByNumber(9).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
+        minModRevision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(10).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        maxModRevision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(11).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        minCreateRevision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(12).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        maxCreateRevision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(13).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(1)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(1)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(1)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -470,21 +463,22 @@ object RangeRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
     minCreateRevision = 0L,
     maxCreateRevision = 0L
   )
-  sealed trait SortOrder extends _root_.scalapb.GeneratedEnum {
+  sealed abstract class SortOrder(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
     type EnumType = SortOrder
     def isNone: _root_.scala.Boolean = false
     def isAscend: _root_.scala.Boolean = false
     def isDescend: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[SortOrder] = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder
+    final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortOrder.Recognized])
   }
   
   object SortOrder extends _root_.scalapb.GeneratedEnumCompanion[SortOrder] {
+    sealed trait Recognized extends SortOrder
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[SortOrder] = this
     /** default, no sorting
       */
     @SerialVersionUID(0L)
-    case object NONE extends SortOrder {
-      val value = 0
+    case object NONE extends SortOrder(0) with SortOrder.Recognized {
       val index = 0
       val name = "NONE"
       override def isNone: _root_.scala.Boolean = true
@@ -493,8 +487,7 @@ object RangeRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
     /** lowest target value first
       */
     @SerialVersionUID(0L)
-    case object ASCEND extends SortOrder {
-      val value = 1
+    case object ASCEND extends SortOrder(1) with SortOrder.Recognized {
       val index = 1
       val name = "ASCEND"
       override def isAscend: _root_.scala.Boolean = true
@@ -503,27 +496,26 @@ object RangeRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
     /** highest target value first
       */
     @SerialVersionUID(0L)
-    case object DESCEND extends SortOrder {
-      val value = 2
+    case object DESCEND extends SortOrder(2) with SortOrder.Recognized {
       val index = 2
       val name = "DESCEND"
       override def isDescend: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    final case class Unrecognized(value: _root_.scala.Int) extends SortOrder with _root_.scalapb.UnrecognizedEnum
+    final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends SortOrder(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
     
     lazy val values = scala.collection.immutable.Seq(NONE, ASCEND, DESCEND)
-    def fromValue(value: _root_.scala.Int): SortOrder = value match {
+    def fromValue(__value: _root_.scala.Int): SortOrder = __value match {
       case 0 => NONE
       case 1 => ASCEND
       case 2 => DESCEND
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.javaDescriptor.getEnumTypes.get(0)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.javaDescriptor.getEnumTypes().get(0)
     def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.scalaDescriptor.enums(0)
   }
-  sealed trait SortTarget extends _root_.scalapb.GeneratedEnum {
+  sealed abstract class SortTarget(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
     type EnumType = SortTarget
     def isKey: _root_.scala.Boolean = false
     def isVersion: _root_.scala.Boolean = false
@@ -531,55 +523,52 @@ object RangeRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
     def isMod: _root_.scala.Boolean = false
     def isValue: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[SortTarget] = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget
+    final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.SortTarget.Recognized])
   }
   
   object SortTarget extends _root_.scalapb.GeneratedEnumCompanion[SortTarget] {
+    sealed trait Recognized extends SortTarget
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[SortTarget] = this
     @SerialVersionUID(0L)
-    case object KEY extends SortTarget {
-      val value = 0
+    case object KEY extends SortTarget(0) with SortTarget.Recognized {
       val index = 0
       val name = "KEY"
       override def isKey: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object VERSION extends SortTarget {
-      val value = 1
+    case object VERSION extends SortTarget(1) with SortTarget.Recognized {
       val index = 1
       val name = "VERSION"
       override def isVersion: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object CREATE extends SortTarget {
-      val value = 2
+    case object CREATE extends SortTarget(2) with SortTarget.Recognized {
       val index = 2
       val name = "CREATE"
       override def isCreate: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object MOD extends SortTarget {
-      val value = 3
+    case object MOD extends SortTarget(3) with SortTarget.Recognized {
       val index = 3
       val name = "MOD"
       override def isMod: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object VALUE extends SortTarget {
-      val value = 4
+    case object VALUE extends SortTarget(4) with SortTarget.Recognized {
       val index = 4
       val name = "VALUE"
       override def isValue: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    final case class Unrecognized(value: _root_.scala.Int) extends SortTarget with _root_.scalapb.UnrecognizedEnum
+    final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends SortTarget(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
     
     lazy val values = scala.collection.immutable.Seq(KEY, VERSION, CREATE, MOD, VALUE)
-    def fromValue(value: _root_.scala.Int): SortTarget = value match {
+    def fromValue(__value: _root_.scala.Int): SortTarget = __value match {
       case 0 => KEY
       case 1 => VERSION
       case 2 => CREATE
@@ -587,7 +576,7 @@ object RangeRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
       case 4 => VALUE
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.javaDescriptor.getEnumTypes.get(1)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.javaDescriptor.getEnumTypes().get(1)
     def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.scalaDescriptor.enums(1)
   }
   implicit class RangeRequestLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest](_l) {
@@ -647,4 +636,5 @@ object RangeRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
     minCreateRevision,
     maxCreateRevision
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.RangeRequest])
 }

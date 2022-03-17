@@ -11,8 +11,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 import scala.concurrent.duration._
 import scala.util.Try
 
-/**
-  * This is service test, which starts the test container
+/** This is service test, which starts the test container
   * based on the image bitnami/etcd:latest
   */
 class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer {
@@ -27,7 +26,7 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
   )
 
   def init: EtcdClient[Task] with Watch[Task] = {
-    val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
+    val chManager = ChannelManager.noAuth(s"${container.containerIpAddress}:${container.mappedPort(2379)}")
     new EtcdClient[Task](chManager) with Watch[Task] {
       val taskLift: TaskLift[Task]                                    = TaskLift[Task]
       override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(2 seconds)
@@ -35,9 +34,8 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
     }
   }
 
-  def close(etcdClient: EtcdClient[Task]): Unit = {
+  def close(etcdClient: EtcdClient[Task]): Unit =
     etcdClient.close()
-  }
 
   case class KV(k: String, v: String)
 
@@ -61,16 +59,12 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
 
     for {
       changeStream <- chStream.map(
-        _.map(kv => KV(kv.key.utf8, kv.value.utf8))
-          .delayOnNext(1 second)
-          .dump("kv")
+        _.map(kv => KV(kv.key.utf8, kv.value.utf8)).delayOnNext(1 second).dump("kv")
       )
       changesTask <- changeStream.take(updates.length).toListL.start
       _           <- Task.gather(updates.map(kv => etcdClient.put(kv.k, kv.v)))
       changes     <- changesTask.join
-    } yield {
-      changes should contain theSameElementsAs updates
-    }
+    } yield changes should contain theSameElementsAs updates
   }
 
   "EtcdClient" should {
@@ -80,9 +74,7 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
       val t = for {
         _  <- etcdClient.put("key", "value")
         kv <- etcdClient.get("key")
-      } yield {
-        kv.get.value.utf8 shouldEqual "value"
-      }
+      } yield kv.get.value.utf8 shouldEqual "value"
       t.runSyncUnsafe()
 
       close(etcdClient)
@@ -98,14 +90,14 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
     }
 
     "break during watch with Invalid StreamObserver converter" in {
-      val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
+      val chManager = ChannelManager.noAuth(s"${container.containerIpAddress}:${container.mappedPort(2379)}")
       val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
         val taskLift: TaskLift[Task]                                    = TaskLift[Task]
         override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(2 seconds)
         override def monixToGrpc[T]: Subscriber[T] => StreamObserver[T] = contractBreakingImplMonixToGrpcObserver
       }
 
-      val tried = Try { testWatch(etcdClient).runSyncUnsafe() }
+      val tried = Try(testWatch(etcdClient).runSyncUnsafe())
       tried.isFailure shouldBe true
 
       close(etcdClient)

@@ -11,36 +11,38 @@ package com.github.fit51.reactiveconfig.etcd.gen.auth
 final case class Permission(
     permType: com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.READ,
     key: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY,
-    rangeEnd: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
-    ) extends scalapb.GeneratedMessage with scalapb.Message[Permission] with scalapb.lenses.Updatable[Permission] {
+    rangeEnd: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[Permission] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
       
       {
-        val __value = permType
-        if (__value != com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.READ) {
-          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value.value)
+        val __value = permType.value
+        if (__value != 0) {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value)
         }
       };
       
       {
         val __value = key
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(2, __value)
         }
       };
       
       {
         val __value = rangeEnd
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(3, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -50,51 +52,30 @@ final case class Permission(
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
-        val __v = permType
-        if (__v != com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.READ) {
-          _output__.writeEnum(1, __v.value)
+        val __v = permType.value
+        if (__v != 0) {
+          _output__.writeEnum(1, __v)
         }
       };
       {
         val __v = key
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(2, __v)
         }
       };
       {
         val __v = rangeEnd
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(3, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.auth.Permission = {
-      var __permType = this.permType
-      var __key = this.key
-      var __rangeEnd = this.rangeEnd
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 8 =>
-            __permType = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.fromValue(_input__.readEnum())
-          case 18 =>
-            __key = _input__.readBytes()
-          case 26 =>
-            __rangeEnd = _input__.readBytes()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.auth.Permission(
-          permType = __permType,
-          key = __key,
-          rangeEnd = __rangeEnd
-      )
+      unknownFields.writeTo(_output__)
     }
     def withPermType(__v: com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type): Permission = copy(permType = __v)
     def withKey(__v: _root_.com.google.protobuf.ByteString): Permission = copy(key = __v)
     def withRangeEnd(__v: _root_.com.google.protobuf.ByteString): Permission = copy(rangeEnd = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -121,30 +102,52 @@ final case class Permission(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission
+    // @@protoc_insertion_point(GeneratedMessage[authpb.Permission])
 }
 
 object Permission extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.auth.Permission = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.auth.Permission = {
+    var __permType: com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.READ
+    var __key: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __rangeEnd: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 8 =>
+          __permType = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.fromValue(_input__.readEnum())
+        case 18 =>
+          __key = _input__.readBytes()
+        case 26 =>
+          __rangeEnd = _input__.readBytes()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.auth.Permission(
-      com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.fromValue(__fieldsMap.getOrElse(__fields.get(0), com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.READ.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      __fieldsMap.getOrElse(__fields.get(1), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      __fieldsMap.getOrElse(__fields.get(2), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString]
+        permType = __permType,
+        key = __key,
+        rangeEnd = __rangeEnd,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.auth.Permission(
-        com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.READ.scalaValueDescriptor).number),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY)
+        permType = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.READ.scalaValueDescriptor).number),
+        key = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        rangeEnd = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = AuthProto.javaDescriptor.getMessageTypes.get(1)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = AuthProto.javaDescriptor.getMessageTypes().get(1)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = AuthProto.scalaDescriptor.messages(1)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -158,51 +161,50 @@ object Permission extends scalapb.GeneratedMessageCompanion[com.github.fit51.rea
     key = _root_.com.google.protobuf.ByteString.EMPTY,
     rangeEnd = _root_.com.google.protobuf.ByteString.EMPTY
   )
-  sealed trait Type extends _root_.scalapb.GeneratedEnum {
+  sealed abstract class Type(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
     type EnumType = Type
     def isRead: _root_.scala.Boolean = false
     def isWrite: _root_.scala.Boolean = false
     def isReadwrite: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[Type] = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type
+    final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.Type.Recognized])
   }
   
   object Type extends _root_.scalapb.GeneratedEnumCompanion[Type] {
+    sealed trait Recognized extends Type
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Type] = this
     @SerialVersionUID(0L)
-    case object READ extends Type {
-      val value = 0
+    case object READ extends Type(0) with Type.Recognized {
       val index = 0
       val name = "READ"
       override def isRead: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object WRITE extends Type {
-      val value = 1
+    case object WRITE extends Type(1) with Type.Recognized {
       val index = 1
       val name = "WRITE"
       override def isWrite: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object READWRITE extends Type {
-      val value = 2
+    case object READWRITE extends Type(2) with Type.Recognized {
       val index = 2
       val name = "READWRITE"
       override def isReadwrite: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    final case class Unrecognized(value: _root_.scala.Int) extends Type with _root_.scalapb.UnrecognizedEnum
+    final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends Type(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
     
     lazy val values = scala.collection.immutable.Seq(READ, WRITE, READWRITE)
-    def fromValue(value: _root_.scala.Int): Type = value match {
+    def fromValue(__value: _root_.scala.Int): Type = __value match {
       case 0 => READ
       case 1 => WRITE
       case 2 => READWRITE
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.javaDescriptor.getEnumTypes.get(0)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.javaDescriptor.getEnumTypes().get(0)
     def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.scalaDescriptor.enums(0)
   }
   implicit class PermissionLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.auth.Permission]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.auth.Permission](_l) {
@@ -222,4 +224,5 @@ object Permission extends scalapb.GeneratedMessageCompanion[com.github.fit51.rea
     key,
     rangeEnd
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[authpb.Permission])
 }

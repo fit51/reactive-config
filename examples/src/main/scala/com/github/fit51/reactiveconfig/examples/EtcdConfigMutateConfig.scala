@@ -13,7 +13,7 @@ import scala.concurrent.duration.Duration
 
 object EtcdConfigMutateConfig extends App {
   implicit val scheduler = Scheduler.global
-  val chManager          = ChannelManager.noAuth("http://127.0.0.1:2379")
+  val chManager          = ChannelManager.noAuth("127.0.0.1:2379")
   val client             = new EtcdClient[Task](chManager)
   Await.result(FillConfig.fill[Task](client).runToFuture, Duration.Inf)
   client.close()

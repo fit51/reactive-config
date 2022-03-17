@@ -19,17 +19,18 @@ package com.github.fit51.reactiveconfig.etcd.gen.rpc
 final case class AlarmRequest(
     action: com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.GET,
     memberID: _root_.scala.Long = 0L,
-    alarm: com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE
-    ) extends scalapb.GeneratedMessage with scalapb.Message[AlarmRequest] with scalapb.lenses.Updatable[AlarmRequest] {
+    alarm: com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[AlarmRequest] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
       
       {
-        val __value = action
-        if (__value != com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.GET) {
-          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value.value)
+        val __value = action.value
+        if (__value != 0) {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value)
         }
       };
       
@@ -41,14 +42,15 @@ final case class AlarmRequest(
       };
       
       {
-        val __value = alarm
-        if (__value != com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE) {
-          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(3, __value.value)
+        val __value = alarm.value
+        if (__value != 0) {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(3, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -58,9 +60,9 @@ final case class AlarmRequest(
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
-        val __v = action
-        if (__v != com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.GET) {
-          _output__.writeEnum(1, __v.value)
+        val __v = action.value
+        if (__v != 0) {
+          _output__.writeEnum(1, __v)
         }
       };
       {
@@ -70,39 +72,18 @@ final case class AlarmRequest(
         }
       };
       {
-        val __v = alarm
-        if (__v != com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE) {
-          _output__.writeEnum(3, __v.value)
+        val __v = alarm.value
+        if (__v != 0) {
+          _output__.writeEnum(3, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest = {
-      var __action = this.action
-      var __memberID = this.memberID
-      var __alarm = this.alarm
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 8 =>
-            __action = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.fromValue(_input__.readEnum())
-          case 16 =>
-            __memberID = _input__.readUInt64()
-          case 24 =>
-            __alarm = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.fromValue(_input__.readEnum())
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest(
-          action = __action,
-          memberID = __memberID,
-          alarm = __alarm
-      )
+      unknownFields.writeTo(_output__)
     }
     def withAction(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction): AlarmRequest = copy(action = __v)
     def withMemberID(__v: _root_.scala.Long): AlarmRequest = copy(memberID = __v)
     def withAlarm(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType): AlarmRequest = copy(alarm = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -129,30 +110,52 @@ final case class AlarmRequest(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.AlarmRequest])
 }
 
 object AlarmRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest = {
+    var __action: com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.GET
+    var __memberID: _root_.scala.Long = 0L
+    var __alarm: com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 8 =>
+          __action = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.fromValue(_input__.readEnum())
+        case 16 =>
+          __memberID = _input__.readUInt64()
+        case 24 =>
+          __alarm = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.fromValue(_input__.readEnum())
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest(
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.fromValue(__fieldsMap.getOrElse(__fields.get(0), com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.GET.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      __fieldsMap.getOrElse(__fields.get(1), 0L).asInstanceOf[_root_.scala.Long],
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.fromValue(__fieldsMap.getOrElse(__fields.get(2), com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber)
+        action = __action,
+        memberID = __memberID,
+        alarm = __alarm,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest(
-        com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.GET.scalaValueDescriptor).number),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE.scalaValueDescriptor).number)
+        action = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.GET.scalaValueDescriptor).number),
+        memberID = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        alarm = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE.scalaValueDescriptor).number)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(41)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(41)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(41)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -167,51 +170,50 @@ object AlarmRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
     memberID = 0L,
     alarm = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.NONE
   )
-  sealed trait AlarmAction extends _root_.scalapb.GeneratedEnum {
+  sealed abstract class AlarmAction(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
     type EnumType = AlarmAction
     def isGet: _root_.scala.Boolean = false
     def isActivate: _root_.scala.Boolean = false
     def isDeactivate: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[AlarmAction] = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction
+    final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.AlarmAction.Recognized])
   }
   
   object AlarmAction extends _root_.scalapb.GeneratedEnumCompanion[AlarmAction] {
+    sealed trait Recognized extends AlarmAction
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[AlarmAction] = this
     @SerialVersionUID(0L)
-    case object GET extends AlarmAction {
-      val value = 0
+    case object GET extends AlarmAction(0) with AlarmAction.Recognized {
       val index = 0
       val name = "GET"
       override def isGet: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object ACTIVATE extends AlarmAction {
-      val value = 1
+    case object ACTIVATE extends AlarmAction(1) with AlarmAction.Recognized {
       val index = 1
       val name = "ACTIVATE"
       override def isActivate: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object DEACTIVATE extends AlarmAction {
-      val value = 2
+    case object DEACTIVATE extends AlarmAction(2) with AlarmAction.Recognized {
       val index = 2
       val name = "DEACTIVATE"
       override def isDeactivate: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    final case class Unrecognized(value: _root_.scala.Int) extends AlarmAction with _root_.scalapb.UnrecognizedEnum
+    final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends AlarmAction(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
     
     lazy val values = scala.collection.immutable.Seq(GET, ACTIVATE, DEACTIVATE)
-    def fromValue(value: _root_.scala.Int): AlarmAction = value match {
+    def fromValue(__value: _root_.scala.Int): AlarmAction = __value match {
       case 0 => GET
       case 1 => ACTIVATE
       case 2 => DEACTIVATE
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.javaDescriptor.getEnumTypes.get(0)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.javaDescriptor.getEnumTypes().get(0)
     def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest.scalaDescriptor.enums(0)
   }
   implicit class AlarmRequestLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmRequest](_l) {
@@ -231,4 +233,5 @@ object AlarmRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
     memberID,
     alarm
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.AlarmRequest])
 }

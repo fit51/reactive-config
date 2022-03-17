@@ -7,8 +7,9 @@ package com.github.fit51.reactiveconfig.etcd.gen.rpc
 
 @SerialVersionUID(0L)
 final case class RequestOp(
-    request: com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.Empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[RequestOp] with scalapb.lenses.Updatable[RequestOp] {
+    request: com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.Empty,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[RequestOp] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -29,9 +30,10 @@ final case class RequestOp(
         val __value = request.requestTxn.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -64,28 +66,7 @@ final case class RequestOp(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp = {
-      var __request = this.request
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestRange(_root_.scalapb.LiteParser.readMessage(_input__, request.requestRange.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.defaultInstance)))
-          case 18 =>
-            __request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestPut(_root_.scalapb.LiteParser.readMessage(_input__, request.requestPut.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.PutRequest.defaultInstance)))
-          case 26 =>
-            __request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestDeleteRange(_root_.scalapb.LiteParser.readMessage(_input__, request.requestDeleteRange.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeRequest.defaultInstance)))
-          case 34 =>
-            __request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestTxn(_root_.scalapb.LiteParser.readMessage(_input__, request.requestTxn.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest.defaultInstance)))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp(
-          request = __request
-      )
+      unknownFields.writeTo(_output__)
     }
     def getRequestRange: com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest = request.requestRange.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest.defaultInstance)
     def withRequestRange(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest): RequestOp = copy(request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestRange(__v))
@@ -97,6 +78,8 @@ final case class RequestOp(
     def withRequestTxn(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest): RequestOp = copy(request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestTxn(__v))
     def clearRequest: RequestOp = copy(request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.Empty)
     def withRequest(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request): RequestOp = copy(request = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => request.requestRange.orNull
@@ -116,34 +99,52 @@ final case class RequestOp(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.RequestOp])
 }
 
 object RequestOp extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp = {
+    var __request: com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.Empty
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestRange(__request.requestRange.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 18 =>
+          __request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestPut(__request.requestPut.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.PutRequest](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 26 =>
+          __request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestDeleteRange(__request.requestDeleteRange.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeRequest](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 34 =>
+          __request = com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestTxn(__request.requestTxn.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp(
-      request = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestRange)
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(__fields.get(1)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.PutRequest]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestPut))
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(__fields.get(2)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeRequest]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestDeleteRange))
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(__fields.get(3)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestTxn))
-    .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.Empty)
+        request = __request,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp(
-        request = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestRange)
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.PutRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestPut))
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestDeleteRange))
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestTxn))
-    .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.Empty)
+        request = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.RangeRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestRange(_))
+            .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.PutRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestPut(_)))
+            .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestDeleteRange(_)))
+            .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request](__fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.RequestTxn(_)))
+            .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request.Empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(7)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(7)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(7)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -172,7 +173,7 @@ object RequestOp extends scalapb.GeneratedMessageCompanion[com.github.fit51.reac
     def requestDeleteRange: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeRequest] = _root_.scala.None
     def requestTxn: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest] = _root_.scala.None
   }
-  object Request extends {
+  object Request {
     @SerialVersionUID(0L)
     case object Empty extends com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.Request {
       type ValueType = _root_.scala.Nothing
@@ -227,4 +228,5 @@ object RequestOp extends scalapb.GeneratedMessageCompanion[com.github.fit51.reac
   ): _root_.com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp = _root_.com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp(
     request
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.RequestOp])
 }

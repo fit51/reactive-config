@@ -19,8 +19,9 @@ final case class Member(
     iD: _root_.scala.Long = 0L,
     name: _root_.scala.Predef.String = "",
     peerURLs: _root_.scala.Seq[_root_.scala.Predef.String] = _root_.scala.Seq.empty,
-    clientURLs: _root_.scala.Seq[_root_.scala.Predef.String] = _root_.scala.Seq.empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[Member] with scalapb.lenses.Updatable[Member] {
+    clientURLs: _root_.scala.Seq[_root_.scala.Predef.String] = _root_.scala.Seq.empty,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[Member] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -35,7 +36,7 @@ final case class Member(
       
       {
         val __value = name
-        if (__value != "") {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(2, __value)
         }
       };
@@ -47,9 +48,10 @@ final case class Member(
         val __value = __item
         __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(4, __value)
       }
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -66,7 +68,7 @@ final case class Member(
       };
       {
         val __v = name
-        if (__v != "") {
+        if (!__v.isEmpty) {
           _output__.writeString(2, __v)
         }
       };
@@ -78,34 +80,7 @@ final case class Member(
         val __m = __v
         _output__.writeString(4, __m)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.Member = {
-      var __iD = this.iD
-      var __name = this.name
-      val __peerURLs = (_root_.scala.collection.immutable.Vector.newBuilder[_root_.scala.Predef.String] ++= this.peerURLs)
-      val __clientURLs = (_root_.scala.collection.immutable.Vector.newBuilder[_root_.scala.Predef.String] ++= this.clientURLs)
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 8 =>
-            __iD = _input__.readUInt64()
-          case 18 =>
-            __name = _input__.readString()
-          case 26 =>
-            __peerURLs += _input__.readString()
-          case 34 =>
-            __clientURLs += _input__.readString()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.Member(
-          iD = __iD,
-          name = __name,
-          peerURLs = __peerURLs.result(),
-          clientURLs = __clientURLs.result()
-      )
+      unknownFields.writeTo(_output__)
     }
     def withID(__v: _root_.scala.Long): Member = copy(iD = __v)
     def withName(__v: _root_.scala.Predef.String): Member = copy(name = __v)
@@ -117,6 +92,8 @@ final case class Member(
     def addClientURLs(__vs: _root_.scala.Predef.String*): Member = addAllClientURLs(__vs)
     def addAllClientURLs(__vs: Iterable[_root_.scala.Predef.String]): Member = copy(clientURLs = clientURLs ++ __vs)
     def withClientURLs(__v: _root_.scala.Seq[_root_.scala.Predef.String]): Member = copy(clientURLs = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -136,38 +113,63 @@ final case class Member(
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PLong(iD)
         case 2 => _root_.scalapb.descriptors.PString(name)
-        case 3 => _root_.scalapb.descriptors.PRepeated(peerURLs.iterator.map(_root_.scalapb.descriptors.PString).toVector)
-        case 4 => _root_.scalapb.descriptors.PRepeated(clientURLs.iterator.map(_root_.scalapb.descriptors.PString).toVector)
+        case 3 => _root_.scalapb.descriptors.PRepeated(peerURLs.iterator.map(_root_.scalapb.descriptors.PString(_)).toVector)
+        case 4 => _root_.scalapb.descriptors.PRepeated(clientURLs.iterator.map(_root_.scalapb.descriptors.PString(_)).toVector)
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Member
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.Member])
 }
 
 object Member extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.Member] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.Member] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.Member = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.Member = {
+    var __iD: _root_.scala.Long = 0L
+    var __name: _root_.scala.Predef.String = ""
+    val __peerURLs: _root_.scala.collection.immutable.VectorBuilder[_root_.scala.Predef.String] = new _root_.scala.collection.immutable.VectorBuilder[_root_.scala.Predef.String]
+    val __clientURLs: _root_.scala.collection.immutable.VectorBuilder[_root_.scala.Predef.String] = new _root_.scala.collection.immutable.VectorBuilder[_root_.scala.Predef.String]
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 8 =>
+          __iD = _input__.readUInt64()
+        case 18 =>
+          __name = _input__.readStringRequireUtf8()
+        case 26 =>
+          __peerURLs += _input__.readStringRequireUtf8()
+        case 34 =>
+          __clientURLs += _input__.readStringRequireUtf8()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.Member(
-      __fieldsMap.getOrElse(__fields.get(0), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(1), "").asInstanceOf[_root_.scala.Predef.String],
-      __fieldsMap.getOrElse(__fields.get(2), Nil).asInstanceOf[_root_.scala.Seq[_root_.scala.Predef.String]],
-      __fieldsMap.getOrElse(__fields.get(3), Nil).asInstanceOf[_root_.scala.Seq[_root_.scala.Predef.String]]
+        iD = __iD,
+        name = __name,
+        peerURLs = __peerURLs.result(),
+        clientURLs = __clientURLs.result(),
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.Member] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.Member(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Seq[_root_.scala.Predef.String]]).getOrElse(_root_.scala.Seq.empty),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Seq[_root_.scala.Predef.String]]).getOrElse(_root_.scala.Seq.empty)
+        iD = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        name = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
+        peerURLs = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Seq[_root_.scala.Predef.String]]).getOrElse(_root_.scala.Seq.empty),
+        clientURLs = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Seq[_root_.scala.Predef.String]]).getOrElse(_root_.scala.Seq.empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(30)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(30)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(30)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -199,4 +201,5 @@ object Member extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiv
     peerURLs,
     clientURLs
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.Member])
 }

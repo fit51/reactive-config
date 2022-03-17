@@ -48,7 +48,7 @@ class EtcdConfigServiceTest extends WordSpecLike with Matchers with Eventually w
     import com.github.fit51.reactiveconfig.parser.CirceConfigDecoder.decoder
     import com.github.fit51.reactiveconfig.parser.CirceConfigParser.parser
 
-    val chManager = ChannelManager.noAuth(s"http://${container.containerIpAddress}:${container.mappedPort(2379)}")
+    val chManager = ChannelManager.noAuth(s"${container.containerIpAddress}:${container.mappedPort(2379)}")
     val etcdClient = new EtcdClient[Task](chManager) with Watch[Task] {
       val taskLift: TaskLift[Task]                                    = TaskLift[Task]
       override val errorRetryPolicy: RetryPolicy                      = SimpleDelayPolicy(10 seconds)

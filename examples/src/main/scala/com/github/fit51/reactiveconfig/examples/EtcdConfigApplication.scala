@@ -39,8 +39,8 @@ object EtcdConfigApplication extends App {
   implicit val scheduler = Scheduler.global
   implicit val clock     = Clock.systemDefaultZone()
 
-  implicit val chManager = ChannelManager.noAuth("http://127.0.0.1:2379")
-  //implicit val chManager = ChannelManager("http://127.0.0.1:2379", Credentials("root", "test"))
+  implicit val chManager = ChannelManager.noAuth("127.0.0.1:2379")
+  //implicit val chManager = ChannelManager("etcd://127.0.0.1:2379", Credentials("root", "test"))
 
   def init[F[_]: ContextShift: Async: Concurrent: Timer: TaskLike](
       etcdClient: EtcdClient[F] with Watch[F],

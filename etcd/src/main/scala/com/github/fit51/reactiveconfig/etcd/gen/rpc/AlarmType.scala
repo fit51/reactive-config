@@ -5,20 +5,21 @@
 
 package com.github.fit51.reactiveconfig.etcd.gen.rpc
 
-sealed trait AlarmType extends _root_.scalapb.GeneratedEnum {
+sealed abstract class AlarmType(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
   type EnumType = AlarmType
   def isNone: _root_.scala.Boolean = false
   def isNospace: _root_.scala.Boolean = false
   def companion: _root_.scalapb.GeneratedEnumCompanion[AlarmType] = com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType
+  final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.rpc.AlarmType.Recognized])
 }
 
 object AlarmType extends _root_.scalapb.GeneratedEnumCompanion[AlarmType] {
+  sealed trait Recognized extends AlarmType
   implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[AlarmType] = this
   /** default, used to query if any alarm is active
     */
   @SerialVersionUID(0L)
-  case object NONE extends AlarmType {
-    val value = 0
+  case object NONE extends AlarmType(0) with AlarmType.Recognized {
     val index = 0
     val name = "NONE"
     override def isNone: _root_.scala.Boolean = true
@@ -27,22 +28,21 @@ object AlarmType extends _root_.scalapb.GeneratedEnumCompanion[AlarmType] {
   /** space quota is exhausted
     */
   @SerialVersionUID(0L)
-  case object NOSPACE extends AlarmType {
-    val value = 1
+  case object NOSPACE extends AlarmType(1) with AlarmType.Recognized {
     val index = 1
     val name = "NOSPACE"
     override def isNospace: _root_.scala.Boolean = true
   }
   
   @SerialVersionUID(0L)
-  final case class Unrecognized(value: _root_.scala.Int) extends AlarmType with _root_.scalapb.UnrecognizedEnum
+  final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends AlarmType(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
   
   lazy val values = scala.collection.immutable.Seq(NONE, NOSPACE)
-  def fromValue(value: _root_.scala.Int): AlarmType = value match {
+  def fromValue(__value: _root_.scala.Int): AlarmType = __value match {
     case 0 => NONE
     case 1 => NOSPACE
     case __other => Unrecognized(__other)
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = RpcProto.javaDescriptor.getEnumTypes.get(0)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = RpcProto.javaDescriptor.getEnumTypes().get(0)
   def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = RpcProto.scalaDescriptor.enums(0)
 }

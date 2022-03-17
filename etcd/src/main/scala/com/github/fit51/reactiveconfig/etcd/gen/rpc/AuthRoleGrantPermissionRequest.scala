@@ -13,8 +13,9 @@ package com.github.fit51.reactiveconfig.etcd.gen.rpc
 @SerialVersionUID(0L)
 final case class AuthRoleGrantPermissionRequest(
     name: _root_.scala.Predef.String = "",
-    perm: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission] = _root_.scala.None
-    ) extends scalapb.GeneratedMessage with scalapb.Message[AuthRoleGrantPermissionRequest] with scalapb.lenses.Updatable[AuthRoleGrantPermissionRequest] {
+    perm: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission] = _root_.scala.None,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[AuthRoleGrantPermissionRequest] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -22,7 +23,7 @@ final case class AuthRoleGrantPermissionRequest(
       
       {
         val __value = name
-        if (__value != "") {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(1, __value)
         }
       };
@@ -30,9 +31,10 @@ final case class AuthRoleGrantPermissionRequest(
         val __value = perm.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -43,7 +45,7 @@ final case class AuthRoleGrantPermissionRequest(
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
         val __v = name
-        if (__v != "") {
+        if (!__v.isEmpty) {
           _output__.writeString(1, __v)
         }
       };
@@ -53,31 +55,14 @@ final case class AuthRoleGrantPermissionRequest(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest = {
-      var __name = this.name
-      var __perm = this.perm
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __name = _input__.readString()
-          case 18 =>
-            __perm = Option(_root_.scalapb.LiteParser.readMessage(_input__, __perm.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.defaultInstance)))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest(
-          name = __name,
-          perm = __perm
-      )
+      unknownFields.writeTo(_output__)
     }
     def withName(__v: _root_.scala.Predef.String): AuthRoleGrantPermissionRequest = copy(name = __v)
     def getPerm: com.github.fit51.reactiveconfig.etcd.gen.auth.Permission = perm.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.auth.Permission.defaultInstance)
     def clearPerm: AuthRoleGrantPermissionRequest = copy(perm = _root_.scala.None)
     def withPerm(__v: com.github.fit51.reactiveconfig.etcd.gen.auth.Permission): AuthRoleGrantPermissionRequest = copy(perm = Option(__v))
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -96,28 +81,47 @@ final case class AuthRoleGrantPermissionRequest(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.AuthRoleGrantPermissionRequest])
 }
 
 object AuthRoleGrantPermissionRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest = {
+    var __name: _root_.scala.Predef.String = ""
+    var __perm: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission] = _root_.scala.None
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __name = _input__.readStringRequireUtf8()
+        case 18 =>
+          __perm = Option(__perm.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest(
-      __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String],
-      __fieldsMap.get(__fields.get(1)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission]]
+        name = __name,
+        perm = __perm,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionRequest(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission]])
+        name = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
+        perm = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.auth.Permission]])
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(60)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(60)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(60)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -146,4 +150,5 @@ object AuthRoleGrantPermissionRequest extends scalapb.GeneratedMessageCompanion[
     name,
     perm
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.AuthRoleGrantPermissionRequest])
 }

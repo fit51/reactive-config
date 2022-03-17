@@ -91,7 +91,7 @@ object RpcProto extends _root_.scalapb.GeneratedFileObject {
       com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleGrantPermissionResponse,
       com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleRevokePermissionResponse
     )
-  private lazy val ProtoBytes: Array[Byte] =
+  private lazy val ProtoBytes: _root_.scala.Array[Byte] =
       scalapb.Encoding.fromBase64(scala.collection.immutable.Seq(
   """CglycGMucHJvdG8SDGV0Y2RzZXJ2ZXJwYhoIa3YucHJvdG8aCmF1dGgucHJvdG8iwgEKDlJlc3BvbnNlSGVhZGVyEi0KCmNsd
   XN0ZXJfaWQYASABKARCDuI/CxIJY2x1c3RlcklkUgljbHVzdGVySWQSKgoJbWVtYmVyX2lkGAIgASgEQg3iPwoSCG1lbWJlcklkU
@@ -289,7 +289,7 @@ object RpcProto extends _root_.scalapb.GeneratedFileObject {
   }
   lazy val javaDescriptor: com.google.protobuf.Descriptors.FileDescriptor = {
     val javaProto = com.google.protobuf.DescriptorProtos.FileDescriptorProto.parseFrom(ProtoBytes)
-    com.google.protobuf.Descriptors.FileDescriptor.buildFrom(javaProto, Array(
+    com.google.protobuf.Descriptors.FileDescriptor.buildFrom(javaProto, _root_.scala.Array(
       com.github.fit51.reactiveconfig.etcd.gen.kv.KvProto.javaDescriptor,
       com.github.fit51.reactiveconfig.etcd.gen.auth.AuthProto.javaDescriptor
     ))
