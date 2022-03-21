@@ -36,8 +36,9 @@ package com.github.fit51.reactiveconfig.etcd.gen.rpc
 final case class TxnRequest(
     compare: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare] = _root_.scala.Seq.empty,
     success: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] = _root_.scala.Seq.empty,
-    failure: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] = _root_.scala.Seq.empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[TxnRequest] with scalapb.lenses.Updatable[TxnRequest] {
+    failure: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] = _root_.scala.Seq.empty,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[TxnRequest] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -54,9 +55,10 @@ final case class TxnRequest(
         val __value = __item
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       }
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -83,30 +85,7 @@ final case class TxnRequest(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest = {
-      val __compare = (_root_.scala.collection.immutable.Vector.newBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare] ++= this.compare)
-      val __success = (_root_.scala.collection.immutable.Vector.newBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] ++= this.success)
-      val __failure = (_root_.scala.collection.immutable.Vector.newBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] ++= this.failure)
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __compare += _root_.scalapb.LiteParser.readMessage(_input__, com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.defaultInstance)
-          case 18 =>
-            __success += _root_.scalapb.LiteParser.readMessage(_input__, com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.defaultInstance)
-          case 26 =>
-            __failure += _root_.scalapb.LiteParser.readMessage(_input__, com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp.defaultInstance)
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest(
-          compare = __compare.result(),
-          success = __success.result(),
-          failure = __failure.result()
-      )
+      unknownFields.writeTo(_output__)
     }
     def clearCompare = copy(compare = _root_.scala.Seq.empty)
     def addCompare(__vs: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare*): TxnRequest = addAllCompare(__vs)
@@ -120,6 +99,8 @@ final case class TxnRequest(
     def addFailure(__vs: com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp*): TxnRequest = addAllFailure(__vs)
     def addAllFailure(__vs: Iterable[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]): TxnRequest = copy(failure = failure ++ __vs)
     def withFailure(__v: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]): TxnRequest = copy(failure = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => compare
@@ -137,30 +118,52 @@ final case class TxnRequest(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.TxnRequest])
 }
 
 object TxnRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest = {
+    val __compare: _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare] = new _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare]
+    val __success: _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] = new _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]
+    val __failure: _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp] = new _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __compare += _root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare](_input__)
+        case 18 =>
+          __success += _root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp](_input__)
+        case 26 =>
+          __failure += _root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp](_input__)
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest(
-      __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare]],
-      __fieldsMap.getOrElse(__fields.get(1), Nil).asInstanceOf[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]],
-      __fieldsMap.getOrElse(__fields.get(2), Nil).asInstanceOf[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]]
+        compare = __compare.result(),
+        success = __success.result(),
+        failure = __failure.result(),
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.TxnRequest(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare]]).getOrElse(_root_.scala.Seq.empty),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]]).getOrElse(_root_.scala.Seq.empty),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]]).getOrElse(_root_.scala.Seq.empty)
+        compare = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare]]).getOrElse(_root_.scala.Seq.empty),
+        success = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]]).getOrElse(_root_.scala.Seq.empty),
+        failure = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.rpc.RequestOp]]).getOrElse(_root_.scala.Seq.empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(10)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(10)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(10)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -195,4 +198,5 @@ object TxnRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.rea
     success,
     failure
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.TxnRequest])
 }

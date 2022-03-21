@@ -19,8 +19,9 @@ final case class ResponseHeader(
     clusterId: _root_.scala.Long = 0L,
     memberId: _root_.scala.Long = 0L,
     revision: _root_.scala.Long = 0L,
-    raftTerm: _root_.scala.Long = 0L
-    ) extends scalapb.GeneratedMessage with scalapb.Message[ResponseHeader] with scalapb.lenses.Updatable[ResponseHeader] {
+    raftTerm: _root_.scala.Long = 0L,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[ResponseHeader] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -53,9 +54,10 @@ final case class ResponseHeader(
           __size += _root_.com.google.protobuf.CodedOutputStream.computeUInt64Size(4, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -88,39 +90,14 @@ final case class ResponseHeader(
           _output__.writeUInt64(4, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader = {
-      var __clusterId = this.clusterId
-      var __memberId = this.memberId
-      var __revision = this.revision
-      var __raftTerm = this.raftTerm
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 8 =>
-            __clusterId = _input__.readUInt64()
-          case 16 =>
-            __memberId = _input__.readUInt64()
-          case 24 =>
-            __revision = _input__.readInt64()
-          case 32 =>
-            __raftTerm = _input__.readUInt64()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader(
-          clusterId = __clusterId,
-          memberId = __memberId,
-          revision = __revision,
-          raftTerm = __raftTerm
-      )
+      unknownFields.writeTo(_output__)
     }
     def withClusterId(__v: _root_.scala.Long): ResponseHeader = copy(clusterId = __v)
     def withMemberId(__v: _root_.scala.Long): ResponseHeader = copy(memberId = __v)
     def withRevision(__v: _root_.scala.Long): ResponseHeader = copy(revision = __v)
     def withRaftTerm(__v: _root_.scala.Long): ResponseHeader = copy(raftTerm = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -152,32 +129,57 @@ final case class ResponseHeader(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.ResponseHeader])
 }
 
 object ResponseHeader extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader = {
+    var __clusterId: _root_.scala.Long = 0L
+    var __memberId: _root_.scala.Long = 0L
+    var __revision: _root_.scala.Long = 0L
+    var __raftTerm: _root_.scala.Long = 0L
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 8 =>
+          __clusterId = _input__.readUInt64()
+        case 16 =>
+          __memberId = _input__.readUInt64()
+        case 24 =>
+          __revision = _input__.readInt64()
+        case 32 =>
+          __raftTerm = _input__.readUInt64()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader(
-      __fieldsMap.getOrElse(__fields.get(0), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(1), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(2), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(3), 0L).asInstanceOf[_root_.scala.Long]
+        clusterId = __clusterId,
+        memberId = __memberId,
+        revision = __revision,
+        raftTerm = __raftTerm,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
+        clusterId = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        memberId = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        revision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        raftTerm = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(0)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(0)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(0)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -209,4 +211,5 @@ object ResponseHeader extends scalapb.GeneratedMessageCompanion[com.github.fit51
     revision,
     raftTerm
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.ResponseHeader])
 }

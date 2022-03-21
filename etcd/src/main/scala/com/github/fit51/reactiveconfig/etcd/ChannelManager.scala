@@ -1,12 +1,13 @@
 package com.github.fit51.reactiveconfig.etcd
 
-import com.coreos.jetcd.resolver.URIResolverLoader
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.{AuthGrpc, AuthenticateRequest, AuthenticateResponse}
+import com.google.common.net.HostAndPort
 import com.typesafe.scalalogging.StrictLogging
 import io.grpc.ForwardingClientCall.SimpleForwardingClientCall
 import io.grpc.ForwardingClientCallListener.SimpleForwardingClientCallListener
 import io.grpc.Status.Code
 import io.grpc._
+import io.grpc.NameResolver.Args
 import io.grpc.netty.{GrpcSslContexts, NettyChannelBuilder}
 import io.netty.channel.ChannelOption
 import io.netty.handler.ssl.ClientAuth
@@ -16,6 +17,7 @@ import java.net.URI
 import java.time.Clock
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.TrustManagerFactory
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -29,10 +31,8 @@ object ChannelManager {
       options: ChannelOptions = ChannelOptions(),
       authority: Option[String] = None,
       trustManagerFactory: Option[TrustManagerFactory] = None
-  )(implicit exec: ExecutionContext): ChannelManager = {
-    val uris = endpoints.split(',').map(new URI(_)).toList
-    new ChannelManager(uris, options, authority, trustManagerFactory)
-  }
+  )(implicit exec: ExecutionContext): ChannelManager =
+    new ChannelManager(endpoints, options, authority, trustManagerFactory)
 
   def apply(
       endpoints: String,
@@ -41,12 +41,41 @@ object ChannelManager {
       authority: Option[String] = None,
       trustManagerFactory: Option[TrustManagerFactory] = None
   )(implicit exec: ExecutionContext, cl: Clock): ChannelManager with Authorization = {
-    val uris = endpoints.split(',').map(new URI(_)).toList
-    new ChannelManager(uris, options, authority, trustManagerFactory) with Authorization {
+    val uris = endpoints
+      .split(',')
+      .map(new URI(_))
+      .map(e => e.getHost() + (if (e.getPort() != -1) s":${e.getPort()}" else ""))
+      .mkString(",")
+    val target = s"etcd://${authority.getOrElse("etcd")}/$uris"
+    new ChannelManager(target, options, authority, trustManagerFactory) with Authorization {
       override val credentials    = credential
       override implicit val clock = cl
     }
   }
+
+  NameResolverRegistry
+    .getDefaultRegistry().register(new NameResolverProvider() {
+      override def newNameResolver(targetUri: URI, args: Args): NameResolver = {
+        val addresses = targetUri
+          .getPath()
+          .split(",")
+          .map(_.trim())
+          .map(a => if (a.startsWith("/")) a.substring(1) else a)
+          .map(HostAndPort.fromString)
+          .toList
+          .asJava
+        new MultipleAddressesResolver(targetUri, addresses)
+      }
+
+      override def getDefaultScheme(): String =
+        "etcd"
+
+      override protected def isAvailable(): Boolean =
+        true
+
+      override protected def priority(): Int =
+        Int.MinValue
+    })
 }
 
 /** @param uris
@@ -56,7 +85,7 @@ object ChannelManager {
   * @param exec
   */
 class ChannelManager(
-    uris: List[URI],
+    target: String,
     options: ChannelOptions,
     authority: Option[String],
     tmf: Option[TrustManagerFactory]
@@ -70,10 +99,7 @@ class ChannelManager(
       * Stub Api would fail and we have to retry it ourselves.
       */
     val builder = NettyChannelBuilder
-      .forTarget("etcd")
-      .nameResolverFactory(
-        new SmartNameResolverFactory(uris, authority.getOrElse("etcd"), URIResolverLoader.defaultLoader)
-      )
+      .forTarget(target)
       .defaultLoadBalancingPolicy("pick_first")
       .keepAliveTime(options.keepAliveTime.toSeconds, TimeUnit.SECONDS)
       .keepAliveTimeout(options.keepAliveTimeout.toSeconds, TimeUnit.SECONDS)

@@ -14,8 +14,9 @@ package com.github.fit51.reactiveconfig.etcd.gen.rpc
 final case class DeleteRangeResponse(
     header: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = _root_.scala.None,
     deleted: _root_.scala.Long = 0L,
-    prevKvs: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = _root_.scala.Seq.empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[DeleteRangeResponse] with scalapb.lenses.Updatable[DeleteRangeResponse] {
+    prevKvs: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = _root_.scala.Seq.empty,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[DeleteRangeResponse] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -35,9 +36,10 @@ final case class DeleteRangeResponse(
         val __value = __item
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       }
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -64,30 +66,7 @@ final case class DeleteRangeResponse(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse = {
-      var __header = this.header
-      var __deleted = this.deleted
-      val __prevKvs = (_root_.scala.collection.immutable.Vector.newBuilder[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] ++= this.prevKvs)
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __header = Option(_root_.scalapb.LiteParser.readMessage(_input__, __header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)))
-          case 16 =>
-            __deleted = _input__.readInt64()
-          case 26 =>
-            __prevKvs += _root_.scalapb.LiteParser.readMessage(_input__, com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue.defaultInstance)
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse(
-          header = __header,
-          deleted = __deleted,
-          prevKvs = __prevKvs.result()
-      )
+      unknownFields.writeTo(_output__)
     }
     def getHeader: com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader = header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)
     def clearHeader: DeleteRangeResponse = copy(header = _root_.scala.None)
@@ -97,6 +76,8 @@ final case class DeleteRangeResponse(
     def addPrevKvs(__vs: com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue*): DeleteRangeResponse = addAllPrevKvs(__vs)
     def addAllPrevKvs(__vs: Iterable[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]): DeleteRangeResponse = copy(prevKvs = prevKvs ++ __vs)
     def withPrevKvs(__v: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]): DeleteRangeResponse = copy(prevKvs = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => header.orNull
@@ -117,30 +98,52 @@ final case class DeleteRangeResponse(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.DeleteRangeResponse])
 }
 
 object DeleteRangeResponse extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse = {
+    var __header: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = _root_.scala.None
+    var __deleted: _root_.scala.Long = 0L
+    val __prevKvs: _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = new _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __header = Option(__header.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 16 =>
+          __deleted = _input__.readInt64()
+        case 26 =>
+          __prevKvs += _root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue](_input__)
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]],
-      __fieldsMap.getOrElse(__fields.get(1), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(2), Nil).asInstanceOf[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]]
+        header = __header,
+        deleted = __deleted,
+        prevKvs = __prevKvs.result(),
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.DeleteRangeResponse(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]]).getOrElse(_root_.scala.Seq.empty)
+        header = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
+        deleted = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        prevKvs = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue]]).getOrElse(_root_.scala.Seq.empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(6)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(6)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(6)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -175,4 +178,5 @@ object DeleteRangeResponse extends scalapb.GeneratedMessageCompanion[com.github.
     deleted,
     prevKvs
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.DeleteRangeResponse])
 }

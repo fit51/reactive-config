@@ -7,8 +7,9 @@ package com.github.fit51.reactiveconfig.etcd.gen.rpc
 
 @SerialVersionUID(0L)
 final case class AuthRoleDeleteRequest(
-    role: _root_.scala.Predef.String = ""
-    ) extends scalapb.GeneratedMessage with scalapb.Message[AuthRoleDeleteRequest] with scalapb.lenses.Updatable[AuthRoleDeleteRequest] {
+    role: _root_.scala.Predef.String = "",
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[AuthRoleDeleteRequest] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -16,13 +17,14 @@ final case class AuthRoleDeleteRequest(
       
       {
         val __value = role
-        if (__value != "") {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(1, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -33,28 +35,15 @@ final case class AuthRoleDeleteRequest(
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
         val __v = role
-        if (__v != "") {
+        if (!__v.isEmpty) {
           _output__.writeString(1, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest = {
-      var __role = this.role
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __role = _input__.readString()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest(
-          role = __role
-      )
+      unknownFields.writeTo(_output__)
     }
     def withRole(__v: _root_.scala.Predef.String): AuthRoleDeleteRequest = copy(role = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -71,26 +60,42 @@ final case class AuthRoleDeleteRequest(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.AuthRoleDeleteRequest])
 }
 
 object AuthRoleDeleteRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest = {
+    var __role: _root_.scala.Predef.String = ""
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __role = _input__.readStringRequireUtf8()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest(
-      __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String]
+        role = __role,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
+        role = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(59)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(59)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(59)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -107,4 +112,5 @@ object AuthRoleDeleteRequest extends scalapb.GeneratedMessageCompanion[com.githu
   ): _root_.com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest = _root_.com.github.fit51.reactiveconfig.etcd.gen.rpc.AuthRoleDeleteRequest(
     role
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.AuthRoleDeleteRequest])
 }

@@ -15,8 +15,9 @@ final case class LeaseGrantResponse(
     header: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = _root_.scala.None,
     iD: _root_.scala.Long = 0L,
     tTL: _root_.scala.Long = 0L,
-    error: _root_.scala.Predef.String = ""
-    ) extends scalapb.GeneratedMessage with scalapb.Message[LeaseGrantResponse] with scalapb.lenses.Updatable[LeaseGrantResponse] {
+    error: _root_.scala.Predef.String = "",
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[LeaseGrantResponse] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -42,13 +43,14 @@ final case class LeaseGrantResponse(
       
       {
         val __value = error
-        if (__value != "") {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(4, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -77,38 +79,11 @@ final case class LeaseGrantResponse(
       };
       {
         val __v = error
-        if (__v != "") {
+        if (!__v.isEmpty) {
           _output__.writeString(4, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse = {
-      var __header = this.header
-      var __iD = this.iD
-      var __tTL = this.tTL
-      var __error = this.error
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __header = Option(_root_.scalapb.LiteParser.readMessage(_input__, __header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)))
-          case 16 =>
-            __iD = _input__.readInt64()
-          case 24 =>
-            __tTL = _input__.readInt64()
-          case 34 =>
-            __error = _input__.readString()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse(
-          header = __header,
-          iD = __iD,
-          tTL = __tTL,
-          error = __error
-      )
+      unknownFields.writeTo(_output__)
     }
     def getHeader: com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader = header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)
     def clearHeader: LeaseGrantResponse = copy(header = _root_.scala.None)
@@ -116,6 +91,8 @@ final case class LeaseGrantResponse(
     def withID(__v: _root_.scala.Long): LeaseGrantResponse = copy(iD = __v)
     def withTTL(__v: _root_.scala.Long): LeaseGrantResponse = copy(tTL = __v)
     def withError(__v: _root_.scala.Predef.String): LeaseGrantResponse = copy(error = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => header.orNull
@@ -144,32 +121,57 @@ final case class LeaseGrantResponse(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.LeaseGrantResponse])
 }
 
 object LeaseGrantResponse extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse = {
+    var __header: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = _root_.scala.None
+    var __iD: _root_.scala.Long = 0L
+    var __tTL: _root_.scala.Long = 0L
+    var __error: _root_.scala.Predef.String = ""
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __header = Option(__header.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 16 =>
+          __iD = _input__.readInt64()
+        case 24 =>
+          __tTL = _input__.readInt64()
+        case 34 =>
+          __error = _input__.readStringRequireUtf8()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]],
-      __fieldsMap.getOrElse(__fields.get(1), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(2), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(3), "").asInstanceOf[_root_.scala.Predef.String]
+        header = __header,
+        iD = __iD,
+        tTL = __tTL,
+        error = __error,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.LeaseGrantResponse(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
+        header = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
+        iD = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        tTL = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        error = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(23)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(23)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(23)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -208,4 +210,5 @@ object LeaseGrantResponse extends scalapb.GeneratedMessageCompanion[com.github.f
     tTL,
     error
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.LeaseGrantResponse])
 }

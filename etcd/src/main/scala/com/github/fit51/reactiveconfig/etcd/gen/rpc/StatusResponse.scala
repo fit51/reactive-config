@@ -23,8 +23,9 @@ final case class StatusResponse(
     dbSize: _root_.scala.Long = 0L,
     leader: _root_.scala.Long = 0L,
     raftIndex: _root_.scala.Long = 0L,
-    raftTerm: _root_.scala.Long = 0L
-    ) extends scalapb.GeneratedMessage with scalapb.Message[StatusResponse] with scalapb.lenses.Updatable[StatusResponse] {
+    raftTerm: _root_.scala.Long = 0L,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[StatusResponse] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -36,7 +37,7 @@ final case class StatusResponse(
       
       {
         val __value = version
-        if (__value != "") {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(2, __value)
         }
       };
@@ -68,9 +69,10 @@ final case class StatusResponse(
           __size += _root_.com.google.protobuf.CodedOutputStream.computeUInt64Size(6, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -87,7 +89,7 @@ final case class StatusResponse(
       };
       {
         val __v = version
-        if (__v != "") {
+        if (!__v.isEmpty) {
           _output__.writeString(2, __v)
         }
       };
@@ -115,42 +117,7 @@ final case class StatusResponse(
           _output__.writeUInt64(6, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse = {
-      var __header = this.header
-      var __version = this.version
-      var __dbSize = this.dbSize
-      var __leader = this.leader
-      var __raftIndex = this.raftIndex
-      var __raftTerm = this.raftTerm
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __header = Option(_root_.scalapb.LiteParser.readMessage(_input__, __header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)))
-          case 18 =>
-            __version = _input__.readString()
-          case 24 =>
-            __dbSize = _input__.readInt64()
-          case 32 =>
-            __leader = _input__.readUInt64()
-          case 40 =>
-            __raftIndex = _input__.readUInt64()
-          case 48 =>
-            __raftTerm = _input__.readUInt64()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse(
-          header = __header,
-          version = __version,
-          dbSize = __dbSize,
-          leader = __leader,
-          raftIndex = __raftIndex,
-          raftTerm = __raftTerm
-      )
+      unknownFields.writeTo(_output__)
     }
     def getHeader: com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader = header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)
     def clearHeader: StatusResponse = copy(header = _root_.scala.None)
@@ -160,6 +127,8 @@ final case class StatusResponse(
     def withLeader(__v: _root_.scala.Long): StatusResponse = copy(leader = __v)
     def withRaftIndex(__v: _root_.scala.Long): StatusResponse = copy(raftIndex = __v)
     def withRaftTerm(__v: _root_.scala.Long): StatusResponse = copy(raftTerm = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => header.orNull
@@ -198,36 +167,67 @@ final case class StatusResponse(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.StatusResponse])
 }
 
 object StatusResponse extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse = {
+    var __header: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = _root_.scala.None
+    var __version: _root_.scala.Predef.String = ""
+    var __dbSize: _root_.scala.Long = 0L
+    var __leader: _root_.scala.Long = 0L
+    var __raftIndex: _root_.scala.Long = 0L
+    var __raftTerm: _root_.scala.Long = 0L
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __header = Option(__header.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 18 =>
+          __version = _input__.readStringRequireUtf8()
+        case 24 =>
+          __dbSize = _input__.readInt64()
+        case 32 =>
+          __leader = _input__.readUInt64()
+        case 40 =>
+          __raftIndex = _input__.readUInt64()
+        case 48 =>
+          __raftTerm = _input__.readUInt64()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]],
-      __fieldsMap.getOrElse(__fields.get(1), "").asInstanceOf[_root_.scala.Predef.String],
-      __fieldsMap.getOrElse(__fields.get(2), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(3), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(4), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(5), 0L).asInstanceOf[_root_.scala.Long]
+        header = __header,
+        version = __version,
+        dbSize = __dbSize,
+        leader = __leader,
+        raftIndex = __raftIndex,
+        raftTerm = __raftTerm,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.StatusResponse(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
+        header = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
+        version = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
+        dbSize = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        leader = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        raftIndex = __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        raftTerm = __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(45)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(45)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(45)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -276,4 +276,5 @@ object StatusResponse extends scalapb.GeneratedMessageCompanion[com.github.fit51
     raftIndex,
     raftTerm
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.StatusResponse])
 }

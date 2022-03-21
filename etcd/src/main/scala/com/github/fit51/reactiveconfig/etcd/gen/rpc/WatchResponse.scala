@@ -35,8 +35,9 @@ final case class WatchResponse(
     canceled: _root_.scala.Boolean = false,
     compactRevision: _root_.scala.Long = 0L,
     cancelReason: _root_.scala.Predef.String = "",
-    events: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.Event] = _root_.scala.Seq.empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[WatchResponse] with scalapb.lenses.Updatable[WatchResponse] {
+    events: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.Event] = _root_.scala.Seq.empty,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[WatchResponse] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -76,7 +77,7 @@ final case class WatchResponse(
       
       {
         val __value = cancelReason
-        if (__value != "") {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(6, __value)
         }
       };
@@ -84,9 +85,10 @@ final case class WatchResponse(
         val __value = __item
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       }
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -127,7 +129,7 @@ final case class WatchResponse(
       };
       {
         val __v = cancelReason
-        if (__v != "") {
+        if (!__v.isEmpty) {
           _output__.writeString(6, __v)
         }
       };
@@ -137,46 +139,7 @@ final case class WatchResponse(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse = {
-      var __header = this.header
-      var __watchId = this.watchId
-      var __created = this.created
-      var __canceled = this.canceled
-      var __compactRevision = this.compactRevision
-      var __cancelReason = this.cancelReason
-      val __events = (_root_.scala.collection.immutable.Vector.newBuilder[com.github.fit51.reactiveconfig.etcd.gen.kv.Event] ++= this.events)
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __header = Option(_root_.scalapb.LiteParser.readMessage(_input__, __header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)))
-          case 16 =>
-            __watchId = _input__.readInt64()
-          case 24 =>
-            __created = _input__.readBool()
-          case 32 =>
-            __canceled = _input__.readBool()
-          case 40 =>
-            __compactRevision = _input__.readInt64()
-          case 50 =>
-            __cancelReason = _input__.readString()
-          case 90 =>
-            __events += _root_.scalapb.LiteParser.readMessage(_input__, com.github.fit51.reactiveconfig.etcd.gen.kv.Event.defaultInstance)
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse(
-          header = __header,
-          watchId = __watchId,
-          created = __created,
-          canceled = __canceled,
-          compactRevision = __compactRevision,
-          cancelReason = __cancelReason,
-          events = __events.result()
-      )
+      unknownFields.writeTo(_output__)
     }
     def getHeader: com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader = header.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader.defaultInstance)
     def clearHeader: WatchResponse = copy(header = _root_.scala.None)
@@ -190,6 +153,8 @@ final case class WatchResponse(
     def addEvents(__vs: com.github.fit51.reactiveconfig.etcd.gen.kv.Event*): WatchResponse = addAllEvents(__vs)
     def addAllEvents(__vs: Iterable[com.github.fit51.reactiveconfig.etcd.gen.kv.Event]): WatchResponse = copy(events = events ++ __vs)
     def withEvents(__v: _root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.Event]): WatchResponse = copy(events = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => header.orNull
@@ -230,38 +195,72 @@ final case class WatchResponse(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.WatchResponse])
 }
 
 object WatchResponse extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse = {
+    var __header: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader] = _root_.scala.None
+    var __watchId: _root_.scala.Long = 0L
+    var __created: _root_.scala.Boolean = false
+    var __canceled: _root_.scala.Boolean = false
+    var __compactRevision: _root_.scala.Long = 0L
+    var __cancelReason: _root_.scala.Predef.String = ""
+    val __events: _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.kv.Event] = new _root_.scala.collection.immutable.VectorBuilder[com.github.fit51.reactiveconfig.etcd.gen.kv.Event]
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __header = Option(__header.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 16 =>
+          __watchId = _input__.readInt64()
+        case 24 =>
+          __created = _input__.readBool()
+        case 32 =>
+          __canceled = _input__.readBool()
+        case 40 =>
+          __compactRevision = _input__.readInt64()
+        case 50 =>
+          __cancelReason = _input__.readStringRequireUtf8()
+        case 90 =>
+          __events += _root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.kv.Event](_input__)
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]],
-      __fieldsMap.getOrElse(__fields.get(1), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(2), false).asInstanceOf[_root_.scala.Boolean],
-      __fieldsMap.getOrElse(__fields.get(3), false).asInstanceOf[_root_.scala.Boolean],
-      __fieldsMap.getOrElse(__fields.get(4), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(5), "").asInstanceOf[_root_.scala.Predef.String],
-      __fieldsMap.getOrElse(__fields.get(6), Nil).asInstanceOf[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.Event]]
+        header = __header,
+        watchId = __watchId,
+        created = __created,
+        canceled = __canceled,
+        compactRevision = __compactRevision,
+        cancelReason = __cancelReason,
+        events = __events.result(),
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchResponse(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(11).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.Event]]).getOrElse(_root_.scala.Seq.empty)
+        header = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.ResponseHeader]]),
+        watchId = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        created = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
+        canceled = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Boolean]).getOrElse(false),
+        compactRevision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        cancelReason = __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
+        events = __fieldsMap.get(scalaDescriptor.findFieldByNumber(11).get).map(_.as[_root_.scala.Seq[com.github.fit51.reactiveconfig.etcd.gen.kv.Event]]).getOrElse(_root_.scala.Seq.empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(21)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(21)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(21)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -316,4 +315,5 @@ object WatchResponse extends scalapb.GeneratedMessageCompanion[com.github.fit51.
     cancelReason,
     events
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.WatchResponse])
 }

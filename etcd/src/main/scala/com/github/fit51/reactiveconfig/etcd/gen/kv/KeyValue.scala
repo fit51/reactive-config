@@ -29,8 +29,9 @@ final case class KeyValue(
     modRevision: _root_.scala.Long = 0L,
     version: _root_.scala.Long = 0L,
     value: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY,
-    lease: _root_.scala.Long = 0L
-    ) extends scalapb.GeneratedMessage with scalapb.Message[KeyValue] with scalapb.lenses.Updatable[KeyValue] {
+    lease: _root_.scala.Long = 0L,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[KeyValue] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -38,7 +39,7 @@ final case class KeyValue(
       
       {
         val __value = key
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(1, __value)
         }
       };
@@ -66,7 +67,7 @@ final case class KeyValue(
       
       {
         val __value = value
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(5, __value)
         }
       };
@@ -77,9 +78,10 @@ final case class KeyValue(
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt64Size(6, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -90,7 +92,7 @@ final case class KeyValue(
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
         val __v = key
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(1, __v)
         }
       };
@@ -114,7 +116,7 @@ final case class KeyValue(
       };
       {
         val __v = value
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(5, __v)
         }
       };
@@ -124,42 +126,7 @@ final case class KeyValue(
           _output__.writeInt64(6, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue = {
-      var __key = this.key
-      var __createRevision = this.createRevision
-      var __modRevision = this.modRevision
-      var __version = this.version
-      var __value = this.value
-      var __lease = this.lease
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __key = _input__.readBytes()
-          case 16 =>
-            __createRevision = _input__.readInt64()
-          case 24 =>
-            __modRevision = _input__.readInt64()
-          case 32 =>
-            __version = _input__.readInt64()
-          case 42 =>
-            __value = _input__.readBytes()
-          case 48 =>
-            __lease = _input__.readInt64()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue(
-          key = __key,
-          createRevision = __createRevision,
-          modRevision = __modRevision,
-          version = __version,
-          value = __value,
-          lease = __lease
-      )
+      unknownFields.writeTo(_output__)
     }
     def withKey(__v: _root_.com.google.protobuf.ByteString): KeyValue = copy(key = __v)
     def withCreateRevision(__v: _root_.scala.Long): KeyValue = copy(createRevision = __v)
@@ -167,6 +134,8 @@ final case class KeyValue(
     def withVersion(__v: _root_.scala.Long): KeyValue = copy(version = __v)
     def withValue(__v: _root_.com.google.protobuf.ByteString): KeyValue = copy(value = __v)
     def withLease(__v: _root_.scala.Long): KeyValue = copy(lease = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -208,36 +177,67 @@ final case class KeyValue(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue
+    // @@protoc_insertion_point(GeneratedMessage[mvccpb.KeyValue])
 }
 
 object KeyValue extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue = {
+    var __key: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __createRevision: _root_.scala.Long = 0L
+    var __modRevision: _root_.scala.Long = 0L
+    var __version: _root_.scala.Long = 0L
+    var __value: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __lease: _root_.scala.Long = 0L
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __key = _input__.readBytes()
+        case 16 =>
+          __createRevision = _input__.readInt64()
+        case 24 =>
+          __modRevision = _input__.readInt64()
+        case 32 =>
+          __version = _input__.readInt64()
+        case 42 =>
+          __value = _input__.readBytes()
+        case 48 =>
+          __lease = _input__.readInt64()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue(
-      __fieldsMap.getOrElse(__fields.get(0), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      __fieldsMap.getOrElse(__fields.get(1), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(2), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(3), 0L).asInstanceOf[_root_.scala.Long],
-      __fieldsMap.getOrElse(__fields.get(4), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      __fieldsMap.getOrElse(__fields.get(5), 0L).asInstanceOf[_root_.scala.Long]
+        key = __key,
+        createRevision = __createRevision,
+        modRevision = __modRevision,
+        version = __version,
+        value = __value,
+        lease = __lease,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.kv.KeyValue(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
+        key = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        createRevision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        modRevision = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        version = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Long]).getOrElse(0L),
+        value = __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        lease = __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = KvProto.javaDescriptor.getMessageTypes.get(0)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = KvProto.javaDescriptor.getMessageTypes().get(0)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = KvProto.scalaDescriptor.messages(0)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -279,4 +279,5 @@ object KeyValue extends scalapb.GeneratedMessageCompanion[com.github.fit51.react
     value,
     lease
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[mvccpb.KeyValue])
 }

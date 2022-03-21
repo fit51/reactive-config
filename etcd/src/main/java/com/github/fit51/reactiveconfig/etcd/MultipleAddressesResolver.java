@@ -1,59 +1,52 @@
 package com.github.fit51.reactiveconfig.etcd;
 
-import com.google.common.annotations.VisibleForTesting;
+import java.net.URI;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.net.InetSocketAddress;
+import java.util.stream.Collectors;
+
 import com.google.common.base.Preconditions;
-import com.coreos.jetcd.common.exception.ErrorCode;
-import com.coreos.jetcd.common.exception.EtcdExceptionFactory;
-import com.coreos.jetcd.resolver.URIResolver;
-import com.coreos.jetcd.resolver.URIResolverLoader;
+import com.google.common.base.Strings;
+import com.google.common.net.HostAndPort;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.grpc.Attributes;
-import io.grpc.NameResolver.Listener;
 import io.grpc.EquivalentAddressGroup;
 import io.grpc.NameResolver;
 import io.grpc.Status;
 import io.grpc.internal.GrpcUtil;
 import io.grpc.internal.SharedResourceHolder;
 
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import javax.annotation.concurrent.GuardedBy;
+// Stolen from jetcd-core://io.etcd.jetcd.resolver
+public class MultipleAddressesResolver extends NameResolver {
+    public static final int ETCD_CLIENT_PORT = 2379;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-//ToDo: Rewrite in Scala
-public class SmartNameResolver extends NameResolver {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SmartNameResolver.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultipleAddressesResolver.class);
 
     private final Object lock;
     private final String authority;
-    private final Collection<URI> uris;
-    private final List<URIResolver> resolvers;
+    private final URI targetUri;
 
     private volatile boolean shutdown;
     private volatile boolean resolving;
 
-    @GuardedBy("lock")
     private Executor executor;
-    @GuardedBy("lock")
     private Listener listener;
 
-    public SmartNameResolver(String authority, Collection<URI> uris, URIResolverLoader loader) {
-        this.lock = new Object();
-        this.authority = authority;
-        this.uris = uris;
+    private final List<HostAndPort> addresses;
 
-        this.resolvers = new ArrayList<>();
-        this.resolvers.add(new DirectUriResolver());
-        this.resolvers.addAll(loader.load());
-        this.resolvers.sort(Comparator.comparingInt(r -> r.priority()));
+    public MultipleAddressesResolver(URI targetUri, List<HostAndPort> addresses) {
+        this.lock = new Object();
+        this.targetUri = targetUri;
+        this.authority = targetUri.getAuthority() != null ? targetUri.getAuthority() : "";
+        this.addresses =  addresses;
     }
 
-    @VisibleForTesting
-    public List<URIResolver> getResolvers() {
-        return Collections.unmodifiableList(resolvers);
+    public URI getTargetUri() {
+        return targetUri;
     }
 
     @Override
@@ -110,25 +103,13 @@ public class SmartNameResolver extends NameResolver {
         }
 
         try {
-            List<EquivalentAddressGroup> groups = new ArrayList<>();
-
-            for (URI uri : uris) {
-                resolvers.stream()
-                        .filter(r -> r.supports(uri))
-                        .limit(1)
-                        .flatMap(r -> r.resolve(uri).stream())
-                        .map(EquivalentAddressGroup::new)
-                        .forEach(groups::add);
-            }
-
+            List<EquivalentAddressGroup> groups = computeAddressGroups();
             if (groups.isEmpty()) {
-                throw EtcdExceptionFactory.newEtcdException(
-                        ErrorCode.INVALID_ARGUMENT,
-                        ("Unable to resolve endpoints " + uris)
-                );
+                throw new RuntimeException("Unable to resolve endpoint " + targetUri);
             }
 
             savedListener.onAddresses(groups, Attributes.EMPTY);
+
         } catch (Exception e) {
             LOGGER.warn("Error wile getting list of servers", e);
             savedListener.onError(Status.NOT_FOUND);
@@ -136,5 +117,24 @@ public class SmartNameResolver extends NameResolver {
             resolving = false;
         }
     }
-}
 
+    protected List<EquivalentAddressGroup> computeAddressGroups() {
+        if (addresses.isEmpty()) {
+            throw new RuntimeException("Unable to resolve endpoint " + targetUri);
+        }
+
+        return addresses.stream()
+            .map(address -> {
+                return new EquivalentAddressGroup(
+                    new InetSocketAddress(
+                        address.getHost(),
+                        address.getPortOrDefault(ETCD_CLIENT_PORT)),
+                    Strings.isNullOrEmpty(getServiceAuthority())
+                        ? Attributes.newBuilder()
+                            .set(EquivalentAddressGroup.ATTR_AUTHORITY_OVERRIDE, address.toString())
+                            .build()
+                        : Attributes.EMPTY);
+            })
+            .collect(Collectors.toList());
+    }
+}

@@ -47,29 +47,17 @@ lazy val etcd = project
   .settings(
     name := "reactive-config-etcd",
     libraryDependencies ++= Seq(
-      "io.grpc"              % "grpc-netty"                      % "1.22.3",
+      "io.grpc"              % "grpc-netty"                      % "1.41.0",
       "io.netty"             % "netty-tcnative-boringssl-static" % "2.0.25.Final",
       "io.netty"             % "netty-codec-http2"               % "4.1.53.Final",
       "io.netty"             % "netty-handler-proxy"             % "4.1.53.Final",
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % scalapb.compiler.Version.scalapbVersion,
-      "com.coreos"           % "jetcd-core"                      % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc")),
-      "com.coreos"           % "jetcd-common"                    % "0.0.2" excludeAll (ExclusionRule(organization = "io.grpc")),
       "com.pauldijou"        %% "jwt-core"                       % "4.2.0"
+    ),
+    Compile / PB.targets := Seq(
+      scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
     )
   )
-  .settings {
-    val generateSources           = TaskKey.apply[Unit]("generateSources")
-    def genPackage(f: File): File = f / "com" / "github" / "fit51" / "reactiveconfig" / "etcd" / "gen"
-    generateSources := {
-      (PB.generate in Compile).value
-      val genDir    = genPackage((sourceManaged in Compile).value)
-      val targetDir = genPackage((sourceDirectory in Compile).value / "scala")
-      println(s"Generated in: $genDir")
-      println(s"Moved to: $targetDir")
-      IO.copyDirectory(genDir, targetDir, true, true)
-      IO.delete(genDir)
-    }
-  }
 
 lazy val typesafe = project
   .in(file("typesafe"))

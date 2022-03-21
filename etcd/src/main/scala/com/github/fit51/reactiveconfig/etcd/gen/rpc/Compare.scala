@@ -21,31 +21,32 @@ final case class Compare(
     result: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.EQUAL,
     target: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.VERSION,
     key: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY,
+    targetUnion: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Empty,
     rangeEnd: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY,
-    targetUnion: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[Compare] with scalapb.lenses.Updatable[Compare] {
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[Compare] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
       
       {
-        val __value = result
-        if (__value != com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.EQUAL) {
-          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value.value)
+        val __value = result.value
+        if (__value != 0) {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value)
         }
       };
       
       {
-        val __value = target
-        if (__value != com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.VERSION) {
-          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(2, __value.value)
+        val __value = target.value
+        if (__value != 0) {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(2, __value)
         }
       };
       
       {
         val __value = key
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(3, __value)
         }
       };
@@ -68,13 +69,14 @@ final case class Compare(
       
       {
         val __value = rangeEnd
-        if (__value != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__value.isEmpty) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeBytesSize(8, __value)
         }
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -84,20 +86,20 @@ final case class Compare(
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
-        val __v = result
-        if (__v != com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.EQUAL) {
-          _output__.writeEnum(1, __v.value)
+        val __v = result.value
+        if (__v != 0) {
+          _output__.writeEnum(1, __v)
         }
       };
       {
-        val __v = target
-        if (__v != com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.VERSION) {
-          _output__.writeEnum(2, __v.value)
+        val __v = target.value
+        if (__v != 0) {
+          _output__.writeEnum(2, __v)
         }
       };
       {
         val __v = key
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(3, __v)
         }
       };
@@ -119,48 +121,11 @@ final case class Compare(
       };
       {
         val __v = rangeEnd
-        if (__v != _root_.com.google.protobuf.ByteString.EMPTY) {
+        if (!__v.isEmpty) {
           _output__.writeBytes(8, __v)
         }
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare = {
-      var __result = this.result
-      var __target = this.target
-      var __key = this.key
-      var __rangeEnd = this.rangeEnd
-      var __targetUnion = this.targetUnion
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 8 =>
-            __result = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.fromValue(_input__.readEnum())
-          case 16 =>
-            __target = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.fromValue(_input__.readEnum())
-          case 26 =>
-            __key = _input__.readBytes()
-          case 32 =>
-            __targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Version(_input__.readInt64())
-          case 40 =>
-            __targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.CreateRevision(_input__.readInt64())
-          case 48 =>
-            __targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.ModRevision(_input__.readInt64())
-          case 58 =>
-            __targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Value(_input__.readBytes())
-          case 66 =>
-            __rangeEnd = _input__.readBytes()
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare(
-          result = __result,
-          target = __target,
-          key = __key,
-          rangeEnd = __rangeEnd,
-          targetUnion = __targetUnion
-      )
+      unknownFields.writeTo(_output__)
     }
     def withResult(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult): Compare = copy(result = __v)
     def withTarget(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget): Compare = copy(target = __v)
@@ -176,6 +141,8 @@ final case class Compare(
     def withRangeEnd(__v: _root_.com.google.protobuf.ByteString): Compare = copy(rangeEnd = __v)
     def clearTargetUnion: Compare = copy(targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Empty)
     def withTargetUnion(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion): Compare = copy(targetUnion = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -206,51 +173,81 @@ final case class Compare(
         case 1 => _root_.scalapb.descriptors.PEnum(result.scalaValueDescriptor)
         case 2 => _root_.scalapb.descriptors.PEnum(target.scalaValueDescriptor)
         case 3 => _root_.scalapb.descriptors.PByteString(key)
-        case 4 => targetUnion.version.map(_root_.scalapb.descriptors.PLong).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 5 => targetUnion.createRevision.map(_root_.scalapb.descriptors.PLong).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 6 => targetUnion.modRevision.map(_root_.scalapb.descriptors.PLong).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 7 => targetUnion._value.map(_root_.scalapb.descriptors.PByteString).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 4 => targetUnion.version.map(_root_.scalapb.descriptors.PLong(_)).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 5 => targetUnion.createRevision.map(_root_.scalapb.descriptors.PLong(_)).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 6 => targetUnion.modRevision.map(_root_.scalapb.descriptors.PLong(_)).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 7 => targetUnion._value.map(_root_.scalapb.descriptors.PByteString(_)).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 8 => _root_.scalapb.descriptors.PByteString(rangeEnd)
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.Compare])
 }
 
 object Compare extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare = {
+    var __result: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.EQUAL
+    var __target: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.VERSION
+    var __key: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __rangeEnd: _root_.com.google.protobuf.ByteString = _root_.com.google.protobuf.ByteString.EMPTY
+    var __targetUnion: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Empty
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 8 =>
+          __result = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.fromValue(_input__.readEnum())
+        case 16 =>
+          __target = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.fromValue(_input__.readEnum())
+        case 26 =>
+          __key = _input__.readBytes()
+        case 32 =>
+          __targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Version(_input__.readInt64())
+        case 40 =>
+          __targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.CreateRevision(_input__.readInt64())
+        case 48 =>
+          __targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.ModRevision(_input__.readInt64())
+        case 58 =>
+          __targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Value(_input__.readBytes())
+        case 66 =>
+          __rangeEnd = _input__.readBytes()
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare(
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.fromValue(__fieldsMap.getOrElse(__fields.get(0), com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.EQUAL.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.fromValue(__fieldsMap.getOrElse(__fields.get(1), com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.VERSION.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      __fieldsMap.getOrElse(__fields.get(2), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      __fieldsMap.getOrElse(__fields.get(7), _root_.com.google.protobuf.ByteString.EMPTY).asInstanceOf[_root_.com.google.protobuf.ByteString],
-      targetUnion = __fieldsMap.get(__fields.get(3)).asInstanceOf[_root_.scala.Option[_root_.scala.Long]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Version)
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(__fields.get(4)).asInstanceOf[_root_.scala.Option[_root_.scala.Long]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.CreateRevision))
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(__fields.get(5)).asInstanceOf[_root_.scala.Option[_root_.scala.Long]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.ModRevision))
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(__fields.get(6)).asInstanceOf[_root_.scala.Option[_root_.com.google.protobuf.ByteString]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Value))
-    .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Empty)
+        result = __result,
+        target = __target,
+        key = __key,
+        rangeEnd = __rangeEnd,
+        targetUnion = __targetUnion,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare(
-        com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.EQUAL.scalaValueDescriptor).number),
-        com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.VERSION.scalaValueDescriptor).number),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
-        targetUnion = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[_root_.scala.Long]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Version)
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).flatMap(_.as[_root_.scala.Option[_root_.scala.Long]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.CreateRevision))
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).flatMap(_.as[_root_.scala.Option[_root_.scala.Long]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.ModRevision))
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(scalaDescriptor.findFieldByNumber(7).get).flatMap(_.as[_root_.scala.Option[_root_.com.google.protobuf.ByteString]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Value))
-    .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Empty)
+        result = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.EQUAL.scalaValueDescriptor).number),
+        target = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.VERSION.scalaValueDescriptor).number),
+        key = __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        rangeEnd = __fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).map(_.as[_root_.com.google.protobuf.ByteString]).getOrElse(_root_.com.google.protobuf.ByteString.EMPTY),
+        targetUnion = __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[_root_.scala.Long]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Version(_))
+            .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).flatMap(_.as[_root_.scala.Option[_root_.scala.Long]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.CreateRevision(_)))
+            .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).flatMap(_.as[_root_.scala.Option[_root_.scala.Long]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.ModRevision(_)))
+            .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion](__fieldsMap.get(scalaDescriptor.findFieldByNumber(7).get).flatMap(_.as[_root_.scala.Option[_root_.com.google.protobuf.ByteString]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Value(_)))
+            .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(9)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(9)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(9)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] = Seq.empty
@@ -267,118 +264,114 @@ object Compare extends scalapb.GeneratedMessageCompanion[com.github.fit51.reacti
     rangeEnd = _root_.com.google.protobuf.ByteString.EMPTY,
     targetUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion.Empty
   )
-  sealed trait CompareResult extends _root_.scalapb.GeneratedEnum {
+  sealed abstract class CompareResult(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
     type EnumType = CompareResult
     def isEqual: _root_.scala.Boolean = false
     def isGreater: _root_.scala.Boolean = false
     def isLess: _root_.scala.Boolean = false
     def isNotEqual: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[CompareResult] = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult
+    final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult.Recognized])
   }
   
   object CompareResult extends _root_.scalapb.GeneratedEnumCompanion[CompareResult] {
+    sealed trait Recognized extends CompareResult
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[CompareResult] = this
     @SerialVersionUID(0L)
-    case object EQUAL extends CompareResult {
-      val value = 0
+    case object EQUAL extends CompareResult(0) with CompareResult.Recognized {
       val index = 0
       val name = "EQUAL"
       override def isEqual: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object GREATER extends CompareResult {
-      val value = 1
+    case object GREATER extends CompareResult(1) with CompareResult.Recognized {
       val index = 1
       val name = "GREATER"
       override def isGreater: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object LESS extends CompareResult {
-      val value = 2
+    case object LESS extends CompareResult(2) with CompareResult.Recognized {
       val index = 2
       val name = "LESS"
       override def isLess: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object NOT_EQUAL extends CompareResult {
-      val value = 3
+    case object NOT_EQUAL extends CompareResult(3) with CompareResult.Recognized {
       val index = 3
       val name = "NOT_EQUAL"
       override def isNotEqual: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    final case class Unrecognized(value: _root_.scala.Int) extends CompareResult with _root_.scalapb.UnrecognizedEnum
+    final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends CompareResult(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
     
     lazy val values = scala.collection.immutable.Seq(EQUAL, GREATER, LESS, NOT_EQUAL)
-    def fromValue(value: _root_.scala.Int): CompareResult = value match {
+    def fromValue(__value: _root_.scala.Int): CompareResult = __value match {
       case 0 => EQUAL
       case 1 => GREATER
       case 2 => LESS
       case 3 => NOT_EQUAL
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.javaDescriptor.getEnumTypes.get(0)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.javaDescriptor.getEnumTypes().get(0)
     def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.scalaDescriptor.enums(0)
   }
-  sealed trait CompareTarget extends _root_.scalapb.GeneratedEnum {
+  sealed abstract class CompareTarget(val value: _root_.scala.Int) extends _root_.scalapb.GeneratedEnum {
     type EnumType = CompareTarget
     def isVersion: _root_.scala.Boolean = false
     def isCreate: _root_.scala.Boolean = false
     def isMod: _root_.scala.Boolean = false
     def isValue: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[CompareTarget] = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget
+    final def asRecognized: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.Recognized] = if (isUnrecognized) _root_.scala.None else _root_.scala.Some(this.asInstanceOf[com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget.Recognized])
   }
   
   object CompareTarget extends _root_.scalapb.GeneratedEnumCompanion[CompareTarget] {
+    sealed trait Recognized extends CompareTarget
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[CompareTarget] = this
     @SerialVersionUID(0L)
-    case object VERSION extends CompareTarget {
-      val value = 0
+    case object VERSION extends CompareTarget(0) with CompareTarget.Recognized {
       val index = 0
       val name = "VERSION"
       override def isVersion: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object CREATE extends CompareTarget {
-      val value = 1
+    case object CREATE extends CompareTarget(1) with CompareTarget.Recognized {
       val index = 1
       val name = "CREATE"
       override def isCreate: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object MOD extends CompareTarget {
-      val value = 2
+    case object MOD extends CompareTarget(2) with CompareTarget.Recognized {
       val index = 2
       val name = "MOD"
       override def isMod: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    case object VALUE extends CompareTarget {
-      val value = 3
+    case object VALUE extends CompareTarget(3) with CompareTarget.Recognized {
       val index = 3
       val name = "VALUE"
       override def isValue: _root_.scala.Boolean = true
     }
     
     @SerialVersionUID(0L)
-    final case class Unrecognized(value: _root_.scala.Int) extends CompareTarget with _root_.scalapb.UnrecognizedEnum
+    final case class Unrecognized(unrecognizedValue: _root_.scala.Int) extends CompareTarget(unrecognizedValue) with _root_.scalapb.UnrecognizedEnum
     
     lazy val values = scala.collection.immutable.Seq(VERSION, CREATE, MOD, VALUE)
-    def fromValue(value: _root_.scala.Int): CompareTarget = value match {
+    def fromValue(__value: _root_.scala.Int): CompareTarget = __value match {
       case 0 => VERSION
       case 1 => CREATE
       case 2 => MOD
       case 3 => VALUE
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.javaDescriptor.getEnumTypes.get(1)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.javaDescriptor.getEnumTypes().get(1)
     def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.scalaDescriptor.enums(1)
   }
   sealed trait TargetUnion extends _root_.scalapb.GeneratedOneof {
@@ -393,7 +386,7 @@ object Compare extends scalapb.GeneratedMessageCompanion[com.github.fit51.reacti
     def modRevision: _root_.scala.Option[_root_.scala.Long] = _root_.scala.None
     def _value: _root_.scala.Option[_root_.com.google.protobuf.ByteString] = _root_.scala.None
   }
-  object TargetUnion extends {
+  object TargetUnion {
     @SerialVersionUID(0L)
     case object Empty extends com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion {
       type ValueType = _root_.scala.Nothing
@@ -455,13 +448,14 @@ object Compare extends scalapb.GeneratedMessageCompanion[com.github.fit51.reacti
     result: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareResult,
     target: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.CompareTarget,
     key: _root_.com.google.protobuf.ByteString,
-    rangeEnd: _root_.com.google.protobuf.ByteString,
-    targetUnion: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion
+    targetUnion: com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare.TargetUnion,
+    rangeEnd: _root_.com.google.protobuf.ByteString
   ): _root_.com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare = _root_.com.github.fit51.reactiveconfig.etcd.gen.rpc.Compare(
     result,
     target,
     key,
-    rangeEnd,
-    targetUnion
+    targetUnion,
+    rangeEnd
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.Compare])
 }

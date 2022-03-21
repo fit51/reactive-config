@@ -7,8 +7,9 @@ package com.github.fit51.reactiveconfig.etcd.gen.rpc
 
 @SerialVersionUID(0L)
 final case class WatchRequest(
-    requestUnion: com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.Empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[WatchRequest] with scalapb.lenses.Updatable[WatchRequest] {
+    requestUnion: com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.Empty,
+    unknownFields: _root_.scalapb.UnknownFieldSet = _root_.scalapb.UnknownFieldSet.empty
+    ) extends scalapb.GeneratedMessage with scalapb.lenses.Updatable[WatchRequest] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
@@ -21,9 +22,10 @@ final case class WatchRequest(
         val __value = requestUnion.cancelRequest.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
+      __size += unknownFields.serializedSize
       __size
     }
-    final override def serializedSize: _root_.scala.Int = {
+    override def serializedSize: _root_.scala.Int = {
       var read = __serializedSizeCachedValue
       if (read == 0) {
         read = __computeSerializedValue()
@@ -44,24 +46,7 @@ final case class WatchRequest(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest = {
-      var __requestUnion = this.requestUnion
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __requestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest(_root_.scalapb.LiteParser.readMessage(_input__, requestUnion.createRequest.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.defaultInstance)))
-          case 18 =>
-            __requestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CancelRequest(_root_.scalapb.LiteParser.readMessage(_input__, requestUnion.cancelRequest.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCancelRequest.defaultInstance)))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest(
-          requestUnion = __requestUnion
-      )
+      unknownFields.writeTo(_output__)
     }
     def getCreateRequest: com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest = requestUnion.createRequest.getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest.defaultInstance)
     def withCreateRequest(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest): WatchRequest = copy(requestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest(__v))
@@ -69,6 +54,8 @@ final case class WatchRequest(
     def withCancelRequest(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCancelRequest): WatchRequest = copy(requestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CancelRequest(__v))
     def clearRequestUnion: WatchRequest = copy(requestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.Empty)
     def withRequestUnion(__v: com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion): WatchRequest = copy(requestUnion = __v)
+    def withUnknownFields(__v: _root_.scalapb.UnknownFieldSet) = copy(unknownFields = __v)
+    def discardUnknownFields = copy(unknownFields = _root_.scalapb.UnknownFieldSet.empty)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => requestUnion.createRequest.orNull
@@ -84,30 +71,46 @@ final case class WatchRequest(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest
+    // @@protoc_insertion_point(GeneratedMessage[etcdserverpb.WatchRequest])
 }
 
 object WatchRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
+  def parseFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest = {
+    var __requestUnion: com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.Empty
+    var `_unknownFields__`: _root_.scalapb.UnknownFieldSet.Builder = null
+    var _done__ = false
+    while (!_done__) {
+      val _tag__ = _input__.readTag()
+      _tag__ match {
+        case 0 => _done__ = true
+        case 10 =>
+          __requestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest(__requestUnion.createRequest.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case 18 =>
+          __requestUnion = com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CancelRequest(__requestUnion.cancelRequest.fold(_root_.scalapb.LiteParser.readMessage[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCancelRequest](_input__))(_root_.scalapb.LiteParser.readMessage(_input__, _)))
+        case tag =>
+          if (_unknownFields__ == null) {
+            _unknownFields__ = new _root_.scalapb.UnknownFieldSet.Builder()
+          }
+          _unknownFields__.parseField(tag, _input__)
+      }
+    }
     com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest(
-      requestUnion = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest)
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion](__fieldsMap.get(__fields.get(1)).asInstanceOf[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCancelRequest]].map(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CancelRequest))
-    .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.Empty)
+        requestUnion = __requestUnion,
+        unknownFields = if (_unknownFields__ == null) _root_.scalapb.UnknownFieldSet.empty else _unknownFields__.result()
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage eq scalaDescriptor), "FieldDescriptor does not match message type.")
       com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest(
-        requestUnion = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest)
-    .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCancelRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CancelRequest))
-    .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.Empty)
+        requestUnion = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CreateRequest(_))
+            .orElse[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCancelRequest]]).map(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.CancelRequest(_)))
+            .getOrElse(com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion.Empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes.get(18)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = RpcProto.javaDescriptor.getMessageTypes().get(18)
   def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = RpcProto.scalaDescriptor.messages(18)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
@@ -130,7 +133,7 @@ object WatchRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
     def createRequest: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCreateRequest] = _root_.scala.None
     def cancelRequest: _root_.scala.Option[com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchCancelRequest] = _root_.scala.None
   }
-  object RequestUnion extends {
+  object RequestUnion {
     @SerialVersionUID(0L)
     case object Empty extends com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest.RequestUnion {
       type ValueType = _root_.scala.Nothing
@@ -167,4 +170,5 @@ object WatchRequest extends scalapb.GeneratedMessageCompanion[com.github.fit51.r
   ): _root_.com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest = _root_.com.github.fit51.reactiveconfig.etcd.gen.rpc.WatchRequest(
     requestUnion
   )
+  // @@protoc_insertion_point(GeneratedMessageCompanion[etcdserverpb.WatchRequest])
 }

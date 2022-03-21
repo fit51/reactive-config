@@ -16,7 +16,7 @@ object LockProto extends _root_.scalapb.GeneratedFileObject {
       com.github.fit51.reactiveconfig.etcd.gen.lock.UnlockRequest,
       com.github.fit51.reactiveconfig.etcd.gen.lock.UnlockResponse
     )
-  private lazy val ProtoBytes: Array[Byte] =
+  private lazy val ProtoBytes: _root_.scala.Array[Byte] =
       scalapb.Encoding.fromBase64(scala.collection.immutable.Seq(
   """Cgpsb2NrLnByb3RvEgh2M2xvY2twYhoJcnBjLnByb3RvIk4KC0xvY2tSZXF1ZXN0Eh0KBG5hbWUYASABKAxCCeI/BhIEbmFtZ
   VIEbmFtZRIgCgVsZWFzZRgCIAEoA0IK4j8HEgVsZWFzZVIFbGVhc2UibQoMTG9ja1Jlc3BvbnNlEkEKBmhlYWRlchgBIAEoCzIcL
@@ -33,7 +33,7 @@ object LockProto extends _root_.scalapb.GeneratedFileObject {
   }
   lazy val javaDescriptor: com.google.protobuf.Descriptors.FileDescriptor = {
     val javaProto = com.google.protobuf.DescriptorProtos.FileDescriptorProto.parseFrom(ProtoBytes)
-    com.google.protobuf.Descriptors.FileDescriptor.buildFrom(javaProto, Array(
+    com.google.protobuf.Descriptors.FileDescriptor.buildFrom(javaProto, _root_.scala.Array(
       com.github.fit51.reactiveconfig.etcd.gen.rpc.RpcProto.javaDescriptor
     ))
   }

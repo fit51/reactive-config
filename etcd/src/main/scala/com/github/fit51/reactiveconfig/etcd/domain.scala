@@ -1,13 +1,10 @@
 package com.github.fit51.reactiveconfig.etcd
 
 import cats.effect.{Async, ContextShift}
-import com.coreos.jetcd.resolver.URIResolverLoader
 import com.google.protobuf.ByteString
 import io.grpc.internal.GrpcUtil
-import io.grpc.{Attributes, NameResolver}
 import pdi.jwt.JwtClaim
 
-import java.net.URI
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -52,14 +49,6 @@ object EtcdUtils {
 }
 
 class EtcdException(m: String) extends Exception(m)
-
-class SmartNameResolverFactory(uris: List[URI], authority: String, loader: URIResolverLoader)
-    extends NameResolver.Factory {
-  override def getDefaultScheme: String = "etcd"
-
-  override def newNameResolver(targetUri: URI, params: Attributes): NameResolver =
-    new SmartNameResolver(authority, uris.asJava, loader)
-}
 
 sealed trait Token {
   def value: String

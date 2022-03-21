@@ -6,15 +6,14 @@
 package com.github.fit51.reactiveconfig.etcd.gen.auth
 
 object AuthProto extends _root_.scalapb.GeneratedFileObject {
-  lazy val dependencies: Seq[_root_.scalapb.GeneratedFileObject] = Seq(
-  )
+  lazy val dependencies: Seq[_root_.scalapb.GeneratedFileObject] = Seq.empty
   lazy val messagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]] =
     Seq[_root_.scalapb.GeneratedMessageCompanion[_ <: _root_.scalapb.GeneratedMessage]](
       com.github.fit51.reactiveconfig.etcd.gen.auth.User,
       com.github.fit51.reactiveconfig.etcd.gen.auth.Permission,
       com.github.fit51.reactiveconfig.etcd.gen.auth.Role
     )
-  private lazy val ProtoBytes: Array[Byte] =
+  private lazy val ProtoBytes: _root_.scala.Array[Byte] =
       scalapb.Encoding.fromBase64(scala.collection.immutable.Seq(
   """CgphdXRoLnByb3RvEgZhdXRocGIicgoEVXNlchIdCgRuYW1lGAEgASgMQgniPwYSBG5hbWVSBG5hbWUSKQoIcGFzc3dvcmQYA
   iABKAxCDeI/ChIIcGFzc3dvcmRSCHBhc3N3b3JkEiAKBXJvbGVzGAMgAygJQgriPwcSBXJvbGVzUgVyb2xlcyLEAQoKUGVybWlzc
@@ -30,7 +29,7 @@ object AuthProto extends _root_.scalapb.GeneratedFileObject {
   }
   lazy val javaDescriptor: com.google.protobuf.Descriptors.FileDescriptor = {
     val javaProto = com.google.protobuf.DescriptorProtos.FileDescriptorProto.parseFrom(ProtoBytes)
-    com.google.protobuf.Descriptors.FileDescriptor.buildFrom(javaProto, Array(
+    com.google.protobuf.Descriptors.FileDescriptor.buildFrom(javaProto, _root_.scala.Array(
     ))
   }
   @deprecated("Use javaDescriptor instead. In a future version this will refer to scalaDescriptor.", "ScalaPB 0.5.47")
