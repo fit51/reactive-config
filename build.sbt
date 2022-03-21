@@ -53,11 +53,24 @@ lazy val etcd = project
       "io.netty"             % "netty-handler-proxy"             % "4.1.53.Final",
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc"           % scalapb.compiler.Version.scalapbVersion,
       "com.pauldijou"        %% "jwt-core"                       % "4.2.0"
-    ),
-    Compile / PB.targets := Seq(
-      scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
     )
-  )
+  ).settings {
+    val generateSources = TaskKey.apply[Unit]("generateSources")
+
+    def genPackage(f: File): File = f / "com" / "github" / "fit51" / "reactiveconfig" / "etcd" / "gen"
+    generateSources := {
+      Compile / PB.targets := Seq(
+        scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
+      )
+      (PB.generate in Compile).value
+      val genDir    = genPackage((sourceManaged in Compile).value / "scalapb")
+      val targetDir = genPackage((sourceDirectory in Compile).value / "scala")
+      println(s"Generated in: $genDir")
+      println(s"Moved to: $targetDir")
+      IO.copyDirectory(genDir, targetDir, true, true)
+      IO.delete(genDir)
+    }
+  }
 
 lazy val typesafe = project
   .in(file("typesafe"))
