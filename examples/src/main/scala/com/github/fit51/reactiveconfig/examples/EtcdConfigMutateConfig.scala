@@ -1,26 +1,30 @@
 package com.github.fit51.reactiveconfig.examples
 
-import cats.effect.{Async, ContextShift}
+import cats.effect.{ContextShift, Sync}
+import cats.effect.IO
+import cats.effect.Timer
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import com.github.fit51.reactiveconfig.etcd.{ChannelManager, EtcdClient}
+import com.github.fit51.reactiveconfig.ce.etcd._
+import com.github.fit51.reactiveconfig.etcd._
 import io.circe.generic.auto._
-import monix.eval.Task
-import monix.execution.Scheduler
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 object EtcdConfigMutateConfig extends App {
-  implicit val scheduler = Scheduler.global
-  val chManager          = ChannelManager.noAuth("127.0.0.1:2379")
-  val client             = new EtcdClient[Task](chManager)
-  Await.result(FillConfig.fill[Task](client).runToFuture, Duration.Inf)
-  client.close()
+  implicit val ioTimer: Timer[IO]               = IO.timer(global)
+  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(global)
+
+  val channel = ChannelManager.noAuth("127.0.0.1:2379", options = ChannelOptions(20 seconds)).channel
+  val client  = EtcdClient[IO](channel)
+  FillConfig.fill(client).unsafeRunSync()
+  channel.shutdown()
 }
 
 object FillConfig {
   import StoreModule._
+  import io.circe.syntax._
   // Initial store is hardcoded
   val store: Map[ProductId, Count] = Map(
     "ProgrammingInScala"     -> 4,
@@ -36,15 +40,11 @@ object FillConfig {
   )
   private val adverts = List("ScalaInDepth")
 
-  import io.circe.syntax._
-
-  def fill[F[_]: ContextShift: Async](client: EtcdClient[F])(implicit scheduler: Scheduler): F[Unit] = {
-    val F = implicitly[Async[F]]
+  def fill[F[_]](client: EtcdClient[F])(implicit F: Sync[F]): F[Unit] =
     for {
       storeConfig <- F.pure(StoreConfig(priceList, "1"))
       _           <- client.put("store.store", storeConfig.asJson.noSpaces)
       _           <- client.put("store.adverts", adverts.asJson.noSpaces)
       _           <- F.delay(println("Finish!"))
     } yield ()
-  }
 }

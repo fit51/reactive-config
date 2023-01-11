@@ -2,30 +2,30 @@ enablePlugins(GitVersioning)
 
 git.useGitDescribe := true
 
-organization in ThisBuild := "com.github.fit51"
-homepage in ThisBuild := Some(url("https://github.com/fit51/reactive-config"))
+ThisBuild / organization := "com.github.fit51"
+ThisBuild / homepage := Some(url("https://github.com/fit51/reactive-config"))
 
-scmInfo in ThisBuild := Some(
+ThisBuild / scmInfo := Some(
   ScmInfo(url("https://github.com/fit51/reactive-config"), "git@github.com:fit51/reactive-config.git")
 )
-developers in ThisBuild := List(
+ThisBuild / developers := List(
   Developer("fit51", "Pavel Kondratyuk", "fit511@yandex.ru", url("https://github.com/fit51")),
   Developer("danilbykov", "Danil Bykov", "d.bykov@tinkoff.ru", url("https://github.com/danilbykov")),
   Developer("realvikr", "Viktor Sinchikov", "v.sinchikov@tinkoff.ru", url("https://github.com/realvikr"))
 )
-licenses in ThisBuild += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
-publishMavenStyle in ThisBuild := true
+ThisBuild / licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
+ThisBuild / publishMavenStyle := true
 
-publishTo in ThisBuild := Some(
+ThisBuild / publishTo := Some(
   if (isSnapshot.value)
     Opts.resolver.sonatypeSnapshots
   else
     Opts.resolver.sonatypeStaging
 )
 
-pomIncludeRepository in ThisBuild := { _ => false }
+ThisBuild / pomIncludeRepository := { _ => false }
 
 publishConfiguration := publishConfiguration.value.withOverwrite(true)
 publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
 
-updateOptions in ThisBuild := updateOptions.value.withGigahorse(false)
+ThisBuild / updateOptions := updateOptions.value.withGigahorse(false)

@@ -1,6 +1,6 @@
 package com.github.fit51.reactiveconfig.parser
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 trait ConfigDecoder[T, ParsedData] {
 
@@ -11,6 +11,9 @@ trait ConfigDecoder[T, ParsedData] {
 
 object ConfigDecoder {
   def apply[T, ParsedData](implicit d: ConfigDecoder[T, ParsedData]): ConfigDecoder[T, ParsedData] = d
+
+  def identity[D]: ConfigDecoder[D, D] =
+    data => Success(data)
 }
 
 object DecoderOps {
