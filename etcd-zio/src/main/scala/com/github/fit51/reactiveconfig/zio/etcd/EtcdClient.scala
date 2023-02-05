@@ -24,13 +24,11 @@ trait EtcdClient {
 
 object EtcdClient {
 
-  val live =
-    (for {
-      kvClient <- ZIO.service[KVClient.ZService[Any, Any]]
-    } yield new EtcdClientImpl(kvClient): EtcdClient).toLayer
+  val live: RLayer[KVClient.Service, EtcdClient] =
+    ZLayer.fromFunction(EtcdClientImpl.apply _)
 }
 
-class EtcdClientImpl(kvClient: KVClient.ZService[Any, Any]) extends EtcdClient {
+private case class EtcdClientImpl(kvClient: KVClient.Service) extends EtcdClient {
 
   override def get(key: String): IO[Status, Option[KeyValue]] =
     kvClient.range(RangeRequest(key.bytes)).map(_.kvs.headOption)

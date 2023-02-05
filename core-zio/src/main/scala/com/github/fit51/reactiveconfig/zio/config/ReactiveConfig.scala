@@ -15,7 +15,7 @@ trait ReactiveConfig[ParsedData] {
 
   def reloadable[T](key: String)(implicit
       decoder: ConfigDecoder[T, ParsedData]
-  ): Managed[ReactiveConfigException, Reloadable[T]]
+  ): ZIO[Scope, ReactiveConfigException, Reloadable[T]]
 }
 
 object ReactiveConfig {
@@ -24,7 +24,7 @@ object ReactiveConfig {
     new ReactiveConfig[D] {
 
       override def get[T](key: String)(implicit decoder: ConfigDecoder[T, D]): IO[ReactiveConfigException, T] =
-        IO.fromEither(for {
+        ZIO.fromEither(for {
           value <- map.get(key).toRight(ReactiveConfigException.unknownKey(key))
           parsed <- decoder.decode(value) match {
             case Success(value) =>
@@ -35,11 +35,12 @@ object ReactiveConfig {
         } yield parsed)
 
       override def hasKey(key: String): UIO[Boolean] =
-        UIO.effectTotal(map.contains(key))
+        ZIO.succeed(map.contains(key))
+
       override def reloadable[T](
           key: String
-      )(implicit decoder: ConfigDecoder[T, D]): Managed[ReactiveConfigException, Reloadable[T]] =
-        get(key).map(Reloadable.const).toManaged_
+      )(implicit decoder: ConfigDecoder[T, D]): ZIO[Scope, ReactiveConfigException, Reloadable[T]] =
+        get(key).map(Reloadable.const)
     }
 
   def combine[D](cfg1: ReactiveConfig[D], cfg2: ReactiveConfig[D]): ReactiveConfig[D] =
@@ -49,16 +50,11 @@ object ReactiveConfig {
         cfg1.get(key).orElse(cfg2.get(key))
 
       override def hasKey(key: String): UIO[Boolean] =
-        ZIO.ifM(cfg1.hasKey(key))(ZIO.succeed(true), cfg2.hasKey(key))
+        ZIO.ifZIO(cfg1.hasKey(key))(ZIO.succeed(true), cfg2.hasKey(key))
 
       override def reloadable[T](key: String)(implicit
           decoder: ConfigDecoder[T, D]
-      ): Managed[ReactiveConfigException, Reloadable[T]] =
-        cfg1.hasKey(key).toManaged_.flatMap {
-          case true =>
-            cfg1.reloadable(key)
-          case false =>
-            cfg2.reloadable(key)
-        }
+      ): ZIO[Scope, ReactiveConfigException, Reloadable[T]] =
+        ZIO.ifZIO(cfg1.hasKey(key))(cfg1.reloadable(key), cfg2.reloadable(key))
     }
 }

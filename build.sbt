@@ -5,6 +5,7 @@ val scala212 = "2.12.14"
 val scala213 = "2.13.8"
 val allScalaVersions = List(scala212, scala213)
 
+val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 val scalaTestContainers = "com.dimafeng" %% "testcontainers-scala-scalatest" % "0.40.11" % Test
 
 lazy val commonSettings = Seq(
@@ -22,7 +23,6 @@ lazy val commonSettings = Seq(
     case _ => throw new Exception("!")
   }),
   libraryDependencies ++= Seq(
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
     "org.mockito"                % "mockito-core"   % "3.7.7" % Test,
     "org.scalatest"              %% "scalatest"     % "3.0.8" % Test
   ),
@@ -35,20 +35,21 @@ lazy val commonSettings = Seq(
 lazy val `reactiveconfig-core` = projectMatrix
   .in(file("core"))
   .settings(commonSettings)
+  .settings(libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value)
   .settings(libraryDependencies += "org.typelevel" %% "cats-core" % "2.7.0")
   .jvmPlatform(scalaVersions = allScalaVersions)
 
 lazy val `reactiveconfig-core-zio` = projectMatrix
   .in(file("core-zio"))
   .settings(commonSettings)
-  .settings(libraryDependencies += "dev.zio" %% "zio" % "1.0.13")
+  .settings(libraryDependencies += "dev.zio" %% "zio" % "2.0.6")
   .dependsOn(`reactiveconfig-core` % "compile->compile;test->test")
   .jvmPlatform(scalaVersions = allScalaVersions)
 
 lazy val `reactiveconfig-core-ce` = projectMatrix
   .in(file("core-ce"))
   .settings(commonSettings)
-  .settings(libraryDependencies += "org.typelevel" %% "cats-effect" % "2.5.4")
+  .settings(libraryDependencies ++= List(scalaLogging, "org.typelevel" %% "cats-effect" % "2.5.4"))
   .dependsOn(`reactiveconfig-core` % "compile->compile;test->test")
   .jvmPlatform(scalaVersions = allScalaVersions)
 
@@ -57,6 +58,7 @@ lazy val `reactiveconfig-circe` = projectMatrix
   .dependsOn(`reactiveconfig-core`)
   .settings(commonSettings)
   .settings(libraryDependencies ++= List(
+    scalaLogging,
     "io.circe" %% "circe-parser" % circeVersion % Provided,
     "io.circe" %% "circe-generic" % circeVersion % Test
   ))
@@ -67,6 +69,7 @@ lazy val `reactiveconfig-etcd` = projectMatrix
   .dependsOn(`reactiveconfig-core`)
   .settings(commonSettings)
   .settings(libraryDependencies ++= List(
+    scalaLogging,
     "io.grpc" % "grpc-netty" % "1.43.2",
     "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
     "com.pauldijou" %% "jwt-core" % "4.3.0"
@@ -132,7 +135,7 @@ lazy val `reactiveconfig-typesafe-zio` = projectMatrix
   .settings(commonSettings)
   .dependsOn(`reactiveconfig-core-zio`, `reactiveconfig-typesafe`)
   .settings(libraryDependencies ++= List(
-    "dev.zio" %% "zio-nio" % "1.0.0-RC12",
+    "dev.zio" %% "zio-nio" % "2.0.0",
     "io.circe" %% "circe-parser" % circeVersion % Test
   ))
   .jvmPlatform(scalaVersions = allScalaVersions)

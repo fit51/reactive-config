@@ -9,40 +9,38 @@ import com.github.fit51.reactiveconfig.etcd.gen.kv.Event.EventType
 import com.github.fit51.reactiveconfig.etcd.gen.rpc._
 import com.github.fit51.reactiveconfig.etcd.gen.rpc.ZioRpc._
 import com.github.fit51.reactiveconfig.parser.ConfigParser
-import com.github.fit51.reactiveconfig.typeclasses.Effect
 import com.github.fit51.reactiveconfig.zio.config.AbstractReactiveConfig
 import com.github.fit51.reactiveconfig.zio.reloadable.Reloadable._
 import io.grpc.Status
 import zio._
-import zio.clock.Clock
-import zio.duration.Duration
-import zio.stream.ZStream
+import zio.stream.{Stream, ZStream}
 
 import scala.util.{Failure, Success}
 
-class EtcdReactiveConfig[D](stateRef: RefM[ConfigState[UIO, D]]) extends AbstractReactiveConfig[D](stateRef)
+class EtcdReactiveConfig[D](stateRef: Ref.Synchronized[ConfigState[UIO, D]]) extends AbstractReactiveConfig[D](stateRef)
 
 object EtcdReactiveConfig {
-
-  private val uioEffect: Effect[UIO] = Effect[UIO]
 
   def live[D: ConfigParser: Tag](
       prefixes: NonEmptySet[String],
       retryDuration: Duration
-  ) =
-    (for {
-      _           <- IO.fail(new IntersectionError(prefixes)).when(Utils.doIntersect(prefixes))
-      kvClient    <- ZIO.service[KVClient.ZService[Any, Any]]
-      watchClient <- ZIO.service[WatchClient.ZService[Any, Any]]
-      stateRef    <- loadInitials(prefixes, kvClient).map(ConfigState[UIO, D](_, Map.empty)) >>= ZRefM.make
-      _ <- prefixes.foldLeft[ZStream[Clock, GrpcError, WatchResponse]](ZStream.empty) { case (acc, prefix) =>
-        acc.merge(watchKey(watchClient, prefix, retryDuration))
-      } foreach (handleUpdate(_, stateRef)) fork
-    } yield new EtcdReactiveConfig(stateRef)).toLayer
+  ): ZLayer[KVClient.Service & WatchClient.Service, ReactiveEtcdConfigException, EtcdReactiveConfig[D]] =
+    ZLayer.fromZIO(
+      for {
+        _           <- ZIO.fail(new IntersectionError(prefixes)).when(Utils.doIntersect(prefixes))
+        kvClient    <- ZIO.service[KVClient.Service]
+        watchClient <- ZIO.service[WatchClient.Service]
+        stateRef <- loadInitials(prefixes, kvClient)
+          .map(ConfigState[UIO, D](_, Map.empty)).flatMap(Ref.Synchronized.make(_))
+        _ <- prefixes.foldLeft[Stream[GrpcError, WatchResponse]](ZStream.empty) { case (acc, prefix) =>
+          acc.merge(watchKey(watchClient, prefix, retryDuration))
+        } foreach (handleUpdate(_, stateRef)) fork
+      } yield new EtcdReactiveConfig(stateRef)
+    )
 
   private def loadInitials[D](
       prefixes: NonEmptySet[String],
-      kvClient: KVClient.ZService[Any, Any]
+      kvClient: KVClient.Service
   )(implicit decoder: ConfigParser[D]): IO[GrpcError, Map[String, Value[D]]] =
     ZIO.foreachPar(prefixes.toNonEmptyList.toList.toVector) { key =>
       val keyRange = key.asKeyRange
@@ -66,15 +64,15 @@ object EtcdReactiveConfig {
       }
     } flatMap { case (errors, parsedKvs) =>
       ZIO.foreach(errors) { case (key, message) =>
-        uioEffect.warn(s"Unable to parse key $key: $message")
+        ZIO.logWarning(s"Unable to parse key $key: $message")
       } as parsedKvs.toMap
     }
 
   private def watchKey(
-      watchClient: WatchClient.ZService[Any, Any],
+      watchClient: WatchClient.Service,
       key: String,
       retry: Duration
-  ): ZStream[Clock, GrpcError, WatchResponse] = {
+  ): Stream[GrpcError, WatchResponse] = {
     val keyRange = key.asKeyRange
     watchClient.watch(
       ZStream(
@@ -89,25 +87,25 @@ object EtcdReactiveConfig {
       )
     ) catchAll { status =>
       if (status.getCode() == Status.Code.UNAVAILABLE) {
-        ZStream.execute(uioEffect.info(s"Retrying watch for $key")) ++
-        ZStream.execute(URIO.sleep(retry)) ++
+        ZStream.execute(ZIO.logInfo(s"Retrying watch for $key")) ++
+        ZStream.execute(ZIO.sleep(retry)) ++
         watchKey(watchClient, key, retry)
       } else {
-        ZStream.execute(uioEffect.warn(s"Unrecoverable error: $status")) ++ ZStream.fail(new GrpcError(status))
+        ZStream.execute(ZIO.logWarning(s"Unrecoverable error: $status")) ++ ZStream.fail(new GrpcError(status))
       }
     }
   }
 
   private def handleUpdate[D](
       update: WatchResponse,
-      stateRef: RefM[ConfigState[UIO, D]]
+      stateRef: Ref.Synchronized[ConfigState[UIO, D]]
   )(implicit decoder: ConfigParser[D]): UIO[Unit] =
     if (update.created) {
-      uioEffect.info(s"Subscribed on updates with ${update.watchId}")
+      ZIO.logInfo(s"Subscribed on updates with ${update.watchId}")
     } else if (update.canceled) {
-      uioEffect.info(s"Etcd watch ${update.watchId} cancelled")
+      ZIO.logInfo(s"Etcd watch ${update.watchId} cancelled")
     } else {
-      ZIO.foreach_(for {
+      ZIO.foreachDiscard(for {
         event <- update.events
         kv    <- event.kv
       } yield (event.`type` == EventType.PUT, kv)) {
@@ -115,15 +113,15 @@ object EtcdReactiveConfig {
           val key = kv.key.utf8
           decoder.parse(kv.value.utf8) match {
             case Success(parsed) =>
-              stateRef.update { state =>
+              stateRef.updateZIO { state =>
                 val newValue = Value(parsed, kv.version)
                 state.fireUpdate(key, newValue).as(state.updateValue(key, newValue))
               }
             case Failure(exception) =>
-              uioEffect.warn(s"Unable to parse key $key: ${exception.getMessage()}")
+              ZIO.logWarningCause(s"Unable to parse key $key", Cause.fail(exception))
           }
         case (false, kv) =>
-          stateRef.update(state => UIO.succeed(state.removeKey(kv.value.utf8)))
+          stateRef.update(_.removeKey(kv.value.utf8))
       }
     }
 }

@@ -10,39 +10,39 @@ import zio._
 import scala.reflect.macros.whitebox
 
 class ReloadableMacro(override val c: whitebox.Context) extends CommonReloadableMacro(c) {
-  import c.universe._
+  import c.universe.{Scope => _, _}
 
   def reloadableImpl0[D: WeakTypeTag, A: WeakTypeTag](
       config: c.Expr[ReactiveConfig[D]]
-  ): c.Expr[Managed[ReactiveConfigException, Reloadable[A]]] =
+  ): c.Expr[ZIO[Scope, ReactiveConfigException, Reloadable[A]]] =
     reloadableImpl1[D, A](config, c.Expr[String](q"$emptyString"))
 
   def reloadableImpl1[D: WeakTypeTag, A: WeakTypeTag](
       config: c.Expr[ReactiveConfig[D]],
       prefix: c.Expr[String]
-  ): c.Expr[Managed[ReactiveConfigException, Reloadable[A]]] =
+  ): c.Expr[ZIO[Scope, ReactiveConfigException, Reloadable[A]]] =
     reloadableImpl[D, A](config, prefix, false)
 
   def reloadableImpl2[D: WeakTypeTag, A: WeakTypeTag](
       config: c.Expr[ReactiveConfig[D]]
-  )(decoder: c.Expr[ConfigDecoder[Sensitive, D]]): c.Expr[Managed[ReactiveConfigException, Reloadable[A]]] =
+  )(decoder: c.Expr[ConfigDecoder[Sensitive, D]]): c.Expr[ZIO[Scope, ReactiveConfigException, Reloadable[A]]] =
     reloadableImpl3[D, A](config, c.Expr[String](q"$emptyString"))(decoder)
 
   def reloadableImpl3[D: WeakTypeTag, A: WeakTypeTag](
       config: c.Expr[ReactiveConfig[D]],
       prefix: c.Expr[String]
-  )(decoder: c.Expr[ConfigDecoder[Sensitive, D]]): c.Expr[Managed[ReactiveConfigException, Reloadable[A]]] =
+  )(decoder: c.Expr[ConfigDecoder[Sensitive, D]]): c.Expr[ZIO[Scope, ReactiveConfigException, Reloadable[A]]] =
     reloadableImpl[D, A](config, prefix, true)
 
   def reloadableImpl[D: WeakTypeTag, A: WeakTypeTag](
       config: c.Expr[ReactiveConfig[D]],
       prefix: c.Expr[String],
       sensitive: Boolean
-  ): c.Expr[Managed[ReactiveConfigException, Reloadable[A]]] = {
+  ): c.Expr[ZIO[Scope, ReactiveConfigException, Reloadable[A]]] = {
     val classSymbol   = ensureCaseClass[A]
     val annotations   = extractConstructorAnnotations(classSymbol)
     val prefixLiteral = extractPrefixLiteral(prefix)
-    c.Expr[Managed[ReactiveConfigException, Reloadable[A]]](
+    c.Expr[ZIO[Scope, ReactiveConfigException, Reloadable[A]]](
       reloadableDefs(weakTypeOf[D], prefixLiteral, classSymbol.asType.name, annotations)
     )
   }

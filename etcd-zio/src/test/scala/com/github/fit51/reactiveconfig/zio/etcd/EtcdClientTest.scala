@@ -1,5 +1,7 @@
 package com.github.fit51.reactiveconfig.zio.etcd
 
+import java.util.concurrent.TimeUnit
+
 import cats.data.NonEmptySet
 import com.dimafeng.testcontainers.{ForAllTestContainer, GenericContainer}
 import com.github.fit51.reactiveconfig.etcd._
@@ -11,11 +13,9 @@ import com.github.fit51.reactiveconfig.parser.ConfigParser
 import org.scalatest.{Matchers, WordSpecLike}
 import org.testcontainers.containers.wait.strategy.Wait
 import zio._
-import zio.clock._
-import zio.duration.Duration
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.concurrent.duration.{FiniteDuration => ScalaFiniteDuration}
 import scalapb.zio_grpc.ZManagedChannel
 
 class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer {
@@ -31,7 +31,7 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
     ChannelManager
       .noAuth(
         endpoints = s"${container.containerIpAddress}:${container.mappedPort(2379)}",
-        options = ChannelOptions(20 seconds),
+        options = ChannelOptions(ScalaFiniteDuration(20, TimeUnit.SECONDS)),
         authority = None,
         trustManagerFactory = None
       ).channelBuilder
@@ -41,12 +41,14 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
   implicit val decoder: ConfigDecoder[String, String] = ConfigDecoder.identity
 
   lazy val layer =
-    (Clock.live ++ KVClient.live(channel) ++ WatchClient.live(channel)) >+> EtcdClient.live >+> EtcdReactiveConfig.live(
+    (KVClient.live(channel) ++ WatchClient.live(channel)) >+> EtcdClient.live >+> EtcdReactiveConfig.live(
       NonEmptySet.one("some.key.prefix"),
-      Duration.fromScala(5 seconds)
+      5.seconds
     )
 
-  val runtime = Runtime.default
+  val runtime = Runtime.default.withEnvironment {
+    ZEnvironment(Clock.ClockLive)
+  }
 
   "An EtcdClient" should {
 
@@ -57,10 +59,8 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
         kv         <- etcdClient.get("key")
       } yield kv.get.value.utf8 shouldBe "value").provideLayer(layer)
 
-      runtime.unsafeRunSync(task)
+      Unsafe.unsafe(implicit u => runtime.unsafe.run(task).getOrThrowFiberFailure())
     }
-
-    val keyRange = "some.key.prefix".asKeyRange
 
     val updates = List(
       ("some.key.prefix.key1", "v1"),
@@ -70,31 +70,33 @@ class EtcdClientTest extends WordSpecLike with Matchers with ForAllTestContainer
     )
 
     "watch" in {
-      val task = (for {
-        etcdClient <- ZIO.service[EtcdClient]
-        _          <- etcdClient.put("some.key.prefix.key1", "v0")
-        _          <- etcdClient.put("some.key.prefix.key2", "v0")
+      val task = ZIO
+        .scoped(for {
+          _ <- ZIO.sleep(5 seconds)
 
-        etcdConfig <- ZIO.service[EtcdReactiveConfig[String]]
+          etcdClient <- ZIO.service[EtcdClient]
+          _          <- etcdClient.put("some.key.prefix.key1", "v0")
+          _          <- etcdClient.put("some.key.prefix.key2", "v0")
 
-        values1Ref <- Ref.make[List[String]](Nil)
-        values2Ref <- Ref.make[List[String]](Nil)
+          etcdConfig <- ZIO.service[EtcdReactiveConfig[String]]
 
-        (values1, values2) <- etcdConfig
-          .reloadable[String]("some.key.prefix.key1")
-          .zip(etcdConfig.reloadable[String]("some.key.prefix.key2")).use { case (reloadable1, reloadable2) =>
-            reloadable1.forEachF(str => values1Ref.updateAndGet(str :: _).unit).fork *>
-              reloadable2.forEachF(str => values2Ref.updateAndGet(str :: _).unit).fork *>
-              ZIO.foreach(updates)((etcdClient.put _).tupled) *>
-              ZIO.sleep(Duration.fromScala(5 seconds)) *>
-              values1Ref.get.zip(values2Ref.get)
-          }
-      } yield {
-        values1 should contain theSameElementsAs List("v0", "v1", "v2")
-        values2 should contain theSameElementsAs List("v0", "v3", "v4")
-      }).provideLayer(layer)
+          values1Ref <- Ref.make[List[String]](Nil)
+          values2Ref <- Ref.make[List[String]](Nil)
 
-      runtime.unsafeRunSync(task)
+          reloadable1 <- etcdConfig.reloadable[String]("some.key.prefix.key1")
+          reloadable2 <- etcdConfig.reloadable[String]("some.key.prefix.key2")
+          _           <- reloadable1.forEachF(str => values1Ref.updateAndGet(str :: _).unit).fork
+          _           <- reloadable2.forEachF(str => values2Ref.updateAndGet(str :: _).unit).fork
+          _           <- ZIO.foreach(updates)((etcdClient.put _).tupled)
+          _           <- ZIO.sleep(5 seconds)
+          values1     <- values1Ref.get
+          values2     <- values2Ref.get
+        } yield {
+          values1 should contain theSameElementsAs List("v0", "v1", "v2")
+          values2 should contain theSameElementsAs List("v0", "v3", "v4")
+        }).provideLayer(layer)
+
+      Unsafe.unsafe(implicit u => runtime.unsafe.run(task).getOrThrowFiberFailure())
     }
   }
 }

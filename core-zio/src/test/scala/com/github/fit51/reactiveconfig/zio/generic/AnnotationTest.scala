@@ -85,22 +85,22 @@ class AnnotationTest extends WordSpecLike with Matchers {
 
     "generate Reloadable for case classes with prefix" in {
       val expected = NotSoPlain2(42, false, 2.5)
-      val task     = NotSoPlain2.reloadable(config).use(_.get)
-      runtime.unsafeRunSync(task).toEither shouldBe Right(expected)
+      val task     = ZIO.scoped(NotSoPlain2.reloadable(config).flatMap(_.get))
+      Unsafe.unsafe(implicit unsafe => runtime.unsafe.run(task)) shouldBe Exit.Success(expected)
     }
 
     "generate Reloadable for huge case classes" in {
       val expected = Enormous2(
         0, 1, 2, 3, 4, true, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
       )
-      val task = Enormous2.reloadable(config).use(_.get)
-      runtime.unsafeRunSync(task).toEither shouldBe Right(expected)
+      val task = ZIO.scoped(Enormous2.reloadable(config).flatMap(_.get))
+      Unsafe.unsafe(implicit unsafe => runtime.unsafe.run(task)) shouldBe Exit.Success(expected)
     }
 
     "generate Reloadable for sensitive class" in {
       val expected = Config(SensitiveConfig("user", Sensitive("passpass")), true)
-      val task     = Config.reloadable(config)(sensitiveDecoder).use(_.get)
-      runtime.unsafeRunSync(task).toEither shouldBe Right(expected)
+      val task     = ZIO.scoped(Config.reloadable(config)(sensitiveDecoder).flatMap(_.get))
+      Unsafe.unsafe(implicit unsafe => runtime.unsafe.run(task)) shouldBe Exit.Success(expected)
     }
 
     "not compile for empty case classes" in {

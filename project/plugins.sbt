@@ -9,5 +9,5 @@ addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.2")
 addSbtPlugin("org.lyranthe.fs2-grpc" % "sbt-java-gen" % "0.11.2")
 
 libraryDependencies ++= Seq(
-  "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.5.2"
+  "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test8"
 )

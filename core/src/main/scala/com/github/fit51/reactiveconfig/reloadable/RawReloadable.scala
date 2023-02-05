@@ -149,7 +149,7 @@ class RawReloadableImpl[F[_], R[_[_], _], A](
   }
 }
 
-private object AtomicUtils {
+private[reactiveconfig] object AtomicUtils {
 
   def update[X](ref: AtomicReference[X])(mod: X => X): X = {
     var current = ref.get()
