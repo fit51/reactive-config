@@ -1,6 +1,7 @@
 package com.github.fit51.reactiveconfig.zio.etcd
 
 import cats.data.NonEmptySet
+import cats.syntax.foldable._
 import com.github.fit51.reactiveconfig.Value
 import com.github.fit51.reactiveconfig.config.ConfigState
 import com.github.fit51.reactiveconfig.etcd._
@@ -52,7 +53,7 @@ object EtcdReactiveConfig {
           )
         ).mapError(new GrpcError(_)).map(_.kvs.toVector)
     } map (_.flatten) map { allKvs =>
-      allKvs.partitionMap { kv =>
+      allKvs.partitionEither { kv =>
         decoder.parse(kv.value.utf8) match {
           case Success(parsed) =>
             val key   = kv.key.utf8

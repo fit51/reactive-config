@@ -76,7 +76,7 @@ trait CatsEffectInstances extends StrictLogging {
         ra.flatMap(f)
     }
 
-  implicit def applicativeForEffect[F[_]](implicit effect: Effect[F]): Applicative[F] =
+  def applicativeForEffect[F[_]](implicit effect: Effect[F]): Applicative[F] =
     new Applicative[F] {
 
       override def ap[A, B](ff: F[A => B])(fa: F[A]): F[B] =

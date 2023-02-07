@@ -1,7 +1,7 @@
 val circeVersion = "0.14.1"
 val logbackVersion = "1.4.5"
 
-val scala212 = "2.12.14"
+val scala212 = "2.12.17"
 val scala213 = "2.13.8"
 val allScalaVersions = List(scala212, scala213)
 
@@ -10,6 +10,7 @@ val scalaTestContainers = "com.dimafeng" %% "testcontainers-scala-scalatest" % "
 
 lazy val commonSettings = Seq(
   scalaVersion := scala213,
+  crossScalaVersions := allScalaVersions,
   scalacOptions ++= List(
     "-feature",
     "-unchecked",
@@ -29,31 +30,35 @@ lazy val commonSettings = Seq(
   scalafmtOnCompile := true,
   resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.typelevel" % "kind-projector"      % "0.13.2" cross CrossVersion.full),
-  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
+  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
+  libraryDependencies ++= (
+    if (CrossVersion.partialVersion(scalaVersion.value).contains((2, 12))) {
+      compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full) :: Nil
+    } else {
+      Nil
+    }
+  )
 )
 
-lazy val `reactiveconfig-core` = projectMatrix
+lazy val `reactiveconfig-core` = project
   .in(file("core"))
   .settings(commonSettings)
   .settings(libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value)
   .settings(libraryDependencies += "org.typelevel" %% "cats-core" % "2.7.0")
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-core-zio` = projectMatrix
+lazy val `reactiveconfig-core-zio` = project
   .in(file("core-zio"))
   .settings(commonSettings)
   .settings(libraryDependencies += "dev.zio" %% "zio" % "2.0.6")
   .dependsOn(`reactiveconfig-core` % "compile->compile;test->test")
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-core-ce` = projectMatrix
+lazy val `reactiveconfig-core-ce` = project
   .in(file("core-ce"))
   .settings(commonSettings)
   .settings(libraryDependencies ++= List(scalaLogging, "org.typelevel" %% "cats-effect" % "2.5.4"))
   .dependsOn(`reactiveconfig-core` % "compile->compile;test->test")
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-circe` = projectMatrix
+lazy val `reactiveconfig-circe` = project
   .in(file("circe"))
   .dependsOn(`reactiveconfig-core`)
   .settings(commonSettings)
@@ -62,9 +67,8 @@ lazy val `reactiveconfig-circe` = projectMatrix
     "io.circe" %% "circe-parser" % circeVersion % Provided,
     "io.circe" %% "circe-generic" % circeVersion % Test
   ))
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-etcd` = projectMatrix
+lazy val `reactiveconfig-etcd` = project
   .in(file("etcd"))
   .dependsOn(`reactiveconfig-core`)
   .settings(commonSettings)
@@ -82,45 +86,41 @@ lazy val `reactiveconfig-etcd` = projectMatrix
       scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
     )
   )
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-etcd-ce` = projectMatrix
+lazy val `reactiveconfig-etcd-ce` = project
   .in(file("etcd-ce"))
   .dependsOn(`reactiveconfig-core-ce`, `reactiveconfig-etcd`)
   .settings(commonSettings)
   .settings(libraryDependencies ++= List(scalaTestContainers))
   .settings(
     Compile / PB.protoSources := Seq(
-      (`reactiveconfig-etcd`.jvm(scala213) / Compile / sourceDirectory).value / "protobuf"
+      (`reactiveconfig-etcd` / Compile / sourceDirectory).value / "protobuf"
     )
   )
   .enablePlugins(Fs2Grpc)
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-etcd-zio` = projectMatrix
+lazy val `reactiveconfig-etcd-zio` = project
   .in(file("etcd-zio"))
   .dependsOn(`reactiveconfig-core-zio`, `reactiveconfig-etcd`)
   .settings(commonSettings)
   .settings(libraryDependencies ++= List(scalaTestContainers))
   .settings(
     Compile / PB.protoSources := Seq(
-      (`reactiveconfig-etcd`.jvm(scala213) / Compile / sourceDirectory).value / "protobuf"
+      (`reactiveconfig-etcd` / Compile / sourceDirectory).value / "protobuf"
     ),
     Compile / PB.targets := Seq(
       scalapb.gen(grpc = true) -> (Compile / sourceManaged).value,
       scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb"
     )
   )
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-typesafe` = projectMatrix
+lazy val `reactiveconfig-typesafe` = project
   .in(file("typesafe"))
   .settings(commonSettings)
   .settings(libraryDependencies += "com.typesafe" % "config" % "1.4.2")
   .dependsOn(`reactiveconfig-core`)
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-typesafe-ce` = projectMatrix
+lazy val `reactiveconfig-typesafe-ce` = project
   .in(file("typesafe-ce"))
   .settings(commonSettings)
   .dependsOn(`reactiveconfig-core-ce`, `reactiveconfig-typesafe`)
@@ -128,9 +128,8 @@ lazy val `reactiveconfig-typesafe-ce` = projectMatrix
     "co.fs2" %% "fs2-io" % "2.5.9",
     "io.circe" %% "circe-parser" % circeVersion % Test
   ))
- .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val `reactiveconfig-typesafe-zio` = projectMatrix
+lazy val `reactiveconfig-typesafe-zio` = project
   .in(file("typesafe-zio"))
   .settings(commonSettings)
   .dependsOn(`reactiveconfig-core-zio`, `reactiveconfig-typesafe`)
@@ -138,9 +137,8 @@ lazy val `reactiveconfig-typesafe-zio` = projectMatrix
     "dev.zio" %% "zio-nio" % "2.0.0",
     "io.circe" %% "circe-parser" % circeVersion % Test
   ))
-  .jvmPlatform(scalaVersions = allScalaVersions)
 
-lazy val examples = projectMatrix
+lazy val examples = project
   .in(file("examples"))
   .settings(commonSettings)
   .dependsOn(`reactiveconfig-etcd-ce`, `reactiveconfig-typesafe-ce`, `reactiveconfig-circe`)
@@ -151,7 +149,6 @@ lazy val examples = projectMatrix
       "ch.qos.logback" % "logback-classic" % logbackVersion,
       "ch.qos.logback" % "logback-core"    % logbackVersion,
       "io.circe"       %% "circe-generic"  % circeVersion,
-      "io.circe"       %% "circe-parser"  % circeVersion
+      "io.circe"       %% "circe-parser"   % circeVersion
     )
   )
-  .jvmPlatform(scalaVersions = allScalaVersions)
