@@ -54,7 +54,8 @@ class ReactiveConfigMacroTest extends WordSpecLike with Matchers {
         "enormous.field28"           -> "28",
         "enormous.field29"           -> "29",
         "prefix.booleanFlag"         -> "true",
-        "prefix.creds"               -> "user:pass"
+        "prefix.creds"               -> "user:pass",
+        "prefix.snake_case"          -> "string"
       )
     )
 
@@ -79,12 +80,12 @@ class ReactiveConfigMacroTest extends WordSpecLike with Matchers {
     }
 
     "generate Reloadable for sensitive class" in {
-      val expected = Config(SensitiveConfig("user", Sensitive("passpass")), true)
+      val expected = Config(SensitiveConfig("user", Sensitive("passpass")), true, "string")
       Config.reloadable[IO](config).use(_.get).unsafeRunSync() shouldBe expected
     }
 
     "generate Volatile for sensitive class" in {
-      val expected = Config(SensitiveConfig("user", Sensitive("passpass")), true)
+      val expected = Config(SensitiveConfig("user", Sensitive("passpass")), true, "string")
       Config.volatile[IO, cats.Id](config).use(r => IO.delay(r.get)).unsafeRunSync() shouldBe expected
     }
 
@@ -129,7 +130,8 @@ final case class Config(
     @source("creds")
     credentials: SensitiveConfig,
     @source("booleanFlag")
-    anotherFlag: Boolean
+    anotherFlag: Boolean,
+    snakeCase: String
 )
 
 object Config {
@@ -155,7 +157,6 @@ trait NotSealedTrait2 {
 final case class NotSoPlain2(
     @source("field1")
     override val field1: Int,
-    @source("field2")
     override val field2: Boolean,
     @source("//completely.different.field")
     field3: Double
@@ -174,12 +175,12 @@ final case class Enormous2(
     @source("field2") field2: Int,
     @source("field3") field3: Int,
     @source("field4") field4: Int,
-    @source("field5") field5: Boolean,
+    field5: Boolean,
     @source("field6") field6: Int,
     @source("field7") field7: Int,
     @source("field8") field8: Int,
     @source("field9") field9: Int,
-    @source("field10") field10: Int,
+    field10: Int,
     @source("field11") field11: Int,
     @source("field12") field12: Int,
     @source("field13") field13: Int,
@@ -193,7 +194,7 @@ final case class Enormous2(
     @source("field21") field21: Int,
     @source("field22") field22: Int,
     @source("field23") field23: Int,
-    @source("field24") field24: Int,
+    field24: Int,
     @source("field25") field25: Int,
     @source("field26") field26: Int,
     @source("field27") field27: Int,
