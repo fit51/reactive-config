@@ -12,32 +12,32 @@ trait Reloadable[A] extends RawReloadable[UIO, ResourceLike[*[_], *], A] { self 
 
   val get: UIO[A]
 
-  def forEachF[R](f: A => URIO[R, Unit]): URIO[R, Nothing]
+  def forEachF[R](f: A => URIO[R, Unit]): URIO[R with Scope, Nothing]
 
-  def distinctByKey[K: Eq](makeKey: A => K): UManaged[Reloadable[A]]
+  def distinctByKey[K: Eq](makeKey: A => K): URIO[Scope, Reloadable[A]]
 
   def map[B](
       f: A => B,
       reloadBehaviour: ReloadBehaviour[UIO, A, B] = ReloadBehaviour.simpleBehaviour[UIO, A, B]
-  ): UManaged[Reloadable[B]]
+  ): URIO[Scope, Reloadable[B]]
 
   def mapF[R, E, B](
       f: A => ZIO[R, E, B],
       reloadBehaviour: ReloadBehaviour[ZIO[R, E, *], A, B] = ReloadBehaviour.simpleBehaviour[ZIO[R, E, *], A, B]
-  ): ZManaged[R, E, Reloadable[B]]
+  ): ZIO[R with Scope, E, Reloadable[B]]
 
   def combine[B, C](
       other: Reloadable[B],
       reloadBehaviour: ReloadBehaviour[UIO, (A, B), C] = ReloadBehaviour.simpleBehaviour[UIO, (A, B), C]
-  )(f: (A, B) => C): UManaged[Reloadable[C]]
+  )(f: (A, B) => C): URIO[Scope, Reloadable[C]]
 
   def combineF[R, E, B, C](
       other: Reloadable[B],
       reloadBehaviour: ReloadBehaviour[ZIO[R, E, *], (A, B), C] =
         ReloadBehaviour.simpleBehaviour[ZIO[R, E, *], (A, B), C]
-  )(f: (A, B) => ZIO[R, E, C]): ZManaged[R, E, Reloadable[C]]
+  )(f: (A, B) => ZIO[R, E, C]): ZIO[R with Scope, E, Reloadable[C]]
 
-  def mapManaged[R, E, B](f: A => ZManaged[R, E, B]): ZManaged[R, E, Reloadable[B]]
+  def mapScoped[R, E, B](f: A => ZIO[R with Scope, E, B]): ZIO[R with Scope, E, Reloadable[B]]
 
   def makeVolatile: Volatile[UIO, A] =
     new Volatile[UIO, A] {
@@ -67,66 +67,64 @@ class ReloadableImpl[A](
   override val get: UIO[A] =
     underlying.get
 
-  override def forEachF[R](f: A => URIO[R, Unit]): URIO[R, Nothing] =
-    RIO.environment[R] >>= { env =>
-      new ResourceLikeOps[Any, Nothing, Unit](underlying.forEachF(a => f(a).provide(env))).toManaged.useForever
+  override def forEachF[R](f: A => URIO[R, Unit]): URIO[R with Scope, Nothing] =
+    ZIO.environmentWithZIO[R] { env =>
+      new ResourceLikeOps[Any, Nothing, Unit](underlying.forEachF(a => f(a).provideEnvironment(env))).toScoped
+        .zipRight(ZIO.never)
     }
 
-  override def distinctByKey[K: Eq](makeKey: A => K): UManaged[Reloadable[A]] =
+  override def distinctByKey[K: Eq](makeKey: A => K): URIO[Scope, Reloadable[A]] =
     new ResourceLikeOps[Any, Nothing, RawReloadableImpl[UIO, ResourceLike, A]](
       underlying.distinctByKey[K](makeKey)
-    ).toManaged.map(new ReloadableImpl(_))
+    ).toScoped.map(new ReloadableImpl(_))
 
-  override def map[B](f: A => B, reloadBehaviour: ReloadBehaviour[UIO, A, B]): UManaged[Reloadable[B]] =
+  override def map[B](f: A => B, reloadBehaviour: ReloadBehaviour[UIO, A, B]): URIO[Scope, Reloadable[B]] =
     new ResourceLikeOps[Any, Nothing, RawReloadableImpl[UIO, ResourceLike, B]](
-      underlying.mapF(a => UIO.succeed(f(a)), reloadBehaviour)
-    ).toManaged.map(new ReloadableImpl(_))
+      underlying.mapF(a => ZIO.succeed(f(a)), reloadBehaviour)
+    ).toScoped.map(new ReloadableImpl(_))
 
   override def mapF[R, E, B](
       f: A => ZIO[R, E, B],
       reloadBehaviour: ReloadBehaviour[ZIO[R, E, *], A, B]
-  ): ZManaged[R, E, Reloadable[B]] =
+  ): ZIO[R with Scope, E, Reloadable[B]] =
     for {
-      env <- ZManaged.environment[R]
+      env <- ZIO.environment[R]
       result <- new ResourceLikeOps[Any, E, RawReloadableImpl[UIO, ResourceLike, B]](
-        underlying.mapF(a => f(a).provide(env), provideEnv(env, reloadBehaviour))
-      ).toManaged
+        underlying.mapF(a => f(a).provideEnvironment(env), provideEnv(env, reloadBehaviour))
+      ).toScoped
     } yield new ReloadableImpl(result)
 
   override def combine[B, C](
       other: Reloadable[B],
       reloadBehaviour: ReloadBehaviour[UIO, (A, B), C]
-  )(f: (A, B) => C): UManaged[Reloadable[C]] =
+  )(f: (A, B) => C): URIO[Scope, Reloadable[C]] =
     new ResourceLikeOps[Any, Nothing, RawReloadableImpl[UIO, ResourceLike, C]](
-      underlying.combineF(other, reloadBehaviour)((a, b) => UIO.succeed(f(a, b)))
-    ).toManaged.map(new ReloadableImpl(_))
+      underlying.combineF(other, reloadBehaviour)((a, b) => ZIO.succeed(f(a, b)))
+    ).toScoped.map(new ReloadableImpl(_))
 
   override def combineF[R, E, B, C](
       other: Reloadable[B],
       reloadBehaviour: ReloadBehaviour[ZIO[R, E, *], (A, B), C]
-  )(f: (A, B) => ZIO[R, E, C]): ZManaged[R, E, Reloadable[C]] =
+  )(f: (A, B) => ZIO[R, E, C]): ZIO[R with Scope, E, Reloadable[C]] =
     for {
-      env <- ZManaged.environment[R]
+      env <- ZIO.environment[R]
       result <- new ResourceLikeOps[Any, E, RawReloadableImpl[UIO, ResourceLike, C]](
-        underlying.combineF(other, provideEnv(env, reloadBehaviour))((a, b) => f(a, b).provide(env))
-      ).toManaged
+        underlying.combineF(other, provideEnv(env, reloadBehaviour))((a, b) => f(a, b).provideEnvironment(env))
+      ).toScoped
     } yield new ReloadableImpl(result)
 
-  override def mapManaged[R, E, B](f: A => ZManaged[R, E, B]): ZManaged[R, E, Reloadable[B]] =
-    ZManaged(for {
-      env <- ZIO.environment[(R, ZManaged.ReleaseMap)]
-      result <- mapF[Any, E, (ZManaged.Finalizer, B)](
-        a => f(a).zio.provide(env),
-        Stop((pair: (ZManaged.Finalizer, B)) => pair._1(Exit.Success(pair._2)).unit)
-      ).zio
-    } yield result).flatMap(_.map(_._2))
+  override def mapScoped[R, E, B](f: A => ZIO[R with Scope, E, B]): ZIO[R with Scope, E, Reloadable[B]] =
+    mapF[R, E, (B, Scope.Closeable)](
+      a => Scope.make.flatMap(scope => scope.extend[R](f(a)) <*> ZIO.succeed(scope)),
+      Stop((pair: (B, Scope.Closeable)) => pair._2.close(Exit.Success(pair._1)))
+    ).flatMap(_.map(_._1))
 }
 
 object Reloadable extends EffectInstances with HugeCombines {
 
-  def root[A](initial: A): UManaged[(Reloadable[A], A => UIO[Unit])] = {
-    val x = RawReloadableImpl[UIO, UIO, ResourceLike, A, Nothing](UIO.succeed(initial), Simple())
-    new ResourceLikeOps[Any, Nothing, RawReloadableImpl[UIO, ResourceLike, A]](x).toManaged.map { r =>
+  def root[A](initial: A): URIO[Scope, (Reloadable[A], A => UIO[Unit])] = {
+    val x = RawReloadableImpl[UIO, UIO, ResourceLike, A, Nothing](ZIO.succeed(initial), Simple())
+    new ResourceLikeOps[Any, Nothing, RawReloadableImpl[UIO, ResourceLike, A]](x).toScoped.map { r =>
       val sub = new MappedSubscriber[UIO, A, A](identity, r.modifyCurrentValue)
       (new ReloadableImpl(r), sub.onNext)
     }
@@ -136,20 +134,20 @@ object Reloadable extends EffectInstances with HugeCombines {
     new ConstReloadable(a)
 
   implicit class ResourceLikeOps[R, E, A](private val resource: ResourceLike[ZIO[R, E, *], A]) extends AnyVal {
-    def toManaged: ZManaged[R, E, A] = {
-      def go[B](resource: ResourceLike[ZIO[R, E, *], B]): ZManaged[R, E, B] =
+    def toScoped: ZIO[R with Scope, E, A] = {
+      def go[B](resource: ResourceLike[ZIO[R, E, *], B]): ZIO[R with Scope, E, B] =
         resource match {
           case Allocate(resource) =>
-            // FIXME: uncacellable
-            Managed.makeReserve(resource.map { case (b, release) =>
-              Reservation(
-                ZIO.succeed(b),
-                _ =>
-                  release.catchAll { e =>
-                    UIO.effectTotal(logger.error(s"Unable to release: $e"))
-                  }
-              )
-            })
+            ZIO.scopeWith { scope =>
+              ZIO.environmentWithZIO[R] { env =>
+                resource.flatMap { case (b, release) =>
+                  scope
+                    .addFinalizer(release.provideEnvironment(env).catchAllCause { cause =>
+                      ZIO.logErrorCause("Unable to release", cause)
+                    }).as(b)
+                }
+              }
+            }
           case FlatMap(resource, func) =>
             go(resource).flatMap(a => go(func(a)))
         }
@@ -158,13 +156,16 @@ object Reloadable extends EffectInstances with HugeCombines {
     }
   }
 
-  def provideEnv[R, E, A, B](env: R, behaviour: ReloadBehaviour[ZIO[R, E, *], A, B]): ReloadBehaviour[IO[E, *], A, B] =
+  def provideEnv[R, E, A, B](
+      env: ZEnvironment[R],
+      behaviour: ReloadBehaviour[ZIO[R, E, *], A, B]
+  ): ReloadBehaviour[IO[E, *], A, B] =
     behaviour match {
       case simple: Simple[ZIO[R, E, *], A, B] =>
         simple.asInstanceOf[ReloadBehaviour[IO[E, *], A, B]]
       case Stop(stop) =>
-        Stop(b => stop(b).provide(env))
+        Stop(b => stop(b).provideEnvironment(env))
       case Restart(restart, stop) =>
-        Restart((a, b) => restart(a, b).provide(env), b => stop(b).provide(env))
+        Restart((a, b) => restart(a, b).provideEnvironment(env), b => stop(b).provideEnvironment(env))
     }
 }

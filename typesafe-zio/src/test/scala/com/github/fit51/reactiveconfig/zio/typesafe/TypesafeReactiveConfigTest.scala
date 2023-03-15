@@ -7,9 +7,6 @@ import com.github.fit51.reactiveconfig.parser.ConfigParser
 import io.circe.{parser, Decoder, Json}
 import org.scalatest.{Matchers, WordSpecLike}
 import zio._
-import zio.blocking._
-import zio.clock._
-import zio.duration._
 import zio.nio.file.{Files, Path => ZPath}
 
 case class App(net: Net)
@@ -45,7 +42,7 @@ class TypesafeReactiveConfigTest extends WordSpecLike with Matchers {
   val r = Runtime.default
 
   val path        = Paths.get("typesafe/src/test/resources/application.conf")
-  val configLayer = Blocking.live >>> TypesafeReactiveConfig.live[Json](path)
+  val configLayer = TypesafeReactiveConfig.live[Json](path)
 
   def changeable(v: Int): String =
     s"""changeable {
@@ -58,39 +55,46 @@ class TypesafeReactiveConfigTest extends WordSpecLike with Matchers {
   "TypesafeConfig" should {
 
     "properly fetch values with different paths" in {
-      r.unsafeRun((for {
-        config     <- ZIO.service[TypesafeReactiveConfig[Json]]
-        simplePort <- config.get[Int]("app.net.port.public")
-        host       <- config.get[String]("app.net.host")
-        port       <- config.get[Port]("app.net.port")
-        net        <- config.get[Net]("app.net")
-        app        <- config.get[App]("app")
-      } yield {
-        simplePort shouldBe 8080
-        host shouldBe "0.0.0.0"
-        port shouldBe Port(8080, 9090)
-        net shouldBe Net("0.0.0.0", Port(8080, 9090))
-        app shouldBe App(Net("0.0.0.0", Port(8080, 9090)))
-      }).provideLayer(configLayer))
+      Unsafe.unsafe { implicit unsafe =>
+        r.unsafe
+          .run((for {
+            config     <- ZIO.service[TypesafeReactiveConfig[Json]]
+            simplePort <- config.get[Int]("app.net.port.public")
+            host       <- config.get[String]("app.net.host")
+            port       <- config.get[Port]("app.net.port")
+            net        <- config.get[Net]("app.net")
+            app        <- config.get[App]("app")
+          } yield {
+            simplePort shouldBe 8080
+            host shouldBe "0.0.0.0"
+            port shouldBe Port(8080, 9090)
+            net shouldBe Net("0.0.0.0", Port(8080, 9090))
+            app shouldBe App(Net("0.0.0.0", Port(8080, 9090)))
+          }).provideLayer(configLayer)).getOrThrow()
+      }
     }
 
     "fetch values from included config" in {
-      r.unsafeRun((for {
-        config      <- ZIO.service[TypesafeReactiveConfig[Json]]
-        parallelism <- config.get[Int]("akka.kafka.producer.parallelism")
-        hostname    <- config.get[String]("akka.remote.netty.tcp.hostname")
-      } yield {
-        parallelism shouldBe 10
-        hostname shouldBe "0.0.0.0"
-      }).provideLayer(configLayer))
+      Unsafe.unsafe { implicit unsafe =>
+        r.unsafe
+          .run((for {
+            config      <- ZIO.service[TypesafeReactiveConfig[Json]]
+            parallelism <- config.get[Int]("akka.kafka.producer.parallelism")
+            hostname    <- config.get[String]("akka.remote.netty.tcp.hostname")
+          } yield {
+            parallelism shouldBe 10
+            hostname shouldBe "0.0.0.0"
+          }).provideLayer(configLayer)).getOrThrow()
+      }
     }
 
     "config should be able to reload case class on change" in {
-      val task = ZManaged
-        .service[TypesafeReactiveConfig[Json]]
-        .flatMap(_.reloadable[Parameter]("changeable.parameter"))
-        .use { reloadable =>
+      val task =
+        ZIO.scoped {
           for {
+            reloadable <- ZIO.serviceWithZIO[TypesafeReactiveConfig[Json]](
+              _.reloadable[Parameter]("changeable.parameter")
+            )
             first <- reloadable.get
             _ <- Files.writeBytes(
               ZPath.fromJava(path.getParent().resolve("changeable.conf")),
@@ -102,17 +106,15 @@ class TypesafeReactiveConfigTest extends WordSpecLike with Matchers {
             first shouldBe Parameter(1)
             second shouldBe Parameter(2)
           }
-        }
-        .onExit { _ =>
+        }.onExit { _ =>
           Files
             .writeBytes(
               ZPath.fromJava(path.getParent().resolve("changeable.conf")),
               Chunk.fromArray(changeable(1).getBytes())
             ).orDie
-        }
-        .provideLayer(Blocking.live ++ Clock.live ++ configLayer)
+        }.provideLayer(configLayer)
 
-      r.unsafeRun(task)
+      Unsafe.unsafe(implicit u => r.unsafe.run(task).getOrThrow())
     }
   }
 }

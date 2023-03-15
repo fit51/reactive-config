@@ -1,15 +1,19 @@
 package com.github.fit51.reactiveconfig.ce.reloadable
 
-import cats.{~>, Monad}
+import java.util.concurrent.atomic.AtomicReference
+
+import cats.{~>, Applicative, Monad}
 import cats.effect.{Resource => CatsResource}
 import cats.kernel.Eq
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import com.github.fit51.reactiveconfig.ce.reloadable.Reloadable._
 import com.github.fit51.reactiveconfig.reloadable._
 import com.github.fit51.reactiveconfig.typeclasses._
+import com.github.fit51.reactiveconfig.typeclasses.Resource._
 
 private class ConstReloadable[F[_]: Monad, A](a: A) extends Reloadable[F, A] { self =>
+
+  private val subscribers: AtomicReference[List[Subscriber[F, A]]] = new AtomicReference(Nil)
 
   override def unsafeGet: A =
     a
@@ -55,6 +59,12 @@ private class ConstReloadable[F[_]: Monad, A](a: A) extends Reloadable[F, A] { s
 
   override protected[reactiveconfig] def subscribe[G[_]](
       subscriber: Subscriber[F, A]
-  )(implicit effect: Effect[G], resource: Resource[CatsResource, G]): CatsResource[G, Unit] =
-    CatsResource.pure[G, Unit](())
+  )(implicit effect: Effect[G], resource: Resource[CatsResource, G]): CatsResource[G, Unit] = {
+    implicit val app: Applicative[G] = Reloadable.applicativeForEffect[G]
+    resource.make(effect.sync { () =>
+      AtomicUtils.update(subscribers)(subscriber :: _)
+    }) { _ =>
+      effect.sync(() => AtomicUtils.update(subscribers)(_.filter(_ != subscriber)))
+    } as (())
+  }
 }

@@ -12,6 +12,7 @@ import cats.effect.concurrent.Ref
 import cats.effect.concurrent.Semaphore
 import cats.effect.syntax.concurrent._
 import cats.syntax.flatMap._
+import cats.syntax.foldable._
 import cats.syntax.functor._
 import cats.syntax.parallel._
 import com.github.fit51.reactiveconfig.Value
@@ -72,7 +73,7 @@ object EtcdReactiveConfig {
         .range(RangeRequest(key = keyRange.start.bytes, rangeEnd = keyRange.end.bytes), new Metadata())
         .map(_.kvs.toVector)
     }.map(_.flatten).map { allKvs =>
-      allKvs.partitionMap { kv =>
+      allKvs.partitionEither { kv =>
         decoder.parse(kv.value.utf8) match {
           case Success(parsed) =>
             val key   = kv.key.utf8

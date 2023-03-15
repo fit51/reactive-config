@@ -7,7 +7,7 @@ abstract class CommonReloadableMacro(val c: whitebox.Context) {
 
   val emptyString = ""
 
-  type ClassParam = (String, Type, String) // (name, type, path)
+  type ClassParam = (String, Type, Option[String]) // (name, type, path)
 
   def ensureCaseClass[A: WeakTypeTag]: ClassSymbol =
     weakTypeOf[A] match {
@@ -19,10 +19,11 @@ abstract class CommonReloadableMacro(val c: whitebox.Context) {
 
   def extractConstructorAnnotations(clazz: ClassSymbol): List[ClassParam] =
     clazz.primaryConstructor.asMethod.paramLists.head.map { param =>
-      param.annotations.map(_.tree).collectFirst {
+      val mbPath = param.annotations.map(_.tree).collectFirst {
         case tree @ q"new $parent($path)" if tree.tpe =:= typeOf[source] =>
-          (param.name.toTermName.encodedName.toString, param.asTerm.info, c.eval(c.Expr[String](path)))
-      } getOrElse c.abort(c.enclosingPosition, s"${clazz.fullName}.${param.name} does not have source annotation")
+          c.eval(c.Expr[String](path))
+      }
+      (param.name.toTermName.encodedName.toString, param.asTerm.info, mbPath)
     }
 
   def extractPrefixLiteral(prefix: c.Expr[String]): String =
@@ -31,18 +32,13 @@ abstract class CommonReloadableMacro(val c: whitebox.Context) {
       case _                                 => c.abort(c.enclosingPosition, "Prefix is not a literal")
     }
 
-  def getFullMemberPath(prefix: String, param: ClassParam): String = {
-    val path = param._3
-    if (path.startsWith("//")) {
-      path.drop(2)
-    } else if (prefix.nonEmpty) {
-      s"$prefix.$path"
-    } else {
-      path
-    }
-  }
-
-  def reloadableDefs(cfgTpe: Type, prefix: String, tpname: TypeName, params: List[ClassParam]): Tree =
+  def reloadableDefs(
+      cfgTpe: Type,
+      prefix: String,
+      tpname: TypeName,
+      params: List[ClassParam],
+      cfg: c.Expr[Configuration]
+  ): Tree =
     params.size match {
       case 0 =>
         c.abort(c.enclosingPosition, "Invalid annotation target: case class must have at least one member")
@@ -50,19 +46,19 @@ abstract class CommonReloadableMacro(val c: whitebox.Context) {
         val result = TermName("result")
         makeFinalTree(
           tpname,
-          makeRootReloadables(cfgTpe, prefix, params) :+ fq"$result <- ${rootReloadableName(params.head)}.map(${tpname.toTermName}.apply)",
+          makeRootReloadables(cfgTpe, prefix, params, cfg) :+ fq"$result <- ${rootReloadableName(params.head)}.map(${tpname.toTermName}.apply)",
           result
         )
       case len if len <= 22 =>
         makeFinalTree(
           tpname,
-          makeRootReloadables(cfgTpe, prefix, params) ::: combinedReloadablesForMediumClasses(tpname, params),
+          makeRootReloadables(cfgTpe, prefix, params, cfg) ::: combinedReloadablesForMediumClasses(tpname, params),
           combinedReloadable(0)
         )
       case _ =>
         makeFinalTree(
           tpname,
-          makeRootReloadables(cfgTpe, prefix, params) ::: combinedReloadablesForHugeClasses(tpname, params),
+          makeRootReloadables(cfgTpe, prefix, params, cfg) ::: combinedReloadablesForHugeClasses(tpname, params),
           TermName("result")
         )
     }
@@ -74,11 +70,29 @@ abstract class CommonReloadableMacro(val c: whitebox.Context) {
     *   intR <- config.reloadable[Int]("asdf")
     * }}}
     */
-  def makeRootReloadables(cfgTpe: Type, prefix: String, params: List[ClassParam]): List[Tree] =
+  def makeRootReloadables(
+      cfgTpe: Type,
+      prefix: String,
+      params: List[ClassParam],
+      cfg: c.Expr[Configuration]
+  ): List[Tree] =
     params.map { param =>
-      val fullPath = getFullMemberPath(prefix, param)
+      val fullPath = getFullMemberPath(prefix, param, cfg)
       val tpe      = c.typecheck(q"${param._2}", c.TYPEmode).tpe
       fq"""${rootReloadableName(param)} <- config.reloadable[$tpe]($fullPath)"""
+    }
+
+  private def getFullMemberPath(prefix: String, param: ClassParam, cfg: c.Expr[Configuration]): c.Expr[String] =
+    param._3.filter(_.startsWith("//")).map(path => c.Expr[String](q"$path.drop(2)")).getOrElse {
+      val path = param._3 match {
+        case Some(value) =>
+          c.Expr[String](q"$value")
+        case None =>
+          val name = param._1
+          c.Expr[String](q"$cfg.transformMemberNames($name)")
+      }
+
+      if (prefix.nonEmpty) c.Expr[String](q"""$prefix + "." + $path""") else c.Expr[String](q"$path")
     }
 
   def rootReloadableName(param: ClassParam): TermName =

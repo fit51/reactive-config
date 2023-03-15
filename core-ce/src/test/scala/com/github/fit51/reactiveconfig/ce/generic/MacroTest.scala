@@ -271,5 +271,10 @@ object WithSensitiveField {
   def reloadable[F[_]: Concurrent: Parallel](config: ReactiveConfig[F, String])(implicit
       decoder: ConfigDecoder[Sensitive, String]
   ) =
-    deriveSensitiveReloadable[F, String, WithSensitiveField](config)(sensitiveDecoder, implicitly, implicitly)
+    deriveSensitiveReloadable[F, String, WithSensitiveField](config)(
+      sensitiveDecoder,
+      implicitly,
+      implicitly,
+      implicitly
+    )
 }

@@ -5,6 +5,7 @@ import cats.effect.{Concurrent, Resource}
 import com.github.fit51.reactiveconfig.Sensitive
 import com.github.fit51.reactiveconfig.ce.config.ReactiveConfig
 import com.github.fit51.reactiveconfig.ce.reloadable.Reloadable
+import com.github.fit51.reactiveconfig.generic.Configuration
 import com.github.fit51.reactiveconfig.generic.RootReactiveConfig
 import com.github.fit51.reactiveconfig.parser.ConfigDecoder
 
@@ -15,13 +16,13 @@ package object generic {
 
   def deriveReloadable[F[_], D, A](
       config: ReactiveConfig[F, D]
-  )(implicit F: Concurrent[F], P: Parallel[F]): Resource[F, Reloadable[F, A]] =
+  )(implicit F: Concurrent[F], P: Parallel[F], cfg: Configuration): Resource[F, Reloadable[F, A]] =
     macro ReloadableMacro.reloadableImpl0[F, D, A]
 
   def deriveReloadable[F[_], D, A](
       config: ReactiveConfig[F, D],
       prefix: String
-  )(implicit F: Concurrent[F], P: Parallel[F]): Resource[F, Reloadable[F, A]] =
+  )(implicit F: Concurrent[F], P: Parallel[F], cfg: Configuration): Resource[F, Reloadable[F, A]] =
     macro ReloadableMacro.reloadableImpl1[F, D, A]
 
   def deriveSensitiveReloadable[F[_], D, A](
@@ -29,7 +30,8 @@ package object generic {
   )(implicit
       decoder: ConfigDecoder[Sensitive, D],
       F: Concurrent[F],
-      P: Parallel[F]
+      P: Parallel[F],
+      cfg: Configuration
   ): Resource[F, Reloadable[F, A]] =
     macro ReloadableMacro.reloadableImpl2[F, D, A]
 
@@ -39,7 +41,8 @@ package object generic {
   )(implicit
       decoder: ConfigDecoder[Sensitive, D],
       F: Concurrent[F],
-      P: Parallel[F]
+      P: Parallel[F],
+      cfg: Configuration
   ): Resource[F, Reloadable[F, A]] =
     macro ReloadableMacro.reloadableImpl3[F, D, A]
 

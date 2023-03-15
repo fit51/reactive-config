@@ -1,10 +1,11 @@
 package com.github.fit51.reactiveconfig.zio.generic
 
-import Decoders._
 import com.github.fit51.reactiveconfig.Sensitive
+import com.github.fit51.reactiveconfig.generic.Configuration
 import com.github.fit51.reactiveconfig.generic.source
 import com.github.fit51.reactiveconfig.parser.ConfigDecoder
 import com.github.fit51.reactiveconfig.zio.config.ReactiveConfig
+import com.github.fit51.reactiveconfig.zio.generic.Decoders._
 import com.github.fit51.reactiveconfig.zio.generic.reactiveconfig
 import org.scalatest.{Matchers, WordSpecLike}
 import zio._
@@ -22,6 +23,9 @@ object Decoders {
   implicit val doubleDecoder: ConfigDecoder[Double, String] =
     s => Try(s.toDouble)
 
+  implicit val stringDecoder: ConfigDecoder[String, String] =
+    ConfigDecoder.identity
+
   val sensitiveDecoder: ConfigDecoder[Sensitive, String] =
     s => Success(Sensitive(s * 2))
 
@@ -32,6 +36,9 @@ object Decoders {
       val Array(head, tail) = s.split(":")
       sensitiveDecoder.decode(tail).map(SensitiveConfig(head, _))
     }
+
+  implicit val reactiveConfigConfiguration: Configuration =
+    Configuration.default.withSnakeCaseMemberNames
 }
 
 class AnnotationTest extends WordSpecLike with Matchers {
@@ -75,7 +82,8 @@ class AnnotationTest extends WordSpecLike with Matchers {
         "enormous.field28"           -> "28",
         "enormous.field29"           -> "29",
         "prefix.booleanFlag"         -> "true",
-        "prefix.creds"               -> "user:pass"
+        "prefix.creds"               -> "user:pass",
+        "prefix.snake_case"          -> "string"
       )
     )
 
@@ -85,22 +93,22 @@ class AnnotationTest extends WordSpecLike with Matchers {
 
     "generate Reloadable for case classes with prefix" in {
       val expected = NotSoPlain2(42, false, 2.5)
-      val task     = NotSoPlain2.reloadable(config).use(_.get)
-      runtime.unsafeRunSync(task).toEither shouldBe Right(expected)
+      val task     = ZIO.scoped(NotSoPlain2.reloadable(config).flatMap(_.get))
+      Unsafe.unsafe(implicit unsafe => runtime.unsafe.run(task)) shouldBe Exit.Success(expected)
     }
 
     "generate Reloadable for huge case classes" in {
       val expected = Enormous2(
         0, 1, 2, 3, 4, true, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
       )
-      val task = Enormous2.reloadable(config).use(_.get)
-      runtime.unsafeRunSync(task).toEither shouldBe Right(expected)
+      val task = ZIO.scoped(Enormous2.reloadable(config).flatMap(_.get))
+      Unsafe.unsafe(implicit unsafe => runtime.unsafe.run(task)) shouldBe Exit.Success(expected)
     }
 
     "generate Reloadable for sensitive class" in {
-      val expected = Config(SensitiveConfig("user", Sensitive("passpass")), true)
-      val task     = Config.reloadable(config)(sensitiveDecoder).use(_.get)
-      runtime.unsafeRunSync(task).toEither shouldBe Right(expected)
+      val expected = Config(SensitiveConfig("user", Sensitive("passpass")), true, "string")
+      val task     = ZIO.scoped(Config.reloadable(config)(sensitiveDecoder).flatMap(_.get))
+      Unsafe.unsafe(implicit unsafe => runtime.unsafe.run(task)) shouldBe Exit.Success(expected)
     }
 
     "not compile for empty case classes" in {
@@ -144,7 +152,8 @@ final case class Config(
     @source("creds")
     credentials: SensitiveConfig,
     @source("booleanFlag")
-    anotherFlag: Boolean
+    anotherFlag: Boolean,
+    snakeCase: String
 )
 
 sealed trait SealedTrait2 {
@@ -157,7 +166,6 @@ trait NotSealedTrait2 {
 
 @reactiveconfig[String]("test")
 final case class NotSoPlain2(
-    @source("field1")
     override val field1: Int,
     @source("field2")
     override val field2: Boolean,
@@ -176,13 +184,13 @@ final case class Enormous2(
     @source("field5") field5: Boolean,
     @source("field6") field6: Int,
     @source("field7") field7: Int,
-    @source("field8") field8: Int,
+    field8: Int,
     @source("field9") field9: Int,
     @source("field10") field10: Int,
     @source("field11") field11: Int,
     @source("field12") field12: Int,
     @source("field13") field13: Int,
-    @source("field14") field14: Int,
+    field14: Int,
     @source("field15") field15: Int,
     @source("field16") field16: Int,
     @source("field17") field17: Int,
@@ -194,7 +202,7 @@ final case class Enormous2(
     @source("field23") field23: Int,
     @source("field24") field24: Int,
     @source("field25") field25: Int,
-    @source("field26") field26: Int,
+    field26: Int,
     @source("field27") field27: Int,
     @source("field28") field28: Int,
     @source("field29") field29: Int
