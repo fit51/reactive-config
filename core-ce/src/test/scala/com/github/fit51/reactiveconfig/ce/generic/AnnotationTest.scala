@@ -71,6 +71,12 @@ class ReactiveConfigMacroTest extends WordSpecLike with Matchers {
       )
     }
 
+    "generate Reloadable for huge case classes (23 arguments)" in {
+      Enormous23.reloadable[IO](config).use(_.get).unsafeRunSync() shouldBe Enormous23(
+        1, 2, 3, 4, true, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+      )
+    }
+
     "generate Volatile for huge case classes" in {
       val expected = Enormous2(
         0, 1, 2, 3, 4, true, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
@@ -210,3 +216,30 @@ object Enormous2 {
 
   implicit val sDecoder = Decoders.sensitiveDecoder
 }
+
+@reactiveconfig[String]("enormous")
+final case class Enormous23(
+    @source("field1") field1: Int,
+    @source("field2") field2: Int,
+    @source("field3") field3: Int,
+    @source("field4") field4: Int,
+    field5: Boolean,
+    @source("field6") field6: Int,
+    @source("field7") field7: Int,
+    @source("field8") field8: Int,
+    @source("field9") field9: Int,
+    field10: Int,
+    @source("field11") field11: Int,
+    @source("field12") field12: Int,
+    @source("field13") field13: Int,
+    @source("field14") field14: Int,
+    @source("field15") field15: Int,
+    @source("field16") field16: Int,
+    @source("field17") field17: Int,
+    @source("field18") field18: Int,
+    @source("field19") field19: Int,
+    @source("field20") field20: Int,
+    @source("field21") field21: Int,
+    @source("field22") field22: Int,
+    @source("field23") field23: Int
+)
