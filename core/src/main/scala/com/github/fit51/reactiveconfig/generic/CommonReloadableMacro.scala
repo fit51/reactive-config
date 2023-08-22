@@ -131,14 +131,19 @@ abstract class CommonReloadableMacro(val c: whitebox.Context) {
     */
   def combinedReloadablesForHugeClasses0(params: List[ClassParam]): List[Tree] = {
     val groups = params.grouped(22).toList
-    val (listReloadableNames, listReloadables) = groups.zipWithIndex.map { case (group, i) =>
-      val (names, args) = group.zipWithIndex.map { case (param, idx) =>
-        val name = TermName("v" + idx)
-        (name, q"val $name: Any")
-      }.unzip
-      val reloadables    = group.map(rootReloadableName)
-      val reloadableName = combinedReloadable(i)
-      (reloadableName, fq"""$reloadableName <- Reloadable.combine(..$reloadables)((..$args) => List(..$names))""")
+    val (listReloadableNames, listReloadables) = groups.zipWithIndex.map {
+      case (param :: Nil, i) =>
+        val reloadable     = rootReloadableName(param)
+        val reloadableName = combinedReloadable(i)
+        (reloadableName, fq"""$reloadableName <- $reloadable.map(_ :: Nil)""")
+      case (group, i) =>
+        val (names, args) = group.zipWithIndex.map { case (param, idx) =>
+          val name = TermName("v" + idx)
+          (name, q"val $name: Any")
+        }.unzip
+        val reloadables    = group.map(rootReloadableName)
+        val reloadableName = combinedReloadable(i)
+        (reloadableName, fq"""$reloadableName <- Reloadable.combine(..$reloadables)((..$args) => List(..$names))""")
     }.unzip
 
     val (names, args) = groups.zipWithIndex.map { case (param, idx) =>
