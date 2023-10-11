@@ -74,7 +74,7 @@ lazy val `reactiveconfig-etcd` = project
   .settings(commonSettings)
   .settings(libraryDependencies ++= List(
     scalaLogging,
-    "io.grpc" % "grpc-netty" % "1.43.2",
+    "io.grpc" % "grpc-netty" % "1.55.3",
     "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
     "com.pauldijou" %% "jwt-core" % "4.3.0"
   ))
