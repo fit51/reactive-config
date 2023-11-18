@@ -24,6 +24,7 @@ object TypesafeReactiveConfig {
       _        <- ZIO.acquireRelease(zpath.register(watchService, List(StandardWatchEventKinds.ENTRY_MODIFY)))(_.cancel)
       stateRef <- parseConfig(path, -1).map(ConfigState[UIO, D](_, Map.empty)).flatMap(Ref.Synchronized.make(_))
       _ <- watchService.stream
+        .tap(_.pollEvents)
         .mapChunksZIO(ZIO.foreach(_)(_.reset).as(Chunk.unit))
         .zipWithIndex
         .mapZIO { case (_, idx) => parseConfig(path, idx).either }
