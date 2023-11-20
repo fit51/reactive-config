@@ -57,4 +57,10 @@ object ReactiveConfig {
       ): ZIO[Scope, ReactiveConfigException, Reloadable[T]] =
         ZIO.ifZIO(cfg1.hasKey(key))(cfg1.reloadable(key), cfg2.reloadable(key))
     }
+
+  def reloadable[ParsedData, T: ConfigDecoder[*, ParsedData]](path: String)(implicit
+      configTag: Tag[ReactiveConfig[ParsedData]],
+      reloadableTag: Tag[Reloadable[T]]
+  ): ZLayer[ReactiveConfig[ParsedData], ReactiveConfigException, Reloadable[T]] =
+    ZLayer.scoped(ZIO.serviceWithZIO[ReactiveConfig[ParsedData]](_.reloadable[T](path)))
 }

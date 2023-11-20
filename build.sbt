@@ -2,7 +2,7 @@ val circeVersion = "0.14.1"
 val logbackVersion = "1.4.5"
 
 val scala212 = "2.12.17"
-val scala213 = "2.13.8"
+val scala213 = "2.13.11"
 val allScalaVersions = List(scala212, scala213)
 
 val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
