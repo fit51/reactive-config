@@ -1,6 +1,7 @@
 package com.github.fit51.reactiveconfig.ce.etcd
 
-import cats.effect.ConcurrentEffect
+import cats.effect.Async
+import cats.effect.std.Dispatcher
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.github.fit51.reactiveconfig.etcd._
@@ -26,13 +27,13 @@ trait EtcdClient[F[_]] {
 
 object EtcdClient {
 
-  def apply[F[_]: ConcurrentEffect](channel: Channel): EtcdClient[F] =
-    new EtcdClientImpl[F](channel)
+  def apply[F[_]: Async](dispatcher: Dispatcher[F], channel: Channel): EtcdClient[F] =
+    new EtcdClientImpl[F](dispatcher, channel)
 }
 
-class EtcdClientImpl[F[_]: ConcurrentEffect](channel: Channel) extends EtcdClient[F] {
+class EtcdClientImpl[F[_]: Async](dispatcher: Dispatcher[F], channel: Channel) extends EtcdClient[F] {
 
-  private val client = KVFs2Grpc.stub[F](channel)
+  private val client = KVFs2Grpc.stub[F](dispatcher, channel)
 
   override def get(key: String): F[Option[KeyValue]] =
     client.range(RangeRequest(key.bytes), new Metadata()).map(_.kvs.headOption)

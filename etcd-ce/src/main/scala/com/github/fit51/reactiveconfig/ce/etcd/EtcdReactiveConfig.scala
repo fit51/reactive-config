@@ -1,16 +1,16 @@
 package com.github.fit51.reactiveconfig.ce.etcd
 
-import cats.FlatMap
+import cats.MonadThrow
 import cats.Parallel
 import cats.data.NonEmptySet
 import cats.effect.Async
-import cats.effect.ConcurrentEffect
-import cats.effect.ContextShift
 import cats.effect.Resource
-import cats.effect.Timer
-import cats.effect.concurrent.Ref
-import cats.effect.concurrent.Semaphore
-import cats.effect.syntax.concurrent._
+import cats.effect.Temporal
+import cats.effect.kernel.MonadCancel
+import cats.effect.kernel.Ref
+import cats.effect.std.Dispatcher
+import cats.effect.std.Semaphore
+import cats.effect.syntax.spawn._
 import cats.syntax.flatMap._
 import cats.syntax.foldable._
 import cats.syntax.functor._
@@ -39,15 +39,16 @@ import scala.util.{Failure, Success}
 
 object EtcdReactiveConfig {
 
-  def apply[F[_]: ConcurrentEffect: Parallel: ContextShift: Timer, D: ConfigParser](
+  def apply[F[_]: Async: Parallel, D: ConfigParser](
+      dispatcher: Dispatcher[F],
       channel: Channel,
       prefixes: NonEmptySet[String],
       retry: FiniteDuration = 20.seconds
   ): Resource[F, ReactiveConfig[F, D]] = {
     import com.github.fit51.reactiveconfig.ce.reloadable.Reloadable._
 
-    val kvClient    = KVFs2Grpc.stub[F](channel)
-    val watchClient = WatchFs2Grpc.stub[F](channel)
+    val kvClient    = KVFs2Grpc.stub[F](dispatcher, channel)
+    val watchClient = WatchFs2Grpc.stub[F](dispatcher, channel)
 
     for {
       stateRef <- Resource.eval(
@@ -63,7 +64,7 @@ object EtcdReactiveConfig {
     } yield new AbstractReactiveConfig[F, D](stateRef, semaphore)
   }
 
-  private def loadInitials[F[_]: Parallel: ContextShift, D](
+  private def loadInitials[F[_]: Parallel, D](
       prefixes: NonEmptySet[String],
       kvClient: KVFs2Grpc[F, Metadata]
   )(implicit decoder: ConfigParser[D], F: Async[F], effect: Effect[F]): F[Map[String, Value[D]]] =
@@ -92,11 +93,11 @@ object EtcdReactiveConfig {
         }.as(parsedKvs.toMap)
     }
 
-  private def watchKey[F[_]: ConcurrentEffect](
+  private def watchKey[F[_]: MonadThrow: Temporal](
       watchClient: WatchFs2Grpc[F, Metadata],
       key: String,
       retry: FiniteDuration
-  )(implicit timer: Timer[F], eff: Effect[F]): fs2.Stream[F, WatchResponse] = {
+  )(implicit eff: Effect[F]): fs2.Stream[F, WatchResponse] = {
     val keyRange = key.asKeyRange
     watchClient
       .watch(
@@ -113,15 +114,15 @@ object EtcdReactiveConfig {
         new Metadata()
       ).handleErrorWith {
         case e: StatusRuntimeException if e.getStatus().getCode == Status.Code.UNAVAILABLE =>
-          fs2.Stream.eval_(eff.info(s"Retrying watch for $key")) ++
-          fs2.Stream.eval_(Timer[F].sleep(retry)) ++
+          fs2.Stream.exec(eff.info(s"Retrying watch for $key")) ++
+          fs2.Stream.exec(Temporal[F].sleep(retry)) ++
           watchKey(watchClient, key, retry)
         case e =>
-          fs2.Stream.eval_(eff.warn("Unrecoverable error", e)) ++ fs2.Stream.raiseError(e)
+          fs2.Stream.exec(eff.warn("Unrecoverable error", e)) ++ fs2.Stream.raiseError(e)
       }
   }
 
-  private def handleUpdate[F[_]: FlatMap, D](
+  private def handleUpdate[F[_]: MonadCancel[*[_], Throwable], D](
       update: WatchResponse,
       stateRef: Ref[F, ConfigState[F, D]],
       semaphore: Semaphore[F]
@@ -144,12 +145,12 @@ object EtcdReactiveConfig {
                 .flatTap(_.fireUpdate(key, newValue))
                 .map(_.updateValue(key, newValue))
                 .flatMap(stateRef.set)
-              semaphore.withPermit(effect)
+              semaphore.permit.use(_ => effect)
             case Failure(exception) =>
               eff.warn(s"Unable to parse key $key", exception)
           }
         case (false, kv) =>
-          semaphore.withPermit(stateRef.update(_.removeKey(kv.value.utf8)))
+          semaphore.permit.use(_ => stateRef.update(_.removeKey(kv.value.utf8)))
       }
     }
 }

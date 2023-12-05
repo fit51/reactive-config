@@ -1,18 +1,18 @@
 package com.github.fit51.reactiveconfig.ce.generic
 
 import cats.Parallel
-import cats.effect.Concurrent
-import cats.effect.IO
-import cats.effect.Resource
+import cats.effect.{Async, IO, Resource, Spawn}
+import cats.effect.unsafe.IORuntime
 import com.github.fit51.reactiveconfig.Sensitive
 import com.github.fit51.reactiveconfig.ce.config.ReactiveConfig
-import com.github.fit51.reactiveconfig.ce.generic.instances._
 import com.github.fit51.reactiveconfig.ce.reloadable.Reloadable
 import com.github.fit51.reactiveconfig.generic.source
 import com.github.fit51.reactiveconfig.parser.ConfigDecoder
 import org.scalatest.{Matchers, WordSpecLike}
 
 class MacroTest extends WordSpecLike with Matchers {
+
+  implicit val runtime: IORuntime = IORuntime.builder().build()
 
   val config =
     ReactiveConfig.const[IO](
@@ -55,7 +55,7 @@ class MacroTest extends WordSpecLike with Matchers {
       )
     )
 
-  implicit val sensitiveDecoder = Decoders.sensitiveDecoder
+  implicit val sDecoder: ConfigDecoder[Sensitive, String] = Decoders.sensitiveDecoder
 
   "ReloadableMacro" should {
     "generate Reloadable for tiny case classes" in {
@@ -164,7 +164,7 @@ final case class Tiny(
 object Tiny {
   import Decoders._
 
-  def reloadable[F[_]: Concurrent: Parallel](config: ReactiveConfig[F, String]) =
+  def reloadable[F[_]: Async: Spawn: Parallel](config: ReactiveConfig[F, String]) =
     deriveReloadable[F, String, Tiny](config)
 }
 
@@ -193,7 +193,7 @@ final case class Plain(
 object Plain {
   import Decoders._
 
-  def reloadable[F[_]: Concurrent: Parallel](config: ReactiveConfig[F, String]) =
+  def reloadable[F[_]: Async: Spawn: Parallel](config: ReactiveConfig[F, String]) =
     deriveReloadable[F, String, Plain](config)
 }
 
@@ -210,7 +210,7 @@ final case class NotSoPlain(
 object NotSoPlain {
   import Decoders._
 
-  def reloadable[F[_]: Concurrent: Parallel](config: ReactiveConfig[F, String]) =
+  def reloadable[F[_]: Async: Spawn: Parallel](config: ReactiveConfig[F, String]) =
     deriveReloadable[F, String, NotSoPlain](config, "test")
 }
 
@@ -254,7 +254,9 @@ final case class Enormous(
 object Enormous {
   import Decoders._
 
-  def reloadable[F[_]: Concurrent: Parallel](config: ReactiveConfig[F, String]): Resource[F, Reloadable[F, Enormous]] =
+  def reloadable[F[_]: Async: Spawn: Parallel](
+      config: ReactiveConfig[F, String]
+  ): Resource[F, Reloadable[F, Enormous]] =
     deriveReloadable[F, String, Enormous](config)
 }
 
@@ -268,13 +270,8 @@ final case class WithSensitiveField(
 object WithSensitiveField {
   import Decoders._
 
-  def reloadable[F[_]: Concurrent: Parallel](config: ReactiveConfig[F, String])(implicit
+  def reloadable[F[_]: Async: Spawn: Parallel](config: ReactiveConfig[F, String])(implicit
       decoder: ConfigDecoder[Sensitive, String]
   ) =
-    deriveSensitiveReloadable[F, String, WithSensitiveField](config)(
-      sensitiveDecoder,
-      implicitly,
-      implicitly,
-      implicitly
-    )
+    deriveSensitiveReloadable[F, String, WithSensitiveField](config)
 }

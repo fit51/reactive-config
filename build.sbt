@@ -7,6 +7,7 @@ val allScalaVersions = List(scala212, scala213)
 
 val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 val scalaTestContainers = "com.dimafeng" %% "testcontainers-scala-scalatest" % "0.40.11" % Test
+val catsEffectTestKit = "org.typelevel" %% "cats-effect-testkit" % "3.5.2" % Test
 
 lazy val commonSettings = Seq(
   scalaVersion := scala213,
@@ -55,7 +56,11 @@ lazy val `reactiveconfig-core-zio` = project
 lazy val `reactiveconfig-core-ce` = project
   .in(file("core-ce"))
   .settings(commonSettings)
-  .settings(libraryDependencies ++= List(scalaLogging, "org.typelevel" %% "cats-effect" % "2.5.4"))
+  .settings(libraryDependencies ++= List(
+    scalaLogging,
+    "org.typelevel" %% "cats-effect" % "3.5.2",
+    catsEffectTestKit
+  ))
   .dependsOn(`reactiveconfig-core` % "compile->compile;test->test")
 
 lazy val `reactiveconfig-circe` = project
@@ -91,7 +96,7 @@ lazy val `reactiveconfig-etcd-ce` = project
   .in(file("etcd-ce"))
   .dependsOn(`reactiveconfig-core-ce`, `reactiveconfig-etcd`)
   .settings(commonSettings)
-  .settings(libraryDependencies ++= List(scalaTestContainers))
+  .settings(libraryDependencies ++= List(scalaTestContainers, catsEffectTestKit))
   .settings(
     Compile / PB.protoSources := Seq(
       (`reactiveconfig-etcd` / Compile / sourceDirectory).value / "protobuf"
@@ -125,8 +130,9 @@ lazy val `reactiveconfig-typesafe-ce` = project
   .settings(commonSettings)
   .dependsOn(`reactiveconfig-core-ce`, `reactiveconfig-typesafe`)
   .settings(libraryDependencies ++= List(
-    "co.fs2" %% "fs2-io" % "2.5.9",
-    "io.circe" %% "circe-parser" % circeVersion % Test
+    "co.fs2" %% "fs2-io" % "3.9.3",
+    "io.circe" %% "circe-parser" % circeVersion % Test,
+    catsEffectTestKit
   ))
 
 lazy val `reactiveconfig-typesafe-zio` = project

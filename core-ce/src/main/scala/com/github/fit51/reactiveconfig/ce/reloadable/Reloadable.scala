@@ -1,7 +1,7 @@
 package com.github.fit51.reactiveconfig.ce.reloadable
 
 import cats.{~>, Eq, Monad, Parallel}
-import cats.effect.{Concurrent, Resource => CatsResource}
+import cats.effect.{Async, Resource => CatsResource}
 import com.github.fit51.reactiveconfig.ce.instances.CatsEffectInstances
 import com.github.fit51.reactiveconfig.ce.instances.all._
 import com.github.fit51.reactiveconfig.reloadable._
@@ -113,7 +113,7 @@ trait Reloadable[F[_], A] extends RawReloadable[F, CatsResource, A] { self =>
 
 class CatsReloadableImpl[F[_], A](
     underlying: RawReloadableImpl[F, CatsResource, A]
-)(implicit F: Concurrent[F], P: Parallel[F])
+)(implicit F: Async[F], P: Parallel[F])
     extends Reloadable[F, A] {
   override val get: F[A] =
     underlying.get
@@ -148,7 +148,7 @@ class CatsReloadableImpl[F[_], A](
     underlying.distinctByKey[K](makeKey).map(new CatsReloadableImpl(_))
 
   override def forEachF(f: A => F[Unit]): F[Unit] =
-    underlying.forEachF(f).use(_ => Concurrent[F].never)
+    underlying.forEachF(f).use(_ => F.never)
 
   override def makeVolatile[G[_]](nat: F ~> G): CatsResource[F, Volatile[G, A]] =
     underlying.makeVolatile(nat)
@@ -167,8 +167,11 @@ object Reloadable extends HugeCombines with CatsEffectInstances {
   final class RootBuilder[F[_]](val dummy: Boolean = true) extends AnyVal {
     def apply[A](
         initial: A
-    )(implicit concurrent: Concurrent[F], P: Parallel[F]): CatsResource[F, (Reloadable[F, A], A => F[Unit])] =
-      RawReloadableImpl[F, F, CatsResource, A, Throwable](Concurrent[F].pure(initial), Simple()).map { r =>
+    )(implicit
+        F: Async[F],
+        P: Parallel[F]
+    ): CatsResource[F, (Reloadable[F, A], A => F[Unit])] =
+      RawReloadableImpl[F, F, CatsResource, A, Throwable](F.pure(initial), Simple()).map { r =>
         val sub = new MappedSubscriber[F, A, A](identity, r.modifyCurrentValue)
         (new CatsReloadableImpl(r), sub.onNext)
       }

@@ -13,7 +13,7 @@ private class ReactiveConfigAnnotation(override val c: whitebox.Context) extends
       q"""
         import cats.~>
         import cats.Parallel
-        import cats.effect.{Concurrent, Resource}
+        import cats.effect.{Async, Resource}
         import com.github.fit51.reactiveconfig.ce.config.ReactiveConfig
         import com.github.fit51.reactiveconfig.ce.reloadable.Reloadable
         import com.github.fit51.reactiveconfig.reloadable.Volatile
@@ -24,20 +24,20 @@ private class ReactiveConfigAnnotation(override val c: whitebox.Context) extends
         import com.github.fit51.reactiveconfig.Sensitive
         import com.github.fit51.reactiveconfig.parser.ConfigDecoder
 
-        def reloadable[F[_]: Concurrent: Parallel](config: ReactiveConfig[F, $dataType])(implicit d: ConfigDecoder[Sensitive, $dataType]): Resource[F, Reloadable[F, $name]] =
+        def reloadable[F[_]: Async: Parallel](config: ReactiveConfig[F, $dataType])(implicit d: ConfigDecoder[Sensitive, $dataType]): Resource[F, Reloadable[F, $name]] =
           com.github.fit51.reactiveconfig.ce.generic.deriveSensitiveReloadable[F, $dataType, $name](config, $prefix)
 
-        def volatile[F[_]: Concurrent: Parallel, G[_]](config: ReactiveConfig[F, $dataType])(implicit ftog: F ~> G, d: ConfigDecoder[Sensitive, $dataType]): Resource[F, Volatile[G, $name]] =
+        def volatile[F[_]: Async: Parallel, G[_]](config: ReactiveConfig[F, $dataType])(implicit ftog: F ~> G, d: ConfigDecoder[Sensitive, $dataType]): Resource[F, Volatile[G, $name]] =
           reloadable[F](config).flatMap(_.makeVolatile(ftog))
       """
     } else {
       q"""
         ..$imports
 
-        def reloadable[F[_]: Concurrent: Parallel](config: ReactiveConfig[F, $dataType]): Resource[F, Reloadable[F, $name]] =
+        def reloadable[F[_]: Async: Parallel](config: ReactiveConfig[F, $dataType]): Resource[F, Reloadable[F, $name]] =
           com.github.fit51.reactiveconfig.ce.generic.deriveReloadable[F, $dataType, $name](config, $prefix)
 
-        def volatile[F[_]: Concurrent: Parallel, G[_]](config: ReactiveConfig[F, $dataType])(implicit ftog: F ~> G): Resource[F, Volatile[G, $name]] =
+        def volatile[F[_]: Async: Parallel, G[_]](config: ReactiveConfig[F, $dataType])(implicit ftog: F ~> G): Resource[F, Volatile[G, $name]] =
           reloadable[F](config).flatMap(_.makeVolatile(ftog))
       """
     }

@@ -2,10 +2,10 @@ package com.github.fit51.reactiveconfig.examples
 
 import java.nio.file.Paths
 
-import cats.effect.{Blocker, Resource}
-import cats.effect.ContextShift
+import cats.effect.ExitCode
 import cats.effect.IO
-import cats.effect.Timer
+import cats.effect.IOApp
+import cats.effect.Resource
 import com.github.fit51.reactiveconfig.ce.config.ReactiveConfig
 import com.github.fit51.reactiveconfig.ce.reloadable.Reloadable
 import com.github.fit51.reactiveconfig.ce.typesafe.TypesafeReactiveConfig
@@ -14,17 +14,11 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 case class SimpleLib(foo: String, whatever: String)
 
-object TypesafeConfigApplication extends App with LazyLogging {
-
-  implicit val ioTimer: Timer[IO]               = IO.timer(global)
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(global)
-
-  val blocker = Blocker.liftExecutionContext(global)
+object TypesafeConfigApplication extends IOApp with LazyLogging {
 
   def reloadables(config: ReactiveConfig[IO, Json]) =
     for {
@@ -48,13 +42,14 @@ object TypesafeConfigApplication extends App with LazyLogging {
       println(s"all together: $combined")
     }) *> IO.sleep(1.second).flatMap(_ => useReloadables(someR, libConfigR, combinedR))
 
-  val app = (for {
-    config <- TypesafeReactiveConfig[IO, Json](blocker, Paths.get("examples/config/application.conf"))
-    _ <- Resource.eval(IO.delay(logger.info("Now change examples/config/application.conf file and see what happens!")))
-    reloadables <- reloadables(config)
-  } yield reloadables).use { case (someR, libConfigR, combinedR) =>
-    (useReloadables(someR, libConfigR, combinedR).start <* IO.sleep(1.minute)).flatMap(_.cancel)
-  }
-
-  app.unsafeRunSync()
+  override def run(args: List[String]): IO[ExitCode] =
+    (for {
+      config <- TypesafeReactiveConfig[IO, Json](Paths.get("examples/config/application.conf"))
+      _ <- Resource.eval(
+        IO.delay(logger.info("Now change examples/config/application.conf file and see what happens!"))
+      )
+      reloadables <- reloadables(config)
+    } yield reloadables).use { case (someR, libConfigR, combinedR) =>
+      (useReloadables(someR, libConfigR, combinedR).start <* IO.sleep(1.minute)).flatMap(_.cancel).as(ExitCode.Success)
+    }
 }

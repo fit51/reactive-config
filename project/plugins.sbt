@@ -3,8 +3,7 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 addSbtPlugin("org.scalameta"    % "sbt-scalafmt" % "2.4.6")
 addSbtPlugin("com.typesafe.sbt" % "sbt-git"      % "1.0.0")
 
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.2")
-addSbtPlugin("org.lyranthe.fs2-grpc" % "sbt-java-gen" % "0.11.2")
+addSbtPlugin("org.typelevel" % "sbt-fs2-grpc" % "2.7.11")
 
 addSbtPlugin("org.xerial.sbt"   % "sbt-sonatype" % "3.4")
 addSbtPlugin("com.jsuereth"     % "sbt-pgp"      % "2.0.0")

@@ -1,7 +1,7 @@
 package com.github.fit51.reactiveconfig.ce.generic
 
 import cats.Parallel
-import cats.effect.{Concurrent, Resource}
+import cats.effect.{Async, Resource}
 import com.github.fit51.reactiveconfig.Sensitive
 import com.github.fit51.reactiveconfig.ce.config.ReactiveConfig
 import com.github.fit51.reactiveconfig.ce.reloadable.Reloadable
@@ -17,7 +17,7 @@ class ReloadableMacro(override val c: whitebox.Context) extends CommonReloadable
   def reloadableImpl0[F[_], D: WeakTypeTag, A: WeakTypeTag](
       config: c.Expr[ReactiveConfig[F, D]]
   )(
-      F: c.Expr[Concurrent[F]],
+      F: c.Expr[Async[F]],
       P: c.Expr[Parallel[F]],
       cfg: c.Expr[Configuration]
   ): c.Expr[Resource[F, Reloadable[F, A]]] =
@@ -27,7 +27,7 @@ class ReloadableMacro(override val c: whitebox.Context) extends CommonReloadable
       config: c.Expr[ReactiveConfig[F, D]],
       prefix: c.Expr[String]
   )(
-      F: c.Expr[Concurrent[F]],
+      F: c.Expr[Async[F]],
       P: c.Expr[Parallel[F]],
       cfg: c.Expr[Configuration]
   ): c.Expr[Resource[F, Reloadable[F, A]]] =
@@ -37,7 +37,7 @@ class ReloadableMacro(override val c: whitebox.Context) extends CommonReloadable
       config: c.Expr[ReactiveConfig[F, D]]
   )(
       decoder: c.Expr[ConfigDecoder[Sensitive, D]],
-      F: c.Expr[Concurrent[F]],
+      F: c.Expr[Async[F]],
       P: c.Expr[Parallel[F]],
       cfg: c.Expr[Configuration]
   ): c.Expr[Resource[F, Reloadable[F, A]]] =
@@ -48,7 +48,7 @@ class ReloadableMacro(override val c: whitebox.Context) extends CommonReloadable
       prefix: c.Expr[String]
   )(
       decoder: c.Expr[ConfigDecoder[Sensitive, D]],
-      F: c.Expr[Concurrent[F]],
+      F: c.Expr[Async[F]],
       P: c.Expr[Parallel[F]],
       cfg: c.Expr[Configuration]
   ): c.Expr[Resource[F, Reloadable[F, A]]] =
