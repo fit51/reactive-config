@@ -1,8 +1,8 @@
 package com.github.fit51.reactiveconfig.ce.instances
 
-import cats.{Applicative, Parallel}
+import cats.{Applicative, Functor, Parallel}
 import cats.MonadThrow
-import cats.effect.{BracketThrow, Concurrent, Resource => CatsResource}
+import cats.effect.{Async, Resource => CatsResource}
 import cats.syntax.functor._
 import com.github.fit51.reactiveconfig.typeclasses.Effect
 import com.github.fit51.reactiveconfig.typeclasses.HandleTo
@@ -11,7 +11,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 trait CatsEffectInstances extends StrictLogging {
 
-  implicit def effectForConcurrent[F[_]](implicit F: Concurrent[F], P: Parallel[F]): Effect[F] =
+  implicit def effectForConcurrent[F[_]](implicit F: Async[F], P: Parallel[F]): Effect[F] =
     new Effect[F] {
       import cats.instances.list._
       import cats.syntax.parallel._
@@ -23,8 +23,8 @@ trait CatsEffectInstances extends StrictLogging {
         F.delay(thunk())
 
       override def async[A](cb: (A => Unit) => F[Unit]): F[A] =
-        F.asyncF[A] { innerCb =>
-          cb(a => innerCb(Right(a)))
+        F.async[A] { innerCb =>
+          F.map(cb(a => innerCb(Right(a))))(_ => None)
         }
 
       override def map[A, B](fa: F[A])(f: A => B): F[B] =
@@ -57,7 +57,7 @@ trait CatsEffectInstances extends StrictLogging {
         ga
     }
 
-  implicit def catsResource[F[_]: BracketThrow]: Resource[CatsResource, F] =
+  implicit def catsResource[F[_]: Functor]: Resource[CatsResource, F] =
     new Resource[CatsResource, F] {
 
       override def pure[A](a: A): CatsResource[F, A] =

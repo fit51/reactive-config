@@ -3,18 +3,20 @@ package com.github.fit51.reactiveconfig.ce.generic
 import cats.~>
 import cats.Id
 import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import com.github.fit51.reactiveconfig.Sensitive
 import com.github.fit51.reactiveconfig.ce.config.ReactiveConfig
 import com.github.fit51.reactiveconfig.ce.generic.Decoders._
-import com.github.fit51.reactiveconfig.ce.generic.instances._
 import com.github.fit51.reactiveconfig.generic.source
 import com.github.fit51.reactiveconfig.parser.ConfigDecoder
 import org.scalatest.{Matchers, WordSpecLike}
 
 class ReactiveConfigMacroTest extends WordSpecLike with Matchers {
 
-  implicit val ioToId           = λ[IO ~> Id](_.unsafeRunSync())
-  implicit val sensitiveDecoder = Decoders.sensitiveDecoder
+  implicit val runtime: IORuntime = IORuntime.builder().build()
+
+  implicit val ioToId: IO ~> Id                                   = λ[IO ~> Id](_.unsafeRunSync())
+  implicit val sensitiveDecoder: ConfigDecoder[Sensitive, String] = Decoders.sensitiveDecoder
 
   val config =
     ReactiveConfig.const[IO](
@@ -171,7 +173,7 @@ final case class NotSoPlain2(
 
 object NotSoPlain2 {
 
-  implicit val sDecoder = Decoders.sensitiveDecoder
+  implicit val sDecoder: ConfigDecoder[Sensitive, String] = Decoders.sensitiveDecoder
 }
 
 @reactiveconfig[String]("enormous")
@@ -214,7 +216,7 @@ final case class Enormous2(
 
 object Enormous2 {
 
-  implicit val sDecoder = Decoders.sensitiveDecoder
+  implicit val sDecoder: ConfigDecoder[Sensitive, String] = Decoders.sensitiveDecoder
 }
 
 @reactiveconfig[String]("enormous")

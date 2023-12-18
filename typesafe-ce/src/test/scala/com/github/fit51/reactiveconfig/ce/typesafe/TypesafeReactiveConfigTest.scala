@@ -2,13 +2,15 @@ package com.github.fit51.reactiveconfig.ce.typesafe
 
 import java.nio.file.Paths
 
-import cats.effect.{Blocker, ContextShift, IO, Timer}
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import com.github.fit51.reactiveconfig.parser.{ConfigDecoder, ConfigParser}
 import fs2.Stream
+import fs2.io.file.Files
+import fs2.io.file.Path
 import io.circe.{parser, Decoder, Json}
 import org.scalatest.{Matchers, WordSpecLike}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 case class App(net: Net)
@@ -17,6 +19,8 @@ case class Port(public: Int, `private`: Int)
 case class Parameter(value: Int)
 
 class TypesafeReactiveConfigTest extends WordSpecLike with Matchers {
+
+  implicit val runtime: IORuntime = IORuntime.builder().build()
 
   implicit val configParser: ConfigParser[Json] =
     parser.parse(_).toTry
@@ -41,12 +45,8 @@ class TypesafeReactiveConfigTest extends WordSpecLike with Matchers {
   implicit val parameterDecoder: Decoder[Parameter] =
     _.get[Int]("value").map(Parameter)
 
-  implicit val shift: ContextShift[IO] = IO.contextShift(global)
-  implicit val timer: Timer[IO]        = IO.timer(global)
-
   val path           = Paths.get("typesafe/src/test/resources/application.conf")
-  val blocker        = Blocker.liftExecutionContext(global)
-  val configResource = TypesafeReactiveConfig[IO, Json](blocker, path)
+  val configResource = TypesafeReactiveConfig[IO, Json](path)
 
   def changeable(v: Int): String =
     s"""changeable {
@@ -94,9 +94,9 @@ class TypesafeReactiveConfigTest extends WordSpecLike with Matchers {
         .use { reloadable =>
           for {
             first <- reloadable.get
-            _ <- fs2.io.file
-              .writeAll[IO](path.getParent().resolve("changeable.conf"), blocker)
-              .apply(Stream.fromIterator[IO](changeable(2).getBytes().iterator))
+            _ <- Files[IO]
+              .writeAll(Path.fromNioPath(path.getParent().resolve("changeable.conf")))
+              .apply(Stream.fromIterator[IO](changeable(2).getBytes().iterator, 1024))
               .compile
               .drain
             _      <- IO.sleep(10 seconds)
@@ -107,9 +107,9 @@ class TypesafeReactiveConfigTest extends WordSpecLike with Matchers {
           }
         }
         .guarantee {
-          fs2.io.file
-            .writeAll[IO](path.getParent().resolve("changeable.conf"), blocker)
-            .apply(Stream.fromIterator[IO](changeable(1).getBytes().iterator))
+          Files[IO]
+            .writeAll(Path.fromNioPath(path.getParent().resolve("changeable.conf")))
+            .apply(Stream.fromIterator[IO](changeable(1).getBytes().iterator, 1024))
             .compile
             .drain
         }

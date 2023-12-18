@@ -1,8 +1,10 @@
 package com.github.fit51.reactiveconfig.examples
 
-import cats.effect.{ContextShift, Sync}
+import cats.effect.ExitCode
 import cats.effect.IO
-import cats.effect.Timer
+import cats.effect.IOApp
+import cats.effect.Sync
+import cats.effect.std.Dispatcher
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.github.fit51.reactiveconfig.ce.etcd._
@@ -12,14 +14,15 @@ import io.circe.generic.auto._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-object EtcdConfigMutateConfig extends App {
-  implicit val ioTimer: Timer[IO]               = IO.timer(global)
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(global)
+object EtcdConfigMutateConfig extends IOApp {
 
   val channel = ChannelManager.noAuth("127.0.0.1:2379", options = ChannelOptions(20 seconds)).channel
-  val client  = EtcdClient[IO](channel)
-  FillConfig.fill(client).unsafeRunSync()
-  channel.shutdown()
+
+  override def run(args: List[String]): IO[ExitCode] =
+    Dispatcher.parallel[IO].use { dispatcher =>
+      val client = EtcdClient[IO](dispatcher, channel)
+      FillConfig.fill(client).as(ExitCode.Success)
+    }
 }
 
 object FillConfig {

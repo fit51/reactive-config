@@ -3,9 +3,11 @@ package com.github.fit51.reactiveconfig.ce.typesafe
 import java.nio.file.Path
 
 import cats.Parallel
-import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
-import cats.effect.concurrent.{Ref, Semaphore}
-import cats.effect.syntax.concurrent._
+import cats.effect.{Concurrent, Resource}
+import cats.effect.kernel.Async
+import cats.effect.kernel.Ref
+import cats.effect.std.Semaphore
+import cats.effect.syntax.spawn._
 import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -23,11 +25,11 @@ trait TypesafeReactiveConfig[F[_], D] extends ReactiveConfig[F, D]
 
 object TypesafeReactiveConfig {
 
-  def apply[F[_]: Concurrent: ContextShift: Parallel, D](blocker: Blocker, path: Path)(implicit
+  def apply[F[_]: Concurrent: Async: Parallel, D](path: Path)(implicit
       encoder: ConfigParser[D]
   ) =
     for {
-      watcher   <- Watcher.default(blocker)
+      watcher   <- Watcher.default[F]
       _         <- Resource.make(watcher.watch(path.getParent(), List(Watcher.EventType.Modified)))(identity)
       semaphore <- Resource.eval(Semaphore(1))
       stateRef  <- Resource.eval(parseConfig(path, -1).map(ConfigState[F, D](_, Map.empty)) >>= Ref[F].of)
@@ -39,11 +41,13 @@ object TypesafeReactiveConfig {
           .evalMap { case (_, idx) => parseConfig(path, idx).attempt }
           .evalMap {
             case Right(newMap) =>
-              semaphore.withPermit(for {
-                state <- stateRef.get
-                _     <- state.fireUpdates(newMap)
-                _     <- stateRef.set(state.copy(values = newMap))
-              } yield ())
+              semaphore.permit.use(_ =>
+                for {
+                  state <- stateRef.get
+                  _     <- state.fireUpdates(newMap)
+                  _     <- stateRef.set(state.copy(values = newMap))
+                } yield ()
+              )
             case Left(e) =>
               Effect[F].warn("Unable to parse config", e)
           }

@@ -1,10 +1,10 @@
 package com.github.fit51.reactiveconfig.ce.reloadable
 
-import cats.effect.{ContextShift, IO, Timer}
+import cats.effect.IO
 import cats.effect.Resource
-import cats.effect.concurrent.Ref
+import cats.effect.kernel.Ref
+import cats.effect.unsafe.IORuntime
 import cats.instances.int._
-import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.github.fit51.reactiveconfig.reloadable._
 import org.mockito.ArgumentMatchers.any
@@ -14,14 +14,12 @@ import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
 
 import scala.collection.{immutable, mutable}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.control.NoStackTrace
 
 class ReloadableTest extends WordSpecLike with Matchers with MockitoSugar {
 
-  implicit val shift: ContextShift[IO] = IO.contextShift(global)
-  implicit val timer: Timer[IO]        = IO.timer(global)
+  implicit val runtime: IORuntime = IORuntime.builder().build()
 
   trait mocks {
     trait StoppingService[A, B] {

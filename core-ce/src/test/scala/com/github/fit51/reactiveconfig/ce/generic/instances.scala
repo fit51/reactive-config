@@ -1,11 +1,9 @@
 package com.github.fit51.reactiveconfig.ce.generic
 
-import cats.effect.{ContextShift, IO}
 import com.github.fit51.reactiveconfig.Sensitive
 import com.github.fit51.reactiveconfig.generic.Configuration
 import com.github.fit51.reactiveconfig.parser.ConfigDecoder
 
-import scala.concurrent.ExecutionContext
 import scala.util.{Success, Try}
 
 object Decoders {
@@ -33,9 +31,4 @@ object Decoders {
 
   implicit val reactiveConfigConfiguration: Configuration =
     Configuration.default.withSnakeCaseMemberNames
-}
-
-object instances {
-
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.Implicits.global)
 }

@@ -1,10 +1,16 @@
 package com.github.fit51.reactiveconfig.examples
 
-import cats.{Functor, MonadError}
+import cats.Functor
 import cats.data.OptionT
-import cats.effect.{Bracket, Concurrent, ContextShift, ExitCase, Resource, Sync, Timer}
+import cats.effect.{Concurrent, Resource, Sync}
+import cats.effect.ExitCode
 import cats.effect.IO
-import cats.effect.concurrent.MVar
+import cats.effect.IOApp
+import cats.effect.Temporal
+import cats.effect.kernel.MonadCancel
+import cats.effect.kernel.Outcome
+import cats.effect.std.Dispatcher
+import cats.effect.std.Queue
 import cats.syntax.applicative._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -27,10 +33,7 @@ import scala.util.control.NonFatal
   * docker run -e ALLOW_NONE_AUTHENTICATION=yes -p 2379:2379 bitnami/etcd:latest For run with authentication: sudo
   * docker run -e ETCD_ROOT_PASSWORD=test -p 2379:2379 bitnami/etcd:latest
   */
-object EtcdConfigApplication extends App {
-
-  implicit val ioTimer: Timer[IO]               = IO.timer(global)
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(global)
+object EtcdConfigApplication extends IOApp {
 
   import AdvertsModule._
   import StoreModule._
@@ -38,7 +41,7 @@ object EtcdConfigApplication extends App {
   val chManager = ChannelManager.noAuth("127.0.0.1:2379", options = ChannelOptions(20 seconds))
   // implicit val chManager = ChannelManager("etcd://127.0.0.1:2379", Credentials("root", "test"))
 
-  def init[F[_]: Concurrent: Timer](
+  def init[F[_]: Sync: Concurrent: Temporal](
       etcdClient: EtcdClient[F],
       config: ReactiveConfig[F, Json],
       goods: Map[ProductId, Count]
@@ -52,15 +55,17 @@ object EtcdConfigApplication extends App {
       }
 
       implicit0(storeService: StoreService[F]) <- Resource.eval(StoreModule.StoreService[F](goods, storeConfig))
-      implicit0(advertsService: AdvertsService[F]) = new AdvertsService[F](advertsConfig)
+      implicit0(advertsService: AdvertsService[F]) = new AdvertsService[F](advertsConfig)(Sync[F])
     } yield new CommandLineShopService[F]()
 
-  (for {
-    channel    <- Resource.make(IO.delay(chManager.channel))(ch => IO.delay(ch.shutdown()))
-    etcdClient <- Resource.pure[IO, EtcdClient[IO]](EtcdClient[IO](channel))
-    config     <- EtcdReactiveConfig[IO, Json](channel, cats.data.NonEmptySet.one("store"))
-    service    <- init(etcdClient, config, FillConfig.store)
-  } yield service).use(_.flow).unsafeRunSync()
+  override def run(args: List[String]): IO[ExitCode] =
+    (for {
+      dispatcher <- Dispatcher.parallel[IO]
+      channel    <- Resource.make(IO.delay(chManager.channel))(ch => IO.delay(ch.shutdown()))
+      etcdClient <- Resource.pure[IO, EtcdClient[IO]](EtcdClient[IO](dispatcher, channel))
+      config     <- EtcdReactiveConfig[IO, Json](dispatcher, channel, cats.data.NonEmptySet.one("store"))
+      service    <- init(etcdClient, config, FillConfig.store)
+    } yield service).use(_.flow).as(ExitCode.Success)
 }
 
 object CommandLineShop {
@@ -88,14 +93,13 @@ object CommandLineShop {
     case class Buy(productId: ProductId, cash: Money) extends Command
   }
 
-  class CommandLineShopService[F[_]: MonadError[*[_], Throwable]: Sync: Timer](implicit
+  class CommandLineShopService[F[_]](implicit
       store: StoreModule.StoreService[F],
-      adverts: AdvertsModule.AdvertsService[F]
+      adverts: AdvertsModule.AdvertsService[F],
+      F: Sync[F]
   ) {
     import Commands._
-    private val F  = implicitly[Sync[F]]
-    private val FT = implicitly[Timer[F]]
-    private val FE = implicitly[MonadError[F, Throwable]]
+    private val FT: Temporal[F] = ???
 
     def printInstruction: F[Unit] =
       F.delay(println("""
@@ -127,7 +131,7 @@ object CommandLineShop {
     }
 
     def buy(c: Buy): F[Unit] =
-      FE.handleErrorWith(for {
+      F.handleErrorWith(for {
         change <- store.sell(c.productId, 1, c.cash)
         _      <- F.delay(println(s"Thanks for purchasing ${c.productId}. Here is your change $change"))
       } yield ()) { case NonFatal(e) =>
@@ -163,34 +167,37 @@ object StoreModule {
   case class StoreConfig(priceList: Map[ProductId, Money], version: String)
 
   object StoreService {
-    def apply[F[_]: Bracket[*[_], Throwable]: Concurrent](
+    def apply[F[_]: Concurrent](
         goods: Map[ProductId, Count],
         config: Reloadable[F, StoreConfig]
     ): F[StoreService[F]] =
       for {
-        goodsMVar <- MVar.of(goods)
+        goodsMVar <- Queue.bounded[F, Map[ProductId, Count]](1)
+        _         <- goodsMVar.offer(goods)
       } yield new StoreService(goodsMVar, config)
   }
 
-  class StoreService[F[_]: Bracket[*[_], Throwable]](
-      goodsMVar: MVar[F, Map[ProductId, Count]],
+  class StoreService[F[_]: MonadCancel[*[_], Throwable]](
+      goodsMVar: Queue[F, Map[ProductId, Count]],
       reloadable: Reloadable[F, StoreConfig]
   ) {
-    private val F = implicitly[Bracket[F, Throwable]]
+    private val F = implicitly[MonadCancel[F, Throwable]]
 
     def updateGoods[A](f: Map[ProductId, Count] => F[(Map[ProductId, Count], A)]): F[A] =
       F.bracketCase(goodsMVar.take)(goods =>
         f(goods) >>= { input =>
-          goodsMVar.put(input._1).as(input._2)
+          goodsMVar.offer(input._1).as(input._2)
         }
       ) {
-        case (goods, _ @(ExitCase.Canceled | ExitCase.Error(_))) => goodsMVar.put(goods)
-        case _                                                   => F.unit
+        case (goods, Outcome.Canceled())   => goodsMVar.offer(goods)
+        case (goods, Outcome.Errored(_))   => goodsMVar.offer(goods)
+        case (goods, Outcome.Succeeded(_)) => F.unit
       }
 
     def getPriceList: F[Seq[(ProductId, Count, Money)]] =
       for {
-        goods  <- goodsMVar.read
+        goods  <- goodsMVar.take
+        _      <- goodsMVar.offer(goods)
         config <- reloadable.get
         withPrices = config.priceList.flatMap { case (productId, price) =>
           goods.get(productId).map(count => (productId, count, price))
