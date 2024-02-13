@@ -50,7 +50,7 @@ lazy val `reactiveconfig-core` = project
 lazy val `reactiveconfig-core-zio` = project
   .in(file("core-zio"))
   .settings(commonSettings)
-  .settings(libraryDependencies += "dev.zio" %% "zio" % "2.0.6")
+  .settings(libraryDependencies += "dev.zio" %% "zio" % "2.0.21")
   .dependsOn(`reactiveconfig-core` % "compile->compile;test->test")
 
 lazy val `reactiveconfig-core-ce` = project
@@ -79,7 +79,7 @@ lazy val `reactiveconfig-etcd` = project
   .settings(commonSettings)
   .settings(libraryDependencies ++= List(
     scalaLogging,
-    "io.grpc" % "grpc-netty" % "1.55.3",
+    "io.grpc" % "grpc-netty" % "1.61.0",
     "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
     "com.pauldijou" %% "jwt-core" % "4.3.0"
   ))

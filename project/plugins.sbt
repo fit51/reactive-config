@@ -9,5 +9,5 @@ addSbtPlugin("org.xerial.sbt"   % "sbt-sonatype" % "3.4")
 addSbtPlugin("com.jsuereth"     % "sbt-pgp"      % "2.0.0")
 
 libraryDependencies ++= Seq(
-  "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test8"
+  "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.1"
 )
