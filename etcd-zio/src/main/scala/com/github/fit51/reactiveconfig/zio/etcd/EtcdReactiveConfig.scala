@@ -25,12 +25,12 @@ object EtcdReactiveConfig {
   def live[D: ConfigParser: Tag](
       prefixes: NonEmptySet[String],
       retryDuration: Duration
-  ): ZLayer[KVClient.Service & WatchClient.Service, ReactiveEtcdConfigException, EtcdReactiveConfig[D]] =
+  ): ZLayer[KVClient & WatchClient, ReactiveEtcdConfigException, EtcdReactiveConfig[D]] =
     ZLayer.fromZIO(
       for {
         _           <- ZIO.fail(new IntersectionError(prefixes)).when(Utils.doIntersect(prefixes))
-        kvClient    <- ZIO.service[KVClient.Service]
-        watchClient <- ZIO.service[WatchClient.Service]
+        kvClient    <- ZIO.service[KVClient]
+        watchClient <- ZIO.service[WatchClient]
         stateRef <- loadInitials(prefixes, kvClient)
           .map(ConfigState[UIO, D](_, Map.empty)).flatMap(Ref.Synchronized.make(_))
         _ <- prefixes.foldLeft[Stream[GrpcError, WatchResponse]](ZStream.empty) { case (acc, prefix) =>
@@ -41,7 +41,7 @@ object EtcdReactiveConfig {
 
   private def loadInitials[D](
       prefixes: NonEmptySet[String],
-      kvClient: KVClient.Service
+      kvClient: KVClient
   )(implicit decoder: ConfigParser[D]): IO[GrpcError, Map[String, Value[D]]] =
     ZIO.foreachPar(prefixes.toNonEmptyList.toList.toVector) { key =>
       val keyRange = key.asKeyRange
@@ -51,7 +51,8 @@ object EtcdReactiveConfig {
             key = keyRange.start.bytes,
             rangeEnd = keyRange.end.bytes
           )
-        ).mapError(new GrpcError(_)).map(_.kvs.toVector)
+        )
+        .mapError(e => new GrpcError(e.getStatus)).map(_.kvs.toVector)
     } map (_.flatten) map { allKvs =>
       allKvs.partitionEither { kv =>
         decoder.parse(kv.value.utf8) match {
@@ -60,7 +61,7 @@ object EtcdReactiveConfig {
             val value = Value(parsed, kv.version)
             Right(key -> value)
           case Failure(exception) =>
-            Left(kv.key.utf8 -> exception.getMessage())
+            Left(kv.key.utf8 -> exception.getMessage)
         }
       }
     } flatMap { case (errors, parsedKvs) =>
@@ -70,7 +71,7 @@ object EtcdReactiveConfig {
     }
 
   private def watchKey(
-      watchClient: WatchClient.Service,
+      watchClient: WatchClient,
       key: String,
       retry: Duration
   ): Stream[GrpcError, WatchResponse] = {
@@ -86,13 +87,16 @@ object EtcdReactiveConfig {
           )
         )
       )
-    ) catchAll { status =>
-      if (status.getCode() == Status.Code.UNAVAILABLE) {
+    ) catchAll { error =>
+      val statusCode = error.getStatus
+      if (statusCode.getCode == Status.Code.UNAVAILABLE) {
         ZStream.execute(ZIO.logInfo(s"Retrying watch for $key")) ++
         ZStream.execute(ZIO.sleep(retry)) ++
         watchKey(watchClient, key, retry)
       } else {
-        ZStream.execute(ZIO.logWarning(s"Unrecoverable error: $status")) ++ ZStream.fail(new GrpcError(status))
+        ZStream.execute(ZIO.logWarning(s"Unrecoverable error: ${statusCode.getCode}")) ++ ZStream.fail(
+          new GrpcError(statusCode)
+        )
       }
     }
   }
